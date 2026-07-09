@@ -2,24 +2,24 @@
   "background_color": "#ffffff",
   "display": "standalone",
   "lang": "en",
-  "name": "MySavings",
-  "short_name": "MySavings",
-  "start_url": "/MySavingss/?utm_source=web_app_manifest",
+  "name": "HomeVault",
+  "short_name": "HomeVault",
+  "start_url": "/HomeVault/?utm_source=web_app_manifest",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/MySavingss/pwa/chrome-icon/chrome-icon-192.png",
+      "src": "/HomeVault/pwa/chrome-icon/chrome-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/MySavingss/pwa/chrome-icon/chrome-icon-512.png",
+      "src": "/HomeVault/pwa/chrome-icon/chrome-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
   ],
-  "scope": "/MySavingss/",
+  "scope": "/HomeVault/",
   "theme_color": "#26619c"
 }

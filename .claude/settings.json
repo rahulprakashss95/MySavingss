@@ -86,7 +86,10 @@
       "Bash(node -e \"console.log\\(require\\('react-native-css-interop/package.json'\\).version\\)\")",
       "Bash(node -e \"console.log\\('nativewind', require\\('nativewind/package.json'\\).version\\);console.log\\('css-interop', require\\('react-native-css-interop/package.json'\\).version\\)\")",
       "Bash(npm run *)",
-      "Bash(grep -c '\\\\\\\\\\\\\\\\' dist/index.html)"
+      "Bash(grep -c '\\\\\\\\\\\\\\\\' dist/index.html)",
+      "Bash(node -e \"console.log\\(require\\('./app.json'\\).expo.version\\)\")",
+      "Bash(echo \"app.json version: $\\(node -e \"console.log\\(require\\('./app.json'\\).expo.version\\)\"\\)\")",
+      "Bash(node -e \"const m=require\\('@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/Ionicons.json'\\); ['sparkles-outline','bulb-outline','star-outline','chatbox-ellipses-outline'].forEach\\(n=>console.log\\(n, n in m ? 'OK' : 'MISSING'\\)\\)\")"
     ]
   }
 }

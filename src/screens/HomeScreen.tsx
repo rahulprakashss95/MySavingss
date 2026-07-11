@@ -4,6 +4,7 @@ import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { ThemeColors } from "../utils/Color";
 import { biometricAuthentication } from "../components/BiometricAuthentication";
 import FeatureTile from "../components/FeatureTile";
+import QuoteCard from "../components/QuoteCard";
 import { NavigationProp } from "../utils/Utils";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
@@ -41,6 +42,10 @@ const HomeScreen = ({ navigation }: Props) => {
             {user.username}
           </Text>
         )}
+      </View>
+
+      <View style={styles.quoteSpacing}>
+        <QuoteCard />
       </View>
 
       <Text style={styles.sectionTitle}>Manage</Text>
@@ -133,6 +138,9 @@ const createStyles = (colors: ThemeColors) =>
     },
     tileSpacing: {
       marginTop: 14,
+    },
+    quoteSpacing: {
+      marginBottom: 28,
     },
   });
 

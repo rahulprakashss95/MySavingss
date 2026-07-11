@@ -65,7 +65,16 @@
       "PowerShell(npx expo export --platform android --output-dir \"$env:TEMP\\\\hv-export-labels\" --clear 2>&1 | Select-Object -Last 4)",
       "PowerShell(npx expo export --platform android --output-dir \"$env:TEMP\\\\hv-export-fbquery\" --clear 2>&1 | Select-Object -Last 4)",
       "Bash(git add *)",
-      "Bash(git commit -q -m ' *)"
+      "Bash(git commit -q -m ' *)",
+      "Bash(git checkout *)",
+      "Bash(ls -d ios android)",
+      "Bash(ls scripts/)",
+      "Bash(ls webpack.config.js)",
+      "Bash(node -e \"const p=require\\('./package.json'\\); ['expo','react','react-native','react-dom','react-native-web','react-native-reanimated','react-native-screens','react-native-safe-area-context'].forEach\\(k=>console.log\\(k.padEnd\\(34\\), \\(p.dependencies[k]||'\\(missing\\)'\\)\\)\\)\")",
+      "Bash(cat babel.config.js)",
+      "Bash(cat metro.config.js)",
+      "Bash(cat tsconfig.json)",
+      "Bash(node -e \"console.log\\('main:', require\\('./package.json'\\).main || '\\(default expo/AppEntry\\)'\\)\")"
     ]
   }
 }

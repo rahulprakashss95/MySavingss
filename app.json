@@ -31,6 +31,8 @@
       "package": "com.app.savings"
     },
     "web": {
+      "bundler": "metro",
+      "output": "single",
       "favicon": "./assets/favicon.png"
     },
     "extra": {

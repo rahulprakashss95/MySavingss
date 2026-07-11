@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.js": "/HomeVault/static/js/main.05a3bc0d.js",
-    "static/js/856.0f517247.js": "/HomeVault/static/js/856.0f517247.js",
+    "main.js": "/HomeVault/static/js/main.96a9c0c2.js",
+    "static/js/856.b8b9ede4.js": "/HomeVault/static/js/856.b8b9ede4.js",
     "static/media/Ionicons.ttf": "/HomeVault/static/media/Ionicons.3517aeaa34b2f8cd8eef.ttf",
     "static/media/FontAwesome.ttf": "/HomeVault/static/media/FontAwesome.1e59d2330b4c6deb84b3.ttf",
     "static/media/AntDesign.ttf": "/HomeVault/static/media/AntDesign.163adab9dbd7cb1ed12a.ttf",
@@ -11,11 +11,11 @@
     "favicon-16.png": "/HomeVault/favicon-16.png",
     "manifest.json": "/HomeVault/manifest.json",
     "serve.json": "/HomeVault/serve.json",
-    "main.05a3bc0d.js.map": "/HomeVault/static/js/main.05a3bc0d.js.map",
-    "856.0f517247.js.map": "/HomeVault/static/js/856.0f517247.js.map"
+    "main.96a9c0c2.js.map": "/HomeVault/static/js/main.96a9c0c2.js.map",
+    "856.b8b9ede4.js.map": "/HomeVault/static/js/856.b8b9ede4.js.map"
   },
   "entrypoints": [
-    "static/js/856.0f517247.js",
-    "static/js/main.05a3bc0d.js"
+    "static/js/856.b8b9ede4.js",
+    "static/js/main.96a9c0c2.js"
   ]
 }

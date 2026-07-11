@@ -100,6 +100,14 @@ function patchIndexHtml() {
     html = html.replace("</head>", `  ${tags}\n  </head>`);
   }
 
+  // On Windows, Metro emits the CSS href with backslash separators
+  // (href="...\static\css\..."). Browsers normalise `\`→`/` for http URLs, but
+  // rewrite them so the markup is correct rather than merely tolerated. Only
+  // href/src attribute values are touched.
+  html = html.replace(/(href|src)="([^"]*\\[^"]*)"/g, (_match, attr, value) => {
+    return `${attr}="${value.replace(/\\/g, "/")}"`;
+  });
+
   fs.writeFileSync(indexPath, html);
 }
 

@@ -78,7 +78,15 @@
       "Bash(rm -rf dist)",
       "Bash(echo \"\\(exit $?\\)\")",
       "Bash(node -e \"try{require.resolve\\('@expo/image-utils'\\);console.log\\('@expo/image-utils: AVAILABLE'\\)}catch\\(e\\){console.log\\('@expo/image-utils: MISSING'\\)}\")",
-      "Bash(ls -la assets/icon.png assets/favicon.png)"
+      "Bash(ls -la assets/icon.png assets/favicon.png)",
+      "Bash(npm install *)",
+      "Bash(node -e \"const p=require\\('./package.json'\\);console.log\\('nativewind',p.dependencies.nativewind\\);console.log\\('safe-area',p.dependencies['react-native-safe-area-context']\\);console.log\\('tailwindcss',p.devDependencies.tailwindcss\\)\")",
+      "Bash(node -e \"console.log\\(require.resolve\\('nativewind/babel'\\)\\)\")",
+      "Bash(node -e \"console.log\\(require\\('nativewind/package.json'\\).version\\)\")",
+      "Bash(node -e \"console.log\\(require\\('react-native-css-interop/package.json'\\).version\\)\")",
+      "Bash(node -e \"console.log\\('nativewind', require\\('nativewind/package.json'\\).version\\);console.log\\('css-interop', require\\('react-native-css-interop/package.json'\\).version\\)\")",
+      "Bash(npm run *)",
+      "Bash(grep -c '\\\\\\\\\\\\\\\\' dist/index.html)"
     ]
   }
 }

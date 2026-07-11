@@ -42,7 +42,9 @@ import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import { ThemeProvider, useTheme } from "./src/context/ThemeContext";
 import { DrawerProvider } from "./src/context/DrawerContext";
 import { navigationRef } from "./src/navigation/navigationRef";
+import { themeVars } from "./src/utils/themeVars";
 import { installWebStyles } from "./src/utils/webStyles";
+import "./global.css";
 
 // Remove the browser's default focus outline from web inputs, app-wide.
 installWebStyles();
@@ -114,7 +116,9 @@ const RootNavigator = () => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    // themeVars publishes the active palette as CSS variables so NativeWind
+    // classes (bg-background, text-text, …) track the same light/dark toggle.
+    <View style={[{ flex: 1 }, themeVars(colors)]}>
       <NavigationContainer ref={navigationRef} theme={navigationTheme}>
         <StatusBar style={isDark ? "light" : "dark"} />
         <Stack.Navigator

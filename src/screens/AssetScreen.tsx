@@ -1,32 +1,37 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useMemo } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import React from "react";
+import { ScrollView, Text, View } from "react-native";
 import FeatureTile from "../components/FeatureTile";
 import { useTheme } from "../context/ThemeContext";
-import { ThemeColors } from "../utils/Color";
 import { NavigationProp } from "../utils/Utils";
 
 type Props = {
   navigation: NavigationProp;
 };
 
+// Proof-of-concept: this screen is styled with NativeWind (Tailwind) classes
+// instead of StyleSheet. The colour tokens (bg-background, text-muted, …) resolve
+// to the app's ThemeColors via src/utils/themeVars.ts, so it follows the same
+// light/dark toggle. FeatureTile below is still StyleSheet-based — the two
+// approaches coexist, so a migration can be incremental.
 const AssetScreen = ({ navigation }: Props) => {
   const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
+      className="flex-1 bg-background"
+      contentContainerClassName="p-5 pb-8"
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.lede}>
+      <Text className="mt-1 mb-7 text-base leading-[23px] text-muted">
         What the family owns — jewellery by metal, and property with its payments.
       </Text>
 
-      <Text style={styles.sectionTitle}>Records</Text>
+      <Text className="mb-3 text-[13px] font-semibold uppercase tracking-[0.6px] text-muted">
+        Records
+      </Text>
 
-      <View style={styles.grid}>
+      <View className="flex-row flex-wrap justify-between">
         <FeatureTile
           title="Ornaments"
           subtitle="Gold, silver & stones"
@@ -47,7 +52,9 @@ const AssetScreen = ({ navigation }: Props) => {
         />
       </View>
 
-      <Text style={[styles.sectionTitle, styles.sectionSpacing]}>Insights</Text>
+      <Text className="mt-7 mb-3 text-[13px] font-semibold uppercase tracking-[0.6px] text-muted">
+        Insights
+      </Text>
 
       <FeatureTile
         wide
@@ -62,40 +69,5 @@ const AssetScreen = ({ navigation }: Props) => {
     </ScrollView>
   );
 };
-
-const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    content: {
-      padding: 20,
-      paddingBottom: 32,
-    },
-    lede: {
-      fontSize: 16,
-      color: colors.textMuted,
-      lineHeight: 23,
-      marginTop: 4,
-      marginBottom: 28,
-    },
-    sectionTitle: {
-      fontSize: 13,
-      fontWeight: "600",
-      textTransform: "uppercase",
-      letterSpacing: 0.6,
-      color: colors.textMuted,
-      marginBottom: 12,
-    },
-    sectionSpacing: {
-      marginTop: 28,
-    },
-    grid: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      justifyContent: "space-between",
-    },
-  });
 
 export default AssetScreen;

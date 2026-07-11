@@ -1,6 +1,6 @@
 {
   "name": "homevault",
-  "version": "1.0.78",
+  "version": "1.0.80",
   "homepage": "/HomeVault/",
   "scripts": {
     "start": "expo start --dev-client",

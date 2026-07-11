@@ -1,29 +1,38 @@
 /* eslint-env node */
 /**
- * Post-processes the `expo export:web` output so "Add to Home Screen" shows the
- * app logo on Android/Chrome.
+ * Post-processes the Metro web export (`expo export --platform web`, output in
+ * `dist/`) into an installable PWA that works from the GitHub Pages subpath.
  *
- * Expo generates the iOS apple-touch-icon but leaves `manifest.json` without an
- * `icons` array and never emits Chrome PWA icons, so Chrome has nothing to show.
- * This regenerates 192/512 icons from assets/icon.png (same tool Expo's own icon
- * plugin uses) and rewrites the manifest to reference them under the deploy
- * subpath.
+ * Metro's web export — unlike the old webpack one — emits no manifest and no PWA
+ * markup, and serves its JS from an `_expo/` folder. So this script:
+ *   1. Generates 192/512 Chrome icons from assets/icon.png.
+ *   2. Writes a manifest.json from scratch, scoped to the deploy subpath.
+ *   3. Injects the manifest link, theme-color, and apple-touch-icon into
+ *      index.html (Metro adds only a favicon).
+ *   4. Drops a `.nojekyll` file — GitHub Pages runs Jekyll, which otherwise
+ *      strips the underscore-prefixed `_expo/` directory and 404s the bundle.
  *
- * Runs as part of `build-web`, so every deploy is patched.
+ * Runs as part of `build-web`, so every deploy is patched. The subpath comes
+ * from `homepage` in package.json; keep it in sync with `experiments.baseUrl`
+ * in app.json (the value Metro bakes into the asset URLs).
  */
 const path = require("path");
 const fs = require("fs");
 const { generateImageAsync } = require("@expo/image-utils");
 
 const PROJECT_ROOT = path.resolve(__dirname, "..");
-const WEB_BUILD = path.join(PROJECT_ROOT, "web-build");
+const DIST = path.join(PROJECT_ROOT, "dist");
 const SOURCE_ICON = path.join(PROJECT_ROOT, "assets", "icon.png");
-const ICON_OUT_DIR = path.join(WEB_BUILD, "pwa", "chrome-icon");
+const ICON_OUT_DIR = path.join(DIST, "pwa", "chrome-icon");
 
-// Must match `homepage` in package.json (the deploy subpath). Kept as a
-// leading+trailing-slashed base so both manifest and icon URLs resolve.
 const { homepage } = require(path.join(PROJECT_ROOT, "package.json"));
+const { expo: appConfig } = require(path.join(PROJECT_ROOT, "app.json"));
+
+// Leading+trailing-slashed base so both manifest and icon URLs resolve under
+// the subpath, e.g. "/HomeVault/".
 const BASE = (homepage || "/").replace(/\/?$/, "/");
+const APP_NAME = appConfig?.name || "HomeVault";
+const THEME_COLOR = "#26619c";
 
 const ICON_SIZES = [192, 512];
 
@@ -57,41 +66,60 @@ async function generateIcons() {
   return icons;
 }
 
+function writeManifest(icons) {
+  const manifest = {
+    name: APP_NAME,
+    short_name: APP_NAME,
+    start_url: `${BASE}?utm_source=web_app_manifest`,
+    scope: BASE,
+    display: "standalone",
+    orientation: "portrait",
+    background_color: "#ffffff",
+    theme_color: THEME_COLOR,
+    icons,
+  };
+  fs.writeFileSync(
+    path.join(DIST, "manifest.json"),
+    JSON.stringify(manifest, null, 2)
+  );
+}
+
+/** Metro emits only a favicon link; add the PWA markup browsers need to install. */
+function patchIndexHtml() {
+  const indexPath = path.join(DIST, "index.html");
+  let html = fs.readFileSync(indexPath, "utf8");
+
+  const tags = [
+    `<link rel="manifest" href="${BASE}manifest.json" />`,
+    `<meta name="theme-color" content="${THEME_COLOR}" />`,
+    `<link rel="apple-touch-icon" href="${BASE}pwa/chrome-icon/chrome-icon-192.png" />`,
+  ].join("\n    ");
+
+  // Idempotent: don't double-inject if the build is patched twice.
+  if (!html.includes('rel="manifest"')) {
+    html = html.replace("</head>", `  ${tags}\n  </head>`);
+  }
+
+  fs.writeFileSync(indexPath, html);
+}
+
 async function main() {
-  if (!fs.existsSync(WEB_BUILD)) {
-    throw new Error(`web-build not found at ${WEB_BUILD} — run expo export:web first.`);
+  if (!fs.existsSync(DIST)) {
+    throw new Error(
+      `dist/ not found at ${DIST} — run "expo export --platform web" first.`
+    );
   }
 
   const icons = await generateIcons();
+  writeManifest(icons);
+  patchIndexHtml();
 
-  const manifestPath = path.join(WEB_BUILD, "manifest.json");
-  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
-
-  manifest.icons = icons;
-  // Serve the installed app from the subpath, not the domain root.
-  manifest.start_url = `${BASE}?utm_source=web_app_manifest`;
-  manifest.scope = BASE;
-  manifest.theme_color = manifest.theme_color || "#26619c";
-  // Was steering installs to a Play Store listing that may not exist, which
-  // suppresses the browser's own install/icon behaviour.
-  delete manifest.prefer_related_applications;
-  delete manifest.related_applications;
-
-  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
-
-  // Expo builds the injected link hrefs with Windows path separators, e.g.
-  // href="\HomeVault\pwa\...". Browsers normalise `\`→`/` for http URLs, but
-  // rewrite them so the markup is correct rather than merely tolerated. Only
-  // href/src attribute values are touched, never inline scripts.
-  const indexPath = path.join(WEB_BUILD, "index.html");
-  let html = fs.readFileSync(indexPath, "utf8");
-  html = html.replace(/(href|src)="([^"]*\\[^"]*)"/g, (_match, attr, value) => {
-    return `${attr}="${value.replace(/\\/g, "/")}"`;
-  });
-  fs.writeFileSync(indexPath, html);
+  // GitHub Pages / Jekyll strips folders that start with "_"; without this the
+  // _expo/ JS bundle 404s and the site is blank.
+  fs.writeFileSync(path.join(DIST, ".nojekyll"), "");
 
   console.log(
-    `patch-pwa: wrote ${icons.length} icons + manifest.icons under ${BASE}, normalised index.html paths`
+    `patch-pwa: wrote ${icons.length} icons + manifest.json, injected PWA markup, added .nojekyll under ${BASE}`
   );
 }
 

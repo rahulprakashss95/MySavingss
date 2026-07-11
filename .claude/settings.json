@@ -74,7 +74,11 @@
       "Bash(cat babel.config.js)",
       "Bash(cat metro.config.js)",
       "Bash(cat tsconfig.json)",
-      "Bash(node -e \"console.log\\('main:', require\\('./package.json'\\).main || '\\(default expo/AppEntry\\)'\\)\")"
+      "Bash(node -e \"console.log\\('main:', require\\('./package.json'\\).main || '\\(default expo/AppEntry\\)'\\)\")",
+      "Bash(rm -rf dist)",
+      "Bash(echo \"\\(exit $?\\)\")",
+      "Bash(node -e \"try{require.resolve\\('@expo/image-utils'\\);console.log\\('@expo/image-utils: AVAILABLE'\\)}catch\\(e\\){console.log\\('@expo/image-utils: MISSING'\\)}\")",
+      "Bash(ls -la assets/icon.png assets/favicon.png)"
     ]
   }
 }

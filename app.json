@@ -40,6 +40,9 @@
         "projectId": "4531fc5c-e0da-4ae9-9d63-448a35b27b4f"
       }
     },
+    "experiments": {
+      "baseUrl": "/HomeVault"
+    },
     "plugins": [
       [
         "expo-local-authentication",

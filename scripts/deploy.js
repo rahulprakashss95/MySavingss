@@ -81,7 +81,9 @@ async function main() {
 
   console.log(`\nDeploying version ${next}...\n`);
   execSync("npm run build-web", { cwd: PROJECT_ROOT, stdio: "inherit" });
-  execSync("npx gh-pages -d web-build", { cwd: PROJECT_ROOT, stdio: "inherit" });
+  // -t/--dotfiles so the .nojekyll patch-pwa writes gets published; without it
+  // GitHub Pages' Jekyll strips the _expo/ bundle folder.
+  execSync("npx gh-pages -d dist -t", { cwd: PROJECT_ROOT, stdio: "inherit" });
   console.log(`\nDeployed version ${next}.`);
 }
 

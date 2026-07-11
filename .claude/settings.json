@@ -63,7 +63,9 @@
       "PowerShell(npx expo export --platform android --output-dir \"$env:TEMP\\\\hv-export-line\" --clear 2>&1 | Select-Object -Last 4)",
       "Bash(node /c/Users/rahul/AppData/Local/Temp/claude/c--Corptec-Personal-HomeVault/f8bbfef2-1b5d-4b40-bea5-3a7aab02251d/scratchpad/labels.mjs)",
       "PowerShell(npx expo export --platform android --output-dir \"$env:TEMP\\\\hv-export-labels\" --clear 2>&1 | Select-Object -Last 4)",
-      "PowerShell(npx expo export --platform android --output-dir \"$env:TEMP\\\\hv-export-fbquery\" --clear 2>&1 | Select-Object -Last 4)"
+      "PowerShell(npx expo export --platform android --output-dir \"$env:TEMP\\\\hv-export-fbquery\" --clear 2>&1 | Select-Object -Last 4)",
+      "Bash(git add *)",
+      "Bash(git commit -q -m ' *)"
     ]
   }
 }

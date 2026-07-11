@@ -45,37 +45,53 @@ const HomeScreen = ({ navigation }: Props) => {
 
       <Text style={styles.sectionTitle}>Manage</Text>
 
-      <View style={styles.grid}>
+      <FeatureTile
+        wide
+        title="Deposits"
+        subtitle="Fixed deposits & clients"
+        accent={colors.accentBlue}
+        renderIcon={(color) => (
+          <FontAwesome name="credit-card" size={22} color={color} />
+        )}
+        onPress={() => navigation.navigate("Deposit")}
+      />
+
+      <View style={styles.tileSpacing}>
         <FeatureTile
-          title="Deposits"
-          subtitle="Fixed deposits & clients"
-          accent={colors.accentBlue}
+          wide
+          title="Documents"
+          subtitle="Government IDs & bank accounts"
+          accent={colors.accentViolet}
           renderIcon={(color) => (
-            <FontAwesome name="credit-card" size={22} color={color} />
+            <Ionicons name="document-text-outline" size={24} color={color} />
           )}
-          onPress={() => navigation.navigate("Deposit")}
-        />
-        <FeatureTile
-          title="Crypto"
-          subtitle="Track your portfolio"
-          accent={colors.accentAmber}
-          renderIcon={(color) => (
-            <FontAwesome name="bitcoin" size={24} color={color} />
-          )}
-          onPress={() => navigation.navigate("CryptoPortfolio")}
+          onPress={() => navigation.navigate("Documents")}
         />
       </View>
 
-      <View style={styles.wideRow}>
+      <View style={styles.tileSpacing}>
         <FeatureTile
           wide
-          badge="Soon"
-          title="Calculator"
-          subtitle="Interest & maturity"
-          accent={colors.accentViolet}
+          title="Assets"
+          subtitle="Ornaments & properties"
+          accent={colors.accentAmber}
           renderIcon={(color) => (
-            <Ionicons name="calculator-outline" size={24} color={color} />
+            <Ionicons name="cube-outline" size={24} color={color} />
           )}
+          onPress={() => navigation.navigate("Assets")}
+        />
+      </View>
+
+      <View style={styles.tileSpacing}>
+        <FeatureTile
+          wide
+          title="Ledger"
+          subtitle="Earnings & savings"
+          accent={colors.accentBlue}
+          renderIcon={(color) => (
+            <Ionicons name="book-outline" size={24} color={color} />
+          )}
+          onPress={() => navigation.navigate("Ledger")}
         />
       </View>
     </ScrollView>
@@ -115,12 +131,7 @@ const createStyles = (colors: ThemeColors) =>
       color: colors.textMuted,
       marginBottom: 12,
     },
-    grid: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      justifyContent: "space-between",
-    },
-    wideRow: {
+    tileSpacing: {
       marginTop: 14,
     },
   });

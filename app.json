@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "MySavings",
-    "slug": "MySavings",
-    "version": "1.0.0",
+    "name": "HomeVault",
+    "slug": "HomeVault",
+    "version": "1.0.73",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -11,7 +11,9 @@
       "resizeMode": "cover",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
@@ -19,7 +21,9 @@
       }
     },
     "android": {
-      "permissions": ["USE_FINGERPRINT"],
+      "permissions": [
+        "USE_FINGERPRINT"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"

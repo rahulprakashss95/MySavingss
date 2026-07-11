@@ -80,18 +80,21 @@ const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
         const deposits = (depositData as FixedDepositModel[]) ?? [];
         const allDepositors = Array.from(
           new Set(deposits.map((deposit) => deposit.depositorName).filter(Boolean))
-        ).sort((a, b) => a.localeCompare(b));
+        );
 
-        if (canChooseDepositor) {
-          setDepositorList(allDepositors);
-          return;
-        }
-
-        // A non-admin can only file a deposit under their own name — anything
-        // else would immediately disappear from their own scoped list.
+        // Offer every known depositor to everyone, plus the user's own name
+        // even if they have no deposits yet (otherwise the pre-selected value
+        // below wouldn't match any option and the picker would look empty).
         const ownName = depositorNameForUser(user, deposits);
-        setDepositorList(ownName ? [ownName] : []);
-        if (pageMode === "Add" && ownName) {
+        const names = new Set(allDepositors);
+        if (ownName) {
+          names.add(ownName);
+        }
+        setDepositorList([...names].sort((a, b) => a.localeCompare(b)));
+
+        // Non-admins default to their own name when creating a deposit, so a
+        // new record is scoped to them and doesn't vanish from their own list.
+        if (pageMode === "Add" && ownName && !canChooseDepositor) {
           setDepositorName(ownName);
         }
       })
@@ -241,7 +244,6 @@ const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
             style={styles.picker}
             dropdownIconColor={colors.text}
             mode="dropdown"
-            enabled={canChooseDepositor}
             selectedValue={depositorName}
             onValueChange={setDepositorName}
           >

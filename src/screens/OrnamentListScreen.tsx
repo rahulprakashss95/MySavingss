@@ -1,0 +1,97 @@
+import React, { useMemo } from "react";
+import { getOrnaments } from "../../database/firebaseQuery";
+import GroupedList, { useCollection } from "../components/GroupedList";
+import GroupedRow from "../components/GroupedRow";
+import { useTheme } from "../context/ThemeContext";
+import { ORNAMENT_TYPES, OrnamentModel } from "../models/AssetModel";
+import { karatOf, weightSummary } from "../utils/assets";
+import { ThemeColors } from "../utils/Color";
+import { byFixedOrder, byText, groupBy, UNGROUPED } from "../utils/grouping";
+import { NavigationProp } from "../utils/Utils";
+
+type Props = {
+  navigation: NavigationProp;
+};
+
+/** One hue per metal, so a section is recognisable before you read its heading. */
+const accentFor = (ornamentType: string, colors: ThemeColors) => {
+  switch (ornamentType) {
+    case "Gold":
+      return colors.accentAmber;
+    case "Diamond":
+      return colors.accentBlue;
+    case "Platinum":
+      return colors.accentViolet;
+    default:
+      return colors.textMuted;
+  }
+};
+
+const pieceCount = (count: string) => {
+  const parsed = Number(count) || 0;
+  if (parsed <= 1) {
+    return "";
+  }
+  return `${parsed} pieces`;
+};
+
+/** "22K · 3 pieces", or whichever half of that actually applies. */
+const rowMeta = (ornament: OrnamentModel) =>
+  [karatOf(ornament), pieceCount(ornament.count)].filter(Boolean).join(" · ");
+
+const OrnamentListScreen = ({ navigation }: Props) => {
+  const { colors } = useTheme();
+  const { items, ...list } = useCollection<OrnamentModel>(
+    getOrnaments,
+    navigation,
+    "Unable to load ornaments"
+  );
+
+  // Grouped by metal in the order it's declared, then by holder within a group
+  // so one person's pieces stay together.
+  const sections = useMemo(
+    () =>
+      groupBy(
+        [...items].sort(
+          (a, b) =>
+            byText(a.personName, b.personName) || byText(a.name, b.name)
+        ),
+        (ornament) => ornament.ornamentType || UNGROUPED,
+        (ornament) => ornament.ornamentType || UNGROUPED
+      ).sort(byFixedOrder(ORNAMENT_TYPES)),
+    [items]
+  );
+
+  const navigateAddEdit = (data: OrnamentModel | null) => {
+    navigation.navigate("OrnamentAddEdit", { ornamentData: data });
+  };
+
+  return (
+    <GroupedList
+      {...list}
+      sections={sections}
+      keyOf={(item) => item.id}
+      noun="ornament"
+      addLabel="Add ornament"
+      onAdd={() => navigateAddEdit(null)}
+      emptyIcon="ribbon-outline"
+      emptyTitle="No ornaments yet"
+      emptyBody="Tap the + button to record the family's first piece."
+      renderItem={(item, position) => (
+        <GroupedRow
+          icon="ribbon-outline"
+          accent={accentFor(item.ornamentType, colors)}
+          title={item.name}
+          value={weightSummary(item.grams) || "—"}
+          subtitle={item.personName}
+          meta={rowMeta(item) || undefined}
+          description={item.description}
+          onPress={() => navigateAddEdit(item)}
+          position={position}
+        />
+      )}
+    />
+  );
+};
+
+export default OrnamentListScreen;

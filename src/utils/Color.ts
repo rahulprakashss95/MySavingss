@@ -28,6 +28,15 @@ export type ThemeColors = {
   chartAmount: string;
   chartInterest: string;
   chartTrack: string;
+  /**
+   * Categorical series hues, assigned in fixed order and never cycled. Six is
+   * the cap — a stacked chart folds anything past five slots into "Other"
+   * (chartOther). Validated as a set against `card` in each mode: light worst
+   * adjacent CVD ΔE 24.2; dark 10.3 (the floor band, so segments carry a 2px
+   * surface gap and every value is direct-labelled in the readout).
+   */
+  chartSeries: string[];
+  chartOther: string;
 };
 
 /**
@@ -56,6 +65,8 @@ export const LightColors: ThemeColors = {
   chartAmount: "#26619c",
   chartInterest: "#b26a00",
   chartTrack: "#eceff2",
+  chartSeries: ["#2a78d6", "#1baf7a", "#eda100", "#008300", "#4a3aa7", "#e34948"],
+  chartOther: "#898781",
 };
 
 export const DarkColors: ThemeColors = {
@@ -78,4 +89,6 @@ export const DarkColors: ThemeColors = {
   chartAmount: "#5090cc",
   chartInterest: "#c08420",
   chartTrack: "#2b2b2e",
+  chartSeries: ["#3987e5", "#199e70", "#c98500", "#008300", "#9085e9", "#e66767"],
+  chartOther: "#9ba1a6",
 };

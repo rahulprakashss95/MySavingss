@@ -1,14 +1,14 @@
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, {
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
 
-const SESSION_STORAGE_KEY = "@mysavings/session";
+const SESSION_STORAGE_KEY = "@homevault/session";
 
 export type SessionUser = {
   username: string;

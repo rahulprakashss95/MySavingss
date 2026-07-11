@@ -16,6 +16,13 @@ type IDatePicker = {
 /** The value format `<input type="date">` requires. */
 const ISO_FORMAT = "YYYY-MM-DD";
 
+/**
+ * The exact stack react-native-web applies to Text, so the web date input's
+ * value renders in the same font as the app's other inputs.
+ */
+const FONT_STACK =
+  '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
+
 const parseDisplayDate = (dateString: string) => {
   const parsed = moment(dateString, DATE_FORMAT, true);
   return parsed.isValid() ? parsed : null;
@@ -51,17 +58,30 @@ const DatePicker = (props: IDatePicker) => {
           }}
           style={{
             width: "100%",
+            // Mobile browsers give date inputs an intrinsic min width and native
+            // chrome that overflow the card without these three.
+            minWidth: 0,
             boxSizing: "border-box",
+            WebkitAppearance: "none",
+            MozAppearance: "none",
+            appearance: "none",
             borderWidth: 1,
             borderStyle: "solid",
             borderColor: colors.border,
             backgroundColor: colors.inputBackground,
             color: colors.text,
             borderRadius: 10,
-            padding: 15,
+            paddingTop: 14,
+            paddingBottom: 14,
+            paddingLeft: 12,
+            paddingRight: 12,
             marginBottom: 18,
             fontSize: 16,
-            fontFamily: "inherit",
+            // iOS centers the value by default; keep it left like the other fields.
+            textAlign: "left",
+            // Form controls don't inherit page font — set the same system stack
+            // react-native-web uses for Text so the value matches sibling inputs.
+            fontFamily: FONT_STACK,
             // Without this the browser's calendar glyph stays black on dark.
             colorScheme: isDark ? "dark" : "light",
           }}

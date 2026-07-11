@@ -127,6 +127,37 @@ export const ClientListSkeleton = ({ count = 6 }: { count?: number }) => {
   );
 };
 
+/** Mirrors a grouped list: a section heading over a card of rows. */
+export const GroupedListSkeleton = ({ groups = 2 }: { groups?: number }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
+  return (
+    <View accessibilityLabel="Loading documents">
+      {Array.from({ length: groups }).map((_, groupIndex) => (
+        <View key={groupIndex}>
+          <View style={styles.documentHeader}>
+            <Skeleton width={110} height={12} />
+            <Skeleton width={70} height={12} />
+          </View>
+
+          <View style={styles.documentGroup}>
+            {[0, 1].map((rowIndex) => (
+              <View key={rowIndex} style={styles.documentRow}>
+                <Skeleton width={34} height={34} radius={11} />
+                <View style={styles.clientDetails}>
+                  <Skeleton width={80} height={11} />
+                  <Skeleton width={160} height={18} style={styles.mt6} />
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+};
+
 /** Hero figure, KPI row and two bar cards, matching OverviewScreen. */
 export const OverviewSkeleton = () => {
   const { colors } = useTheme();
@@ -201,6 +232,26 @@ const createStyles = (colors: ThemeColors) =>
     clientRow: {
       flexDirection: "row",
       alignItems: "center",
+    },
+    documentHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginHorizontal: 20,
+      marginBottom: 10,
+    },
+    documentGroup: {
+      backgroundColor: colors.card,
+      borderRadius: 14,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+      marginHorizontal: 16,
+      marginBottom: 26,
+    },
+    documentRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 14,
+      paddingVertical: 14,
     },
     clientDetails: {
       flex: 1,

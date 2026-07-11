@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -18,10 +18,14 @@ import { ThemeColors, tint } from "../utils/Color";
 import { showToast } from "../utils/Utils";
 
 const LoginScreen = () => {
-  const [username, setUsername] = useState("rahul");
-  const [password, setPassword] = useState("rahul@123");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [focusedField, setFocusedField] = useState<"username" | "password" | null>(
+    null
+  );
+  const passwordRef = useRef<TextInput>(null);
   const { signIn } = useAuth();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -71,7 +75,7 @@ const LoginScreen = () => {
           <View style={styles.logo}>
             <Ionicons name="wallet-outline" size={34} color={colors.primary} />
           </View>
-          <Text style={styles.title}>MySavings</Text>
+          <Text style={styles.title}>HomeVault</Text>
           <Text style={styles.subtitle}>
             Sign in to track your deposits and portfolio.
           </Text>
@@ -79,7 +83,12 @@ const LoginScreen = () => {
 
         <View style={styles.card}>
           <Text style={styles.label}>Username</Text>
-          <View style={styles.inputRow}>
+          <View
+            style={[
+              styles.inputRow,
+              focusedField === "username" && styles.inputRowFocused,
+            ]}
+          >
             <Ionicons
               name="person-outline"
               size={18}
@@ -92,13 +101,23 @@ const LoginScreen = () => {
               placeholderTextColor={colors.placeholder}
               value={username}
               onChangeText={setUsername}
+              onFocus={() => setFocusedField("username")}
+              onBlur={() => setFocusedField(null)}
               autoCapitalize="none"
               autoCorrect={false}
+              returnKeyType="next"
+              blurOnSubmit={false}
+              onSubmitEditing={() => passwordRef.current?.focus()}
             />
           </View>
 
           <Text style={[styles.label, styles.labelSpacing]}>Password</Text>
-          <View style={styles.inputRow}>
+          <View
+            style={[
+              styles.inputRow,
+              focusedField === "password" && styles.inputRowFocused,
+            ]}
+          >
             <Ionicons
               name="lock-closed-outline"
               size={18}
@@ -106,11 +125,14 @@ const LoginScreen = () => {
               style={styles.inputIcon}
             />
             <TextInput
+              ref={passwordRef}
               style={styles.input}
               placeholder="Password"
               placeholderTextColor={colors.placeholder}
               value={password}
               onChangeText={setPassword}
+              onFocus={() => setFocusedField("password")}
+              onBlur={() => setFocusedField(null)}
               secureTextEntry={!isPasswordVisible}
               autoCapitalize="none"
               onSubmitEditing={handleLogin}
@@ -209,6 +231,9 @@ const createStyles = (colors: ThemeColors) =>
       backgroundColor: colors.inputBackground,
       borderRadius: 10,
       paddingHorizontal: 12,
+    },
+    inputRowFocused: {
+      borderColor: colors.primary,
     },
     inputIcon: {
       marginRight: 10,

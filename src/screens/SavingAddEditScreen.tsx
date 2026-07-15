@@ -17,8 +17,10 @@ import Button from "../components/Button";
 import DatePicker from "../components/DatePicker";
 import LedgerClientPicker from "../components/LedgerClientPicker";
 import Loader from "../components/Loader";
+import VisibilityToggle from "../components/VisibilityToggle";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import { Visibility } from "../models/common";
 import { SavingModel } from "../models/LedgerModel";
 import { ThemeColors } from "../utils/Color";
 import { DATE_FORMAT } from "../utils/deposits";
@@ -44,6 +46,9 @@ const SavingAddEditScreen = ({ route, navigation }: Props) => {
   const [amount, setAmount] = useState(saving?.amount ?? "");
   const [date, setDate] = useState(saving?.date ?? moment().format(DATE_FORMAT));
   const [comments, setComments] = useState(saving?.comments ?? "");
+  const [visibility, setVisibility] = useState<Visibility>(
+    saving?.visibility ?? "private"
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   const { colors } = useTheme();
@@ -77,6 +82,7 @@ const SavingAddEditScreen = ({ route, navigation }: Props) => {
       amount: amount.trim(),
       date,
       comments: comments.trim(),
+      visibility,
       loginUserId: saving?.loginUserId ?? user?.id ?? "",
     };
 
@@ -117,6 +123,10 @@ const SavingAddEditScreen = ({ route, navigation }: Props) => {
       showsVerticalScrollIndicator={false}
     >
       <Loader loading={isLoading} />
+
+      <View style={styles.card}>
+        <VisibilityToggle value={visibility} onChange={setVisibility} />
+      </View>
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Saving</Text>

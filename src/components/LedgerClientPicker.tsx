@@ -25,7 +25,7 @@ const LedgerClientPicker = ({ selectedId, onSelect }: ILedgerClientPicker) => {
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
-    getLedgerClients(user?.id ?? "")
+    getLedgerClients()
       .then((data) =>
         setClients([...data].sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "")))
       )

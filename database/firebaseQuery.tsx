@@ -8,7 +8,8 @@ import {
   getFirestore,
   query,
   setDoc,
-  where
+  updateDoc,
+  where,
 } from "firebase/firestore";
 import type {
   MetalRates,
@@ -34,11 +35,18 @@ import type {
 } from "../src/models/LedgerModel";
 import type { ClientModel } from "../src/models/ClientModel";
 import type { FixedDepositModel } from "../src/models/FixedDepositModel";
-import type { LoginUserModel } from "../src/models/LoginUserModel";
+import type { LoginUserModel, StoredLoginUser, UserRole } from "../src/models/LoginUserModel";
+import type { FamilyInput, FamilyModel } from "../src/models/FamilyModel";
+import { normalizeFamilyCode } from "../src/models/FamilyModel";
+import type { ModuleKey, Owned, Visibility } from "../src/models/common";
+import { DEFAULT_VISIBILITY, canView } from "../src/models/common";
+import { makeCredential, verifyPassword } from "../src/utils/passwordHash";
 import firebaseDb from "./firebaseDb";
 
 const db = getFirestore(firebaseDb);
 
+const FAMILIES = "families";
+const FAMILY_SETTINGS = "familySettings";
 const LOGIN_USERS = "loginUsers";
 const CLIENTS = "clients";
 const FIXED_DEPOSIT = "fixedDeposit";
@@ -50,76 +58,310 @@ const LEDGER_CLIENTS = "ledgerClients";
 const LEDGER_EARNINGS = "ledgerEarnings";
 const LEDGER_SAVINGS = "ledgerSavings";
 
-/** Every document row stores its own id, so `data()` alone is enough. */
-const listAll = <T,>(collectionName: string) =>
-  getDocs(query(collection(db, collectionName))).then((snapshot) =>
-    snapshot.docs.map((entry) => entry.data() as T)
+/* ------------------------------------------------------------------ *
+ * Active scope
+ *
+ * Every domain read/write is scoped to one family and attributed to one
+ * login user. Rather than thread (familyId, userId) through ~30 screens, the
+ * signed-in scope is set once by AuthContext and read here. Reads filter by
+ * family + visibility; writes stamp family + owner automatically.
+ * ------------------------------------------------------------------ */
+
+type ActiveScope = { familyId: string; userId: string };
+
+let activeScope: ActiveScope | null = null;
+
+export const setActiveScope = (scope: ActiveScope) => {
+  activeScope = scope;
+};
+
+export const clearActiveScope = () => {
+  activeScope = null;
+};
+
+const requireScope = (): ActiveScope => {
+  if (!activeScope) {
+    throw new Error("No active family scope — sign in before reading/writing.");
+  }
+  return activeScope;
+};
+
+/* ------------------------------------------------------------------ *
+ * Generic scoped helpers
+ * ------------------------------------------------------------------ */
+
+/**
+ * Every row in a scoped collection lives in exactly one family. Reads filter to
+ * the active family, then drop private records the current user doesn't own.
+ * With no active scope (e.g. before sign-in) this resolves empty rather than
+ * throwing, so a stray read can't crash the app.
+ */
+const listScoped = <T extends Owned>(collectionName: string): Promise<T[]> => {
+  if (!activeScope) {
+    return Promise.resolve([]);
+  }
+  const { familyId, userId } = activeScope;
+  return getDocs(
+    query(collection(db, collectionName), where("familyId", "==", familyId))
+  ).then((snapshot) =>
+    snapshot.docs
+      .map((entry) => entry.data() as T)
+      .filter((record) => canView(record, userId))
   );
+};
 
 /**
  * setDoc replaces the whole document, so callers must pass every field they
- * want to keep. Passing no refId creates one.
+ * want to keep. On create, the row is stamped with the active family and the
+ * creator as owner; on edit, the original family and owner are preserved (a
+ * non-owner editing a public record must not seize ownership), while a caller
+ * can still change `visibility`. Passing no refId creates a new id.
  */
-const saveRecord = <T,>(collectionName: string, input: T, refId?: string) => {
+const saveScoped = async <T extends { visibility?: Visibility }>(
+  collectionName: string,
+  input: T,
+  refId?: string
+): Promise<string> => {
+  const scope = requireScope();
   const id = refId ?? doc(collection(db, collectionName)).id;
-  return setDoc(doc(db, collectionName, id), { ...input, id }).then(() => id);
+
+  let ownerId = scope.userId;
+  let familyId = scope.familyId;
+  if (refId) {
+    const existing = await getDoc(doc(db, collectionName, refId));
+    if (existing.exists()) {
+      const data = existing.data() as Partial<Owned>;
+      ownerId = data.ownerId ?? ownerId;
+      familyId = data.familyId ?? familyId;
+    }
+  }
+
+  const visibility: Visibility = input.visibility ?? DEFAULT_VISIBILITY;
+  await setDoc(doc(db, collectionName, id), {
+    ...input,
+    visibility,
+    familyId,
+    ownerId,
+    id,
+  });
+  return id;
 };
 
 const deleteRecord = (collectionName: string, id: string) =>
   deleteDoc(doc(db, collectionName, id));
 
-/**
- * Ledger reads are scoped to one login. A missing id resolves empty rather than
- * falling back to an unfiltered read — the failure mode there is showing one
- * user another's earnings.
- */
-const listForUser = <T,>(collectionName: string, loginUserId: string) => {
-  if (!loginUserId) {
-    return Promise.resolve([] as T[]);
-  }
-  return getDocs(
-    query(collection(db, collectionName), where("loginUserId", "==", loginUserId))
-  ).then((snapshot) => snapshot.docs.map((entry) => entry.data() as T));
+/* ------------------------------------------------------------------ *
+ * Families
+ * ------------------------------------------------------------------ */
+
+/** Every registered family, for the login screen's family chooser. */
+export const getFamilies = (): Promise<FamilyModel[]> =>
+  getDocs(query(collection(db, FAMILIES))).then((snapshot) =>
+    snapshot.docs.map((entry) => ({ ...entry.data(), id: entry.id } as FamilyModel))
+  );
+
+/** True if no other family already uses this code (case/space-insensitive). */
+export const isFamilyCodeAvailable = (code: string, exceptId?: string) =>
+  getDocs(
+    query(collection(db, FAMILIES), where("code", "==", normalizeFamilyCode(code)))
+  ).then((snapshot) => snapshot.docs.every((entry) => entry.id === exceptId));
+
+/** Creates a family with an internal immutable id and a normalized code. */
+export const createFamily = (input: FamilyInput): Promise<FamilyModel> => {
+  const id = doc(collection(db, FAMILIES)).id;
+  const family: FamilyModel = {
+    ...input,
+    code: normalizeFamilyCode(input.code),
+    id,
+  };
+  return setDoc(doc(db, FAMILIES, id), family).then(() => family);
 };
 
+export const getFamilyById = (id: string): Promise<FamilyModel | null> =>
+  getDoc(doc(db, FAMILIES, id)).then((snapshot) =>
+    snapshot.exists() ? ({ ...snapshot.data(), id: snapshot.id } as FamilyModel) : null
+  );
+
+export const getFamilyByCode = (code: string): Promise<FamilyModel | null> =>
+  getDocs(
+    query(collection(db, FAMILIES), where("code", "==", normalizeFamilyCode(code)))
+  ).then((snapshot) => {
+    if (snapshot.empty) {
+      return null;
+    }
+    const match = snapshot.docs[0];
+    return { ...match.data(), id: match.id } as FamilyModel;
+  });
+
+/** Admins can rename the family or change its handle without re-stamping rows. */
+export const updateFamily = (id: string, patch: Partial<FamilyInput>) => {
+  const data =
+    patch.code != null
+      ? { ...patch, code: normalizeFamilyCode(patch.code) }
+      : patch;
+  return updateDoc(doc(db, FAMILIES, id), data);
+};
+
+/* ------------------------------------------------------------------ *
+ * Login users
+ * ------------------------------------------------------------------ */
+
 /**
- * Resolves the matching user (with its doc id) or null on bad credentials —
- * never rejects for "not found", so the login spinner can't hang.
+ * Usernames are unique within a family (not globally), so two families can each
+ * have their own "admin" or "dad". Login picks the family first, so the handle
+ * only ever needs to be unique alongside its siblings.
  */
-export const getLoginUser = (username: string, password: string) =>
+export const isUsernameAvailable = (
+  familyId: string,
+  username: string,
+  exceptId?: string
+) =>
   getDocs(
     query(
       collection(db, LOGIN_USERS),
-      where("username", "==", username),
-      where("password", "==", password)
+      where("familyId", "==", familyId),
+      where("username", "==", username.trim())
+    )
+  ).then((snapshot) => snapshot.docs.every((entry) => entry.id === exceptId));
+
+/** Full stored user incl. credentials — only login/admin flows use this. */
+export const getStoredUser = (
+  familyId: string,
+  username: string
+): Promise<StoredLoginUser | null> =>
+  getDocs(
+    query(
+      collection(db, LOGIN_USERS),
+      where("familyId", "==", familyId),
+      where("username", "==", username.trim())
     )
   ).then((snapshot) => {
     if (snapshot.empty) {
       return null;
     }
     const match = snapshot.docs[0];
-    return { ...match.data(), id: match.id };
+    return { ...match.data(), id: match.id } as StoredLoginUser;
   });
 
 /**
- * Every family member's account, for the "person" picker on documents. Only the
- * naming fields are projected — the rest of the row holds credentials.
+ * Resolves the matching user in the chosen family (with its doc id) or null on
+ * bad credentials — never rejects for "not found", so the login spinner can't
+ * hang. Verifies the password against the stored salt, not a plaintext column.
  */
-export const getLoginUsers = () =>
-  getDocs(query(collection(db, LOGIN_USERS))).then((snapshot) =>
-    snapshot.docs.map(
-      (entry) =>
-        ({
-          id: entry.id,
-          username: entry.data().username,
-          name: entry.data().name,
-        } as LoginUserModel)
-    )
+export const authenticate = async (
+  familyId: string,
+  username: string,
+  password: string
+): Promise<StoredLoginUser | null> => {
+  const stored = await getStoredUser(familyId, username);
+  if (!stored) {
+    return null;
+  }
+  const ok = await verifyPassword(password, stored);
+  return ok ? stored : null;
+};
+
+/**
+ * "Forgot Family ID" recovery without email: given a username + password, find
+ * every family where those credentials are valid. Verifies the password before
+ * revealing anything, so it only ever discloses a family to someone who already
+ * has a working account in it. Usually returns exactly one match.
+ */
+export const findFamiliesForCredentials = async (
+  username: string,
+  password: string
+): Promise<{ family: FamilyModel; user: StoredLoginUser }[]> => {
+  const snapshot = await getDocs(
+    query(collection(db, LOGIN_USERS), where("username", "==", username.trim()))
+  );
+  const matches: { family: FamilyModel; user: StoredLoginUser }[] = [];
+  for (const entry of snapshot.docs) {
+    const stored = { ...entry.data(), id: entry.id } as StoredLoginUser;
+    if (await verifyPassword(password, stored)) {
+      const family = await getFamilyById(stored.familyId);
+      if (family) {
+        matches.push({ family, user: stored });
+      }
+    }
+  }
+  return matches;
+};
+
+export type CreateUserInput = {
+  familyId: string;
+  username: string;
+  name?: string;
+  role: UserRole;
+  moduleAccess: ModuleKey[];
+  password: string;
+};
+
+/** Creates a member with a freshly salted+hashed password. */
+export const createLoginUser = async (input: CreateUserInput): Promise<string> => {
+  const id = doc(collection(db, LOGIN_USERS)).id;
+  const credential = await makeCredential(input.password);
+  const { password: _password, name, ...rest } = input;
+  // Firestore rejects `undefined` field values, so store an empty display name
+  // rather than omitting it; displayNameOf() falls back to the username.
+  await setDoc(doc(db, LOGIN_USERS, id), {
+    ...rest,
+    name: name ?? "",
+    ...credential,
+    id,
+  });
+  return id;
+};
+
+/** Profile/access edits only — never touches credentials. */
+export const updateLoginUser = (
+  id: string,
+  patch: Partial<Pick<LoginUserModel, "name" | "role" | "moduleAccess" | "username">>
+) => {
+  // Drop undefined values; Firestore updateDoc rejects them.
+  const clean = Object.fromEntries(
+    Object.entries(patch).filter(([, value]) => value !== undefined)
+  );
+  return updateDoc(doc(db, LOGIN_USERS, id), clean);
+};
+
+export const resetUserPassword = async (id: string, password: string) => {
+  const credential = await makeCredential(password);
+  return updateDoc(doc(db, LOGIN_USERS, id), credential);
+};
+
+export const deleteLoginUser = (id: string) => deleteRecord(LOGIN_USERS, id);
+
+/**
+ * Every member of the active family, projected without credentials. Used by the
+ * admin panel and the "person" pickers on documents and assets.
+ */
+export const getFamilyUsers = (): Promise<LoginUserModel[]> =>
+  getDocs(
+    query(collection(db, LOGIN_USERS), where("familyId", "==", requireScope().familyId))
+  ).then((snapshot) =>
+    snapshot.docs.map((entry) => {
+      const data = entry.data();
+      return {
+        id: entry.id,
+        familyId: data.familyId,
+        username: data.username,
+        name: data.name,
+        role: (data.role ?? "member") as UserRole,
+        moduleAccess: (data.moduleAccess ?? []) as ModuleKey[],
+      } as LoginUserModel;
+    })
   );
 
-export const getClients = () => listAll<ClientModel>(CLIENTS);
+/** Kept name for the person pickers; identical to getFamilyUsers. */
+export const getLoginUsers = getFamilyUsers;
 
-export const getFixedDeposit = () => listAll<FixedDepositModel>(FIXED_DEPOSIT);
+/* ------------------------------------------------------------------ *
+ * Domain collections (all scoped to the active family + visibility)
+ * ------------------------------------------------------------------ */
+
+export const getClients = () => listScoped<ClientModel>(CLIENTS);
+
+export const getFixedDeposit = () => listScoped<FixedDepositModel>(FIXED_DEPOSIT);
 
 export type FixedDepositInput = {
   clientId: string;
@@ -129,15 +371,17 @@ export type FixedDepositInput = {
   interestPercentage: string;
   depositedDate: string;
   maturityDate: string;
-  /** Owning login user. Preserved verbatim on edit so it is never blanked. */
+  /** @deprecated Ownership is now `ownerId`, stamped by the data layer. */
   loginUserId?: string;
   canShow?: boolean;
   isCompleted?: boolean;
+  visibility?: Visibility;
 };
 
 /**
- * setDoc replaces the whole document, so the owner and status flags have to be
- * written back on every save or they'd blank out. Defaults apply on create.
+ * setDoc replaces the whole document, so the status flags have to be written
+ * back on every save or they'd blank out. Family/owner/visibility are stamped
+ * by saveScoped; defaults here cover the status flags on create.
  */
 const withFixedDepositDefaults = (input: FixedDepositInput) => ({
   ...input,
@@ -147,97 +391,100 @@ const withFixedDepositDefaults = (input: FixedDepositInput) => ({
 });
 
 export const addFixedDeposit = (input: FixedDepositInput) =>
-  saveRecord(FIXED_DEPOSIT, withFixedDepositDefaults(input));
+  saveScoped(FIXED_DEPOSIT, withFixedDepositDefaults(input));
 
 export const updateFixedDeposit = (refId: string, input: FixedDepositInput) =>
-  saveRecord(FIXED_DEPOSIT, withFixedDepositDefaults(input), refId);
+  saveScoped(FIXED_DEPOSIT, withFixedDepositDefaults(input), refId);
 
 export const deleteFixedDeposit = (id: string) => deleteRecord(FIXED_DEPOSIT, id);
 
 export const getGovernmentDocuments = () =>
-  listAll<GovernmentDocumentModel>(GOVERNMENT_DOCUMENTS);
+  listScoped<GovernmentDocumentModel>(GOVERNMENT_DOCUMENTS);
 
 export const addGovernmentDocument = (input: GovernmentDocumentInput) =>
-  saveRecord(GOVERNMENT_DOCUMENTS, input);
+  saveScoped(GOVERNMENT_DOCUMENTS, input);
 
 export const updateGovernmentDocument = (
   refId: string,
   input: GovernmentDocumentInput
-) => saveRecord(GOVERNMENT_DOCUMENTS, input, refId);
+) => saveScoped(GOVERNMENT_DOCUMENTS, input, refId);
 
 export const deleteGovernmentDocument = (id: string) =>
   deleteRecord(GOVERNMENT_DOCUMENTS, id);
 
-export const getBankDocuments = () => listAll<BankDocumentModel>(BANK_DOCUMENTS);
+export const getBankDocuments = () => listScoped<BankDocumentModel>(BANK_DOCUMENTS);
 
 export const addBankDocument = (input: BankDocumentInput) =>
-  saveRecord(BANK_DOCUMENTS, input);
+  saveScoped(BANK_DOCUMENTS, input);
 
 export const updateBankDocument = (refId: string, input: BankDocumentInput) =>
-  saveRecord(BANK_DOCUMENTS, input, refId);
+  saveScoped(BANK_DOCUMENTS, input, refId);
 
 export const deleteBankDocument = (id: string) =>
   deleteRecord(BANK_DOCUMENTS, id);
 
-export const getOrnaments = () => listAll<OrnamentModel>(ORNAMENTS);
+export const getOrnaments = () => listScoped<OrnamentModel>(ORNAMENTS);
 
-export const addOrnament = (input: OrnamentInput) => saveRecord(ORNAMENTS, input);
+export const addOrnament = (input: OrnamentInput) => saveScoped(ORNAMENTS, input);
 
 export const updateOrnament = (refId: string, input: OrnamentInput) =>
-  saveRecord(ORNAMENTS, input, refId);
+  saveScoped(ORNAMENTS, input, refId);
 
 export const deleteOrnament = (id: string) => deleteRecord(ORNAMENTS, id);
 
-export const getProperties = () => listAll<PropertyModel>(PROPERTIES);
+export const getProperties = () => listScoped<PropertyModel>(PROPERTIES);
 
-export const addProperty = (input: PropertyInput) => saveRecord(PROPERTIES, input);
+export const addProperty = (input: PropertyInput) => saveScoped(PROPERTIES, input);
 
 /** Payment entries live inside the property document, so this writes them too. */
 export const updateProperty = (refId: string, input: PropertyInput) =>
-  saveRecord(PROPERTIES, input, refId);
+  saveScoped(PROPERTIES, input, refId);
 
 export const deleteProperty = (id: string) => deleteRecord(PROPERTIES, id);
 
-/** A single shared document, not a collection — one rate for the whole family. */
-const METAL_RATES_DOC = doc(db, "settings", "metalRates");
+/**
+ * Metal rates are shared within a family — one rate so everyone's overview
+ * agrees — but not across families. Stored per family under `familySettings`.
+ */
+const metalRatesDoc = () => doc(db, FAMILY_SETTINGS, requireScope().familyId);
 
 export const getMetalRates = () =>
-  getDoc(METAL_RATES_DOC).then((snapshot) =>
-    snapshot.exists() ? ({ ...EMPTY_METAL_RATES, ...snapshot.data() } as MetalRates) : EMPTY_METAL_RATES
+  getDoc(metalRatesDoc()).then((snapshot) =>
+    snapshot.exists()
+      ? ({ ...EMPTY_METAL_RATES, ...snapshot.data() } as MetalRates)
+      : EMPTY_METAL_RATES
   );
 
 export const saveMetalRates = (rates: MetalRates) =>
-  setDoc(METAL_RATES_DOC, rates);
+  setDoc(metalRatesDoc(), rates);
 
-export const getLedgerClients = (loginUserId: string) =>
-  listForUser<LedgerClientModel>(LEDGER_CLIENTS, loginUserId);
+export const getLedgerClients = () =>
+  listScoped<LedgerClientModel>(LEDGER_CLIENTS);
 
 export const addLedgerClient = (input: LedgerClientInput) =>
-  saveRecord(LEDGER_CLIENTS, input);
+  saveScoped(LEDGER_CLIENTS, input);
 
 export const updateLedgerClient = (refId: string, input: LedgerClientInput) =>
-  saveRecord(LEDGER_CLIENTS, input, refId);
+  saveScoped(LEDGER_CLIENTS, input, refId);
 
 export const deleteLedgerClient = (id: string) =>
   deleteRecord(LEDGER_CLIENTS, id);
 
-export const getEarnings = (loginUserId: string) =>
-  listForUser<EarningModel>(LEDGER_EARNINGS, loginUserId);
+export const getEarnings = () => listScoped<EarningModel>(LEDGER_EARNINGS);
 
 export const addEarning = (input: EarningInput) =>
-  saveRecord(LEDGER_EARNINGS, input);
+  saveScoped(LEDGER_EARNINGS, input);
 
 export const updateEarning = (refId: string, input: EarningInput) =>
-  saveRecord(LEDGER_EARNINGS, input, refId);
+  saveScoped(LEDGER_EARNINGS, input, refId);
 
 export const deleteEarning = (id: string) => deleteRecord(LEDGER_EARNINGS, id);
 
-export const getSavings = (loginUserId: string) =>
-  listForUser<SavingModel>(LEDGER_SAVINGS, loginUserId);
+export const getSavings = () => listScoped<SavingModel>(LEDGER_SAVINGS);
 
-export const addSaving = (input: SavingInput) => saveRecord(LEDGER_SAVINGS, input);
+export const addSaving = (input: SavingInput) => saveScoped(LEDGER_SAVINGS, input);
 
 export const updateSaving = (refId: string, input: SavingInput) =>
-  saveRecord(LEDGER_SAVINGS, input, refId);
+  saveScoped(LEDGER_SAVINGS, input, refId);
 
 export const deleteSaving = (id: string) => deleteRecord(LEDGER_SAVINGS, id);

@@ -81,9 +81,34 @@ async function main() {
 
   console.log(`\nDeploying version ${next}...\n`);
   execSync("npm run build-web", { cwd: PROJECT_ROOT, stdio: "inherit" });
+
+  // Resolve the push URL ourselves and pass it via --repo. gh-pages otherwise
+  // auto-detects remote.origin.url by shelling out to git, which fails in some
+  // environments with "Failed to get remote.origin.url"; reading it here keeps
+  // the value in sync with the real remote while removing that dependency.
+  let repoUrl;
+  try {
+    repoUrl = execSync("git config --get remote.origin.url", {
+      cwd: PROJECT_ROOT,
+    })
+      .toString()
+      .trim();
+  } catch {
+    repoUrl = "";
+  }
+  if (!repoUrl) {
+    console.error(
+      "\nCould not resolve remote.origin.url. Set an 'origin' remote (git remote add origin <url>) and retry."
+    );
+    process.exit(1);
+  }
+
   // -t/--dotfiles so the .nojekyll patch-pwa writes gets published; without it
   // GitHub Pages' Jekyll strips the _expo/ bundle folder.
-  execSync("npx gh-pages -d dist -t", { cwd: PROJECT_ROOT, stdio: "inherit" });
+  execSync(`npx gh-pages -d dist -t --repo ${repoUrl}`, {
+    cwd: PROJECT_ROOT,
+    stdio: "inherit",
+  });
   console.log(`\nDeployed version ${next}.`);
 }
 

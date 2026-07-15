@@ -15,7 +15,9 @@ import {
 import Button from "../components/Button";
 import Loader from "../components/Loader";
 import PersonPicker from "../components/PersonPicker";
+import VisibilityToggle from "../components/VisibilityToggle";
 import { useTheme } from "../context/ThemeContext";
+import { Visibility } from "../models/common";
 import { BankDocumentModel } from "../models/DocumentModel";
 import { ThemeColors } from "../utils/Color";
 import {
@@ -46,6 +48,9 @@ const BankDocumentAddEditScreen = ({ route, navigation }: Props) => {
   );
   const [ifsc, setIfsc] = useState(document?.ifsc ?? "");
   const [description, setDescription] = useState(document?.description ?? "");
+  const [visibility, setVisibility] = useState<Visibility>(
+    document?.visibility ?? "private"
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   const { colors } = useTheme();
@@ -87,6 +92,7 @@ const BankDocumentAddEditScreen = ({ route, navigation }: Props) => {
       accountNumber: accountNumber.trim(),
       ifsc: ifsc.trim().toUpperCase(),
       description: description.trim(),
+      visibility,
     };
 
     const save =
@@ -128,6 +134,10 @@ const BankDocumentAddEditScreen = ({ route, navigation }: Props) => {
       showsVerticalScrollIndicator={false}
     >
       <Loader loading={isLoading} />
+
+      <View style={styles.card}>
+        <VisibilityToggle value={visibility} onChange={setVisibility} />
+      </View>
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Account</Text>

@@ -1,10 +1,12 @@
+import type { Creatable, Owned } from "./common";
+
 /**
- * The ledger is private to one login. Unlike documents and assets — which the
- * whole family shares — nothing here is grouped by person, because everything
- * on the screen already belongs to whoever is signed in.
+ * The ledger is inherently personal: its records default to private, so a
+ * member only ever sees their own. Ownership now rides on `ownerId` (from
+ * `Owned`); `loginUserId` is retained for older rows and mirrors `ownerId`.
  */
-type UserOwned = {
-  /** `loginUsers` doc id. Every ledger read is filtered on this. */
+type UserOwned = Owned & {
+  /** @deprecated Mirrors `ownerId`; kept so older rows still read. */
   loginUserId: string;
 };
 
@@ -44,6 +46,6 @@ export type EarningModel = LedgerEntry & {
 
 export type SavingModel = LedgerEntry;
 
-export type LedgerClientInput = Omit<LedgerClientModel, "id">;
-export type EarningInput = Omit<EarningModel, "id">;
-export type SavingInput = Omit<SavingModel, "id">;
+export type LedgerClientInput = Creatable<LedgerClientModel>;
+export type EarningInput = Creatable<EarningModel>;
+export type SavingInput = Creatable<SavingModel>;

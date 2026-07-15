@@ -14,8 +14,10 @@ import {
 } from "../../database/firebaseQuery";
 import Button from "../components/Button";
 import Loader from "../components/Loader";
+import VisibilityToggle from "../components/VisibilityToggle";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import { Visibility } from "../models/common";
 import { LedgerClientModel } from "../models/LedgerModel";
 import { ThemeColors } from "../utils/Color";
 import {
@@ -39,6 +41,9 @@ const LedgerClientAddEditScreen = ({ route, navigation }: Props) => {
   const [phone, setPhone] = useState(client?.phone ?? "");
   const [email, setEmail] = useState(client?.email ?? "");
   const [description, setDescription] = useState(client?.description ?? "");
+  const [visibility, setVisibility] = useState<Visibility>(
+    client?.visibility ?? "private"
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   const { colors } = useTheme();
@@ -57,6 +62,7 @@ const LedgerClientAddEditScreen = ({ route, navigation }: Props) => {
       phone: phone.trim(),
       email: email.trim(),
       description: description.trim(),
+      visibility,
       // setDoc replaces the whole document, so the owner has to be written back
       // on edit or the client would vanish from its owner's ledger.
       loginUserId: client?.loginUserId ?? user?.id ?? "",
@@ -101,6 +107,10 @@ const LedgerClientAddEditScreen = ({ route, navigation }: Props) => {
       showsVerticalScrollIndicator={false}
     >
       <Loader loading={isLoading} />
+
+      <View style={styles.card}>
+        <VisibilityToggle value={visibility} onChange={setVisibility} />
+      </View>
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Client</Text>

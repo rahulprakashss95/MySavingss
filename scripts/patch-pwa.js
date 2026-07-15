@@ -34,6 +34,14 @@ const BASE = (homepage || "/").replace(/\/?$/, "/");
 const APP_NAME = appConfig?.name || "HomeVault";
 const THEME_COLOR = "#26619c";
 
+// Page background behind the React root, per color scheme. Keep in sync with
+// `background` in src/utils/Color.ts (LightColors / DarkColors). Metro's export
+// leaves html/body with no background, so they default to white and bleed
+// through wherever the root doesn't cover the viewport in iOS standalone mode —
+// the white strip at the top/bottom of the installed PWA.
+const BG_LIGHT = "#ffffff";
+const BG_DARK = "#121212";
+
 const ICON_SIZES = [192, 512];
 
 async function generateIcons() {
@@ -89,16 +97,36 @@ function patchIndexHtml() {
   const indexPath = path.join(DIST, "index.html");
   let html = fs.readFileSync(indexPath, "utf8");
 
+  // Match html/body to the app background so no white bleeds past the root in
+  // standalone mode, and stop the overscroll rubber-band that shifts the whole
+  // page (leaving a gap at the top or bottom).
+  const bleedFix = `<style id="pwa-bleed-fix">
+      html, body { background-color: ${BG_LIGHT}; overscroll-behavior: none; }
+      @media (prefers-color-scheme: dark) {
+        html, body { background-color: ${BG_DARK}; }
+      }
+    </style>`;
+
   const tags = [
     `<link rel="manifest" href="${BASE}manifest.json" />`,
     `<meta name="theme-color" content="${THEME_COLOR}" />`,
     `<link rel="apple-touch-icon" href="${BASE}pwa/chrome-icon/chrome-icon-192.png" />`,
+    bleedFix,
   ].join("\n    ");
 
   // Idempotent: don't double-inject if the build is patched twice.
   if (!html.includes('rel="manifest"')) {
     html = html.replace("</head>", `  ${tags}\n  </head>`);
   }
+
+  // viewport-fit=cover lets the page paint under the notch/home-indicator so
+  // the app background (not white) fills the safe areas; also required for
+  // env(safe-area-inset-*) to resolve. Idempotent via the viewport-fit guard.
+  html = html.replace(
+    /(<meta name="viewport" content="[^"]*?)"/,
+    (match, head) =>
+      head.includes("viewport-fit") ? match : `${head}, viewport-fit=cover"`
+  );
 
   // On Windows, Metro emits the CSS href with backslash separators
   // (href="...\static\css\..."). Browsers normalise `\`→`/` for http URLs, but

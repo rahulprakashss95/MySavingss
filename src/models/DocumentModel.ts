@@ -1,3 +1,5 @@
+import type { Creatable, Owned } from "./common";
+
 /** The fixed set of government IDs the picker offers. */
 export const GOVERNMENT_DOCUMENT_TYPES = [
   "Aadhaar",
@@ -5,6 +7,7 @@ export const GOVERNMENT_DOCUMENT_TYPES = [
   "Licence",
   "Voter ID",
   "Passport",
+  "UAN"
 ] as const;
 
 export type GovernmentDocumentType = (typeof GOVERNMENT_DOCUMENT_TYPES)[number];
@@ -21,7 +24,7 @@ type PersonOwned = {
   personName: string;
 };
 
-export type GovernmentDocumentModel = PersonOwned & {
+export type GovernmentDocumentModel = PersonOwned & Owned & {
   id: string;
   /** One of GOVERNMENT_DOCUMENT_TYPES. Typed loosely so older rows still read. */
   documentType: string;
@@ -29,7 +32,7 @@ export type GovernmentDocumentModel = PersonOwned & {
   description: string;
 };
 
-export type BankDocumentModel = PersonOwned & {
+export type BankDocumentModel = PersonOwned & Owned & {
   id: string;
   bankName: string;
   /**
@@ -43,5 +46,5 @@ export type BankDocumentModel = PersonOwned & {
   description: string;
 };
 
-export type GovernmentDocumentInput = Omit<GovernmentDocumentModel, "id">;
-export type BankDocumentInput = Omit<BankDocumentModel, "id">;
+export type GovernmentDocumentInput = Creatable<GovernmentDocumentModel>;
+export type BankDocumentInput = Creatable<BankDocumentModel>;

@@ -1,3 +1,5 @@
+import type { Creatable, Owned } from "./common";
+
 /** Precious metals, in the order the list groups them. */
 export const ORNAMENT_TYPES = ["Gold", "Silver", "Diamond", "Platinum"] as const;
 
@@ -48,7 +50,7 @@ type PersonOwned = {
   personName: string;
 };
 
-export type OrnamentModel = PersonOwned & {
+export type OrnamentModel = PersonOwned & Owned & {
   id: string;
   /** One of ORNAMENT_TYPES. Typed loosely so older rows still read. */
   ornamentType: string;
@@ -81,7 +83,7 @@ export type PaymentEntry = {
   paid: boolean;
 };
 
-export type PropertyModel = PersonOwned & {
+export type PropertyModel = PersonOwned & Owned & {
   id: string;
   /** One of PROPERTY_TYPES. */
   propertyType: string;
@@ -100,8 +102,8 @@ export type PropertyModel = PersonOwned & {
   entries: PaymentEntry[];
 };
 
-export type OrnamentInput = Omit<OrnamentModel, "id">;
-export type PropertyInput = Omit<PropertyModel, "id">;
+export type OrnamentInput = Creatable<OrnamentModel>;
+export type PropertyInput = Creatable<PropertyModel>;
 
 /**
  * Shared across the family: one rate, stored once, so everyone's overview

@@ -12,7 +12,6 @@ import {
   sortByMaturity,
   visibleDeposits,
 } from "../utils/deposits";
-import { filterDepositsForUser, isAdmin } from "../utils/permissions";
 import { useAuth } from "../context/AuthContext";
 import { DepositListSkeleton } from "../components/Skeleton";
 import FDCard from "../components/FDCard";
@@ -29,7 +28,6 @@ const FixedDepositListScreen = ({ navigation }: Props) => {
   const { colors } = useTheme();
   const { user } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const showsAllUsers = isAdmin(user);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener("focus", () => {
@@ -44,11 +42,11 @@ const FixedDepositListScreen = ({ navigation }: Props) => {
     // Both are independent reads — fetch them together.
     Promise.all([getFixedDeposit(), getClients()])
       .then(([deposits, clients]: any[]) => {
+        // The query layer already scopes to the family and the current user's
+        // visible records; this only drops completed/hidden ones.
         const visible = visibleDeposits(deposits as FixedDepositModel[]);
-        // Non-admins only ever see deposits held in their own name.
-        const scoped = filterDepositsForUser(visible, user);
         setFixedDeposits(
-          sortByMaturity(mergeClientNames(scoped, clients as ClientModel[]))
+          sortByMaturity(mergeClientNames(visible, clients as ClientModel[]))
         );
       })
       .catch((error) => {
@@ -91,7 +89,6 @@ const FixedDepositListScreen = ({ navigation }: Props) => {
         <Text style={styles.summaryLabel}>
           {fixedDeposits.length}{" "}
           {fixedDeposits.length === 1 ? "deposit" : "deposits"}
-          {showsAllUsers ? " · all users" : ""}
         </Text>
         <Text style={styles.summaryValue}>₹ {amountFormat(totalAmount)}</Text>
       </View>

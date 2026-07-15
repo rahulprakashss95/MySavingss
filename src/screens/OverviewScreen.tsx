@@ -18,7 +18,6 @@ import {
   mergeClientNames,
   visibleDeposits,
 } from "../utils/deposits";
-import { filterDepositsForUser, isAdmin } from "../utils/permissions";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { ThemeColors } from "../utils/Color";
@@ -32,7 +31,6 @@ const OverviewScreen = () => {
   const [deposits, setDeposits] = useState<FixedDepositModel[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
-  const showsAllUsers = isAdmin(user);
 
   useEffect(() => {
     loadData();
@@ -41,11 +39,10 @@ const OverviewScreen = () => {
   const loadData = () => {
     Promise.all([getFixedDeposit(), getClients()])
       .then(([fixedDeposits, clients]: any[]) => {
-        const visible = visibleDeposits(fixedDeposits as FixedDepositModel[]);
-        // Totals must cover exactly the deposits this user is allowed to see,
+        // The query layer already returns only the deposits this user may see,
         // so the hero figure always agrees with the list.
-        const scoped = filterDepositsForUser(visible, user);
-        setDeposits(mergeClientNames(scoped, clients as ClientModel[]));
+        const visible = visibleDeposits(fixedDeposits as FixedDepositModel[]);
+        setDeposits(mergeClientNames(visible, clients as ClientModel[]));
       })
       .catch((error) => {
         console.log(error);
@@ -113,7 +110,6 @@ const OverviewScreen = () => {
           {totals.depositCount}{" "}
           {totals.depositCount === 1 ? "deposit" : "deposits"} across{" "}
           {totals.bankCount} {totals.bankCount === 1 ? "bank" : "banks"}
-          {showsAllUsers ? " · all users" : ""}
         </Text>
       </View>
 

@@ -28,8 +28,10 @@ import {
   updateFixedDeposit,
 } from "../../database/firebaseQuery";
 import Loader from "../components/Loader";
+import VisibilityToggle from "../components/VisibilityToggle";
 import { useAuth } from "../context/AuthContext";
-import { depositorNameForUser, isAdmin } from "../utils/permissions";
+import { Visibility } from "../models/common";
+import { depositorNameForUser } from "../utils/permissions";
 
 type Props = {
   route: RouteProps;
@@ -60,12 +62,15 @@ const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
   const [maturityDate, setMaturityDate] = useState(
     fixedDeposit?.maturityDate ?? ""
   );
+  const [visibility, setVisibility] = useState<Visibility>(
+    fixedDeposit?.visibility ?? "private"
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   const { colors } = useTheme();
   const { user } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const canChooseDepositor = isAdmin(user);
+  const canChooseDepositor = user?.role === "admin";
 
   useEffect(() => {
     // The picker options are data, not constants: banks come from `clients`
@@ -155,6 +160,7 @@ const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
       interestPercentage,
       depositedDate,
       maturityDate,
+      visibility,
     };
 
     const save =
@@ -207,6 +213,10 @@ const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
       showsVerticalScrollIndicator={false}
     >
       <Loader loading={isLoading} />
+
+      <View style={styles.card}>
+        <VisibilityToggle value={visibility} onChange={setVisibility} />
+      </View>
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Deposit</Text>

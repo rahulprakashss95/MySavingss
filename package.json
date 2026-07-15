@@ -1,6 +1,6 @@
 {
   "name": "homevault",
-  "version": "1.0.80",
+  "version": "1.0.86",
   "homepage": "/HomeVault/",
   "scripts": {
     "start": "expo start --dev-client",
@@ -24,6 +24,7 @@
     "axios": "^1.6.8",
     "expo": "^51.0.0",
     "expo-clipboard": "~6.0.3",
+    "expo-crypto": "~13.0.2",
     "expo-local-authentication": "~14.0.1",
     "expo-splash-screen": "~0.27.7",
     "expo-status-bar": "~1.12.1",

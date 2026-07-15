@@ -1,11 +1,13 @@
 import React, { useMemo } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import * as Clipboard from "expo-clipboard";
 import Card from "../components/Card";
 import { confirmSignOut } from "../components/HeaderActions";
 import { useAuth } from "../context/AuthContext";
 import { ThemeMode, useTheme } from "../context/ThemeContext";
 import { ThemeColors } from "../utils/Color";
+import { showToast } from "../utils/Utils";
 
 const THEME_OPTIONS: {
   mode: ThemeMode;
@@ -37,6 +39,12 @@ const SettingsScreen = () => {
   const { mode, setMode, colors } = useTheme();
   const { user, signOut } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
+
+  const copyFamilyId = async () => {
+    if (!user?.familyCode) return;
+    await Clipboard.setStringAsync(user.familyCode);
+    showToast("success", "Copied", `Family ID "${user.familyCode}" copied.`, "bottom");
+  };
 
   return (
     <ScrollView
@@ -75,6 +83,40 @@ const SettingsScreen = () => {
           );
         })}
       </Card>
+
+      {!!user?.familyCode && (
+        <>
+          <Text style={styles.sectionTitle}>Family</Text>
+          <Card customStyle={styles.card}>
+            <View style={[styles.row, styles.accountRow]}>
+              <Ionicons name="home-outline" size={22} color={colors.textMuted} />
+              <View style={styles.rowText}>
+                <Text style={styles.rowLabel}>
+                  {user.familyName || "Your family"}
+                </Text>
+                <Text style={styles.rowDescription}>Your family</Text>
+              </View>
+            </View>
+            <Pressable
+              onPress={copyFamilyId}
+              accessibilityRole="button"
+              accessibilityLabel="Copy Family ID"
+              style={({ pressed }) => [
+                styles.row,
+                styles.rowDivider,
+                pressed && styles.rowPressed,
+              ]}
+            >
+              <Ionicons name="key-outline" size={22} color={colors.textMuted} />
+              <View style={styles.rowText}>
+                <Text style={styles.rowLabel}>Family ID</Text>
+                <Text style={styles.rowDescription}>{user.familyCode}</Text>
+              </View>
+              <Ionicons name="copy-outline" size={20} color={colors.primary} />
+            </Pressable>
+          </Card>
+        </>
+      )}
 
       <Text style={styles.sectionTitle}>Account</Text>
       <Card customStyle={styles.card}>

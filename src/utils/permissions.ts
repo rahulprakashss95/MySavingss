@@ -1,13 +1,10 @@
 import { SessionUser } from "../context/AuthContext";
 import { FixedDepositModel } from "../models/FixedDepositModel";
 
-/** The one privileged account. Everyone else only sees their own deposits. */
-export const ADMIN_USERNAME = "admin";
-
 const normalize = (value?: string | null) => (value ?? "").trim().toLowerCase();
 
-export const isAdmin = (user: SessionUser | null) =>
-  normalize(user?.username) === ADMIN_USERNAME;
+/** Family admins, by role. Data visibility is enforced in the query layer. */
+export const isAdmin = (user: SessionUser | null) => user?.role === "admin";
 
 /**
  * Deposits are owned by `depositorName`, which is a display name rather than a

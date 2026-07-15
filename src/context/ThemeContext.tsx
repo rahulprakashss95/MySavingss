@@ -7,7 +7,7 @@ import React, {
     useMemo,
     useState,
 } from "react";
-import { useColorScheme } from "react-native";
+import { Platform, useColorScheme } from "react-native";
 import { DarkColors, LightColors, ThemeColors } from "../utils/Color";
 
 export type ThemeMode = "system" | "light" | "dark";
@@ -59,6 +59,17 @@ export const ThemeProvider = ({ children }: Props) => {
   }, []);
 
   const isDark = mode === "system" ? systemScheme === "dark" : mode === "dark";
+
+  // On web, paint html/body to match the active theme. The static CSS in
+  // index.html only follows the OS scheme; this also covers a manual override
+  // (e.g. forcing light while the OS is dark), so no white/black bleeds past
+  // the app root in the installed PWA.
+  useEffect(() => {
+    if (Platform.OS !== "web" || typeof document === "undefined") return;
+    const background = (isDark ? DarkColors : LightColors).background;
+    document.documentElement.style.backgroundColor = background;
+    document.body.style.backgroundColor = background;
+  }, [isDark]);
 
   const value = useMemo<ThemeContextValue>(
     () => ({

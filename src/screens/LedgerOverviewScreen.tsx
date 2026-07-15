@@ -40,7 +40,7 @@ const LedgerOverviewScreen = ({ navigation }: Props) => {
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const load = () => {
-    Promise.all([getEarnings(user?.id ?? ""), getSavings(user?.id ?? "")])
+    Promise.all([getEarnings(), getSavings()])
       .then(([earningData, savingData]) => {
         setEarnings(earningData ?? []);
         setSavings(savingData ?? []);

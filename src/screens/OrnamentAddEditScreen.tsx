@@ -17,7 +17,9 @@ import Button from "../components/Button";
 import DualUnitInput from "../components/DualUnitInput";
 import Loader from "../components/Loader";
 import PersonPicker from "../components/PersonPicker";
+import VisibilityToggle from "../components/VisibilityToggle";
 import { useTheme } from "../context/ThemeContext";
+import { Visibility } from "../models/common";
 import {
   DEFAULT_GOLD_KARAT,
   GOLD_KARATS,
@@ -52,6 +54,9 @@ const OrnamentAddEditScreen = ({ route, navigation }: Props) => {
   const [count, setCount] = useState(ornament?.count ?? "1");
   const [grams, setGrams] = useState(ornament?.grams ?? "");
   const [description, setDescription] = useState(ornament?.description ?? "");
+  const [visibility, setVisibility] = useState<Visibility>(
+    ornament?.visibility ?? "private"
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   const { colors } = useTheme();
@@ -92,6 +97,7 @@ const OrnamentAddEditScreen = ({ route, navigation }: Props) => {
       count: count.trim() || "1",
       grams: grams.trim(),
       description: description.trim(),
+      visibility,
     };
 
     const save =
@@ -133,6 +139,10 @@ const OrnamentAddEditScreen = ({ route, navigation }: Props) => {
       showsVerticalScrollIndicator={false}
     >
       <Loader loading={isLoading} />
+
+      <View style={styles.card}>
+        <VisibilityToggle value={visibility} onChange={setVisibility} />
+      </View>
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Ornament</Text>

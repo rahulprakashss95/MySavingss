@@ -20,7 +20,7 @@ const LedgerClientListScreen = ({ navigation }: Props) => {
   const { colors } = useTheme();
   const { user } = useAuth();
   const { items, ...list } = useCollection<LedgerClientModel>(
-    () => getLedgerClients(user?.id ?? ""),
+    () => getLedgerClients(),
     navigation,
     "Unable to load clients"
   );

@@ -17,6 +17,7 @@ import { useAuth } from "../context/AuthContext";
 import { useDrawer } from "../context/DrawerContext";
 import { useTheme } from "../context/ThemeContext";
 import { navigationRef } from "../navigation/navigationRef";
+import { ModuleKey } from "../models/common";
 import { ThemeColors, tint } from "../utils/Color";
 import { confirmSignOut } from "./HeaderActions";
 
@@ -24,15 +25,23 @@ type ScreenName = keyof RootStackParamList;
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
 
 type Leaf = { label: string; icon: IconName; screen: ScreenName };
-type Node = Leaf | { label: string; icon: IconName; children: Leaf[] };
+type Group = {
+  label: string;
+  icon: IconName;
+  /** Module this group belongs to; only shown if the user can access it. */
+  module: ModuleKey;
+  children: Leaf[];
+};
+type Node = Leaf | Group;
 
 // The drawer mirrors the app's screen hierarchy as a tree: top-level
-// destinations plus one expandable "Deposits" group.
+// destinations plus one expandable group per module.
 const TREE: Node[] = [
   { label: "Home", icon: "home-outline", screen: "Home" },
   {
     label: "Deposits",
     icon: "card-outline",
+    module: "deposits",
     children: [
       { label: "Fixed Deposits", icon: "cash-outline", screen: "FixedDepositList" },
       { label: "Clients", icon: "people-outline", screen: "Clients" },
@@ -42,6 +51,7 @@ const TREE: Node[] = [
   {
     label: "Documents",
     icon: "document-text-outline",
+    module: "documents",
     children: [
       { label: "Government", icon: "shield-checkmark-outline", screen: "GovernmentDocumentList" },
       { label: "Bank", icon: "business-outline", screen: "BankDocumentList" },
@@ -50,6 +60,7 @@ const TREE: Node[] = [
   {
     label: "Assets",
     icon: "cube-outline",
+    module: "assets",
     children: [
       { label: "Ornaments", icon: "ribbon-outline", screen: "OrnamentList" },
       { label: "Properties", icon: "home-outline", screen: "PropertyList" },
@@ -59,6 +70,7 @@ const TREE: Node[] = [
   {
     label: "Ledger",
     icon: "book-outline",
+    module: "ledger",
     children: [
       { label: "Earnings", icon: "trending-up-outline", screen: "EarningList" },
       { label: "Savings", icon: "wallet-outline", screen: "SavingList" },
@@ -69,8 +81,7 @@ const TREE: Node[] = [
   { label: "Settings", icon: "settings-outline", screen: "Settings" },
 ];
 
-const isGroup = (node: Node): node is Extract<Node, { children: Leaf[] }> =>
-  "children" in node;
+const isGroup = (node: Node): node is Group => "children" in node;
 
 const SideDrawer = () => {
   const { colors } = useTheme();
@@ -146,6 +157,21 @@ const SideDrawer = () => {
   const displayName = user?.name || user?.username || "Guest";
   const initial = displayName.trim().charAt(0).toUpperCase() || "?";
 
+  const isAdmin = user?.role === "admin";
+  const canAccess = (module: ModuleKey) =>
+    isAdmin || !!user?.moduleAccess?.includes(module);
+  // Hide module groups the member can't open; admins see everything, plus a
+  // "Family Admin" destination.
+  const visibleTree = TREE.filter((node) =>
+    isGroup(node) ? canAccess(node.module) : true
+  );
+  const nodes: Node[] = isAdmin
+    ? [
+        ...visibleTree,
+        { label: "Family Admin", icon: "shield-outline", screen: "Admin" },
+      ]
+    : visibleTree;
+
   const go = (screen: ScreenName) => {
     close();
     if (navigationRef.isReady()) {
@@ -217,6 +243,11 @@ const SideDrawer = () => {
                 @{user.username}
               </Text>
             )}
+            {!!user?.familyName && (
+              <Text style={styles.family} numberOfLines={1}>
+                {user.familyName}
+              </Text>
+            )}
           </View>
         </View>
 
@@ -225,7 +256,7 @@ const SideDrawer = () => {
           contentContainerStyle={styles.treeContent}
           showsVerticalScrollIndicator={false}
         >
-          {TREE.map((node) => {
+          {nodes.map((node) => {
             if (!isGroup(node)) {
               return renderLeaf(node, false);
             }
@@ -346,6 +377,13 @@ const createStyles = (colors: ThemeColors) =>
       fontSize: 13,
       color: colors.textMuted,
       marginTop: 2,
+    },
+    family: {
+      fontSize: 12,
+      fontWeight: "600",
+      color: colors.primary,
+      marginTop: 4,
+      textTransform: "capitalize",
     },
     tree: {
       flex: 1,

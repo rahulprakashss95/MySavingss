@@ -16,7 +16,7 @@ const EarningListScreen = ({ navigation }: Props) => {
   const { colors } = useTheme();
   const { user } = useAuth();
   const { items, ...list } = useCollection<EarningModel>(
-    () => getEarnings(user?.id ?? ""),
+    () => getEarnings(),
     navigation,
     "Unable to load earnings"
   );

@@ -18,8 +18,10 @@ import Button from "../components/Button";
 import DatePicker from "../components/DatePicker";
 import LedgerClientPicker from "../components/LedgerClientPicker";
 import Loader from "../components/Loader";
+import VisibilityToggle from "../components/VisibilityToggle";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import { Visibility } from "../models/common";
 import { EARNING_TYPES, EarningModel } from "../models/LedgerModel";
 import { ThemeColors } from "../utils/Color";
 import { DATE_FORMAT } from "../utils/deposits";
@@ -49,6 +51,9 @@ const EarningAddEditScreen = ({ route, navigation }: Props) => {
     earning?.date ?? moment().format(DATE_FORMAT)
   );
   const [comments, setComments] = useState(earning?.comments ?? "");
+  const [visibility, setVisibility] = useState<Visibility>(
+    earning?.visibility ?? "private"
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   const { colors } = useTheme();
@@ -84,6 +89,7 @@ const EarningAddEditScreen = ({ route, navigation }: Props) => {
       amount: amount.trim(),
       date,
       comments: comments.trim(),
+      visibility,
       loginUserId: earning?.loginUserId ?? user?.id ?? "",
     };
 
@@ -126,6 +132,10 @@ const EarningAddEditScreen = ({ route, navigation }: Props) => {
       showsVerticalScrollIndicator={false}
     >
       <Loader loading={isLoading} />
+
+      <View style={styles.card}>
+        <VisibilityToggle value={visibility} onChange={setVisibility} />
+      </View>
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Earning</Text>

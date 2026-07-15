@@ -16,7 +16,7 @@ const SavingListScreen = ({ navigation }: Props) => {
   const { colors } = useTheme();
   const { user } = useAuth();
   const { items, ...list } = useCollection<SavingModel>(
-    () => getSavings(user?.id ?? ""),
+    () => getSavings(),
     navigation,
     "Unable to load savings"
   );

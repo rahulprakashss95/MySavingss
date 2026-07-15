@@ -19,7 +19,9 @@ import DualUnitInput from "../components/DualUnitInput";
 import Loader from "../components/Loader";
 import PersonPicker from "../components/PersonPicker";
 import ProgressBar from "../components/ProgressBar";
+import VisibilityToggle from "../components/VisibilityToggle";
 import { useTheme } from "../context/ThemeContext";
+import { Visibility } from "../models/common";
 import {
   CENTS_PER_ACRE_LABEL,
   PaymentMode,
@@ -64,6 +66,9 @@ const PropertyAddEditScreen = ({ route, navigation }: Props) => {
   const [totalAmount, setTotalAmount] = useState(property?.totalAmount ?? "");
   const [lender, setLender] = useState(property?.lender ?? "");
   const [interestRate, setInterestRate] = useState(property?.interestRate ?? "");
+  const [visibility, setVisibility] = useState<Visibility>(
+    property?.visibility ?? "private"
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   const { colors } = useTheme();
@@ -108,6 +113,7 @@ const PropertyAddEditScreen = ({ route, navigation }: Props) => {
     lender: paymentMode === "loan" ? lender.trim() : "",
     interestRate: paymentMode === "loan" ? interestRate.trim() : "",
     entries,
+    visibility,
   });
 
   const handleSave = () => {
@@ -185,6 +191,10 @@ const PropertyAddEditScreen = ({ route, navigation }: Props) => {
       showsVerticalScrollIndicator={false}
     >
       <Loader loading={isLoading} />
+
+      <View style={styles.card}>
+        <VisibilityToggle value={visibility} onChange={setVisibility} />
+      </View>
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Property</Text>

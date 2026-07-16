@@ -16,9 +16,12 @@ import {
 import Button from "../components/Button";
 import Loader from "../components/Loader";
 import PersonPicker from "../components/PersonPicker";
+import ReadOnlyBanner from "../components/ReadOnlyBanner";
+import ReadOnlyGuard from "../components/ReadOnlyGuard";
 import VisibilityToggle from "../components/VisibilityToggle";
+import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
-import { Visibility } from "../models/common";
+import { canEdit, Visibility } from "../models/common";
 import {
   GOVERNMENT_DOCUMENT_TYPES,
   GovernmentDocumentModel,
@@ -54,7 +57,11 @@ const GovernmentDocumentAddEditScreen = ({ route, navigation }: Props) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { colors } = useTheme();
+  const { user } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
+
+  // Public records are viewable family-wide but editable only by their owner.
+  const readOnly = pageMode === "Edit" && !canEdit(document!, user?.id);
 
   const selectPerson = (id: string, name: string) => {
     setPersonId(id);
@@ -126,6 +133,9 @@ const GovernmentDocumentAddEditScreen = ({ route, navigation }: Props) => {
     >
       <Loader loading={isLoading} />
 
+      <ReadOnlyBanner show={readOnly} />
+
+      <ReadOnlyGuard active={readOnly}>
       <View style={styles.card}>
         <VisibilityToggle value={visibility} onChange={setVisibility} />
       </View>
@@ -135,6 +145,7 @@ const GovernmentDocumentAddEditScreen = ({ route, navigation }: Props) => {
 
         <PersonPicker
           selectedId={personId}
+          selectedName={personName}
           onSelect={selectPerson}
           autoSelectSelf={pageMode === "Add"}
         />
@@ -194,13 +205,17 @@ const GovernmentDocumentAddEditScreen = ({ route, navigation }: Props) => {
         />
       </View>
 
-      <Button
-        title={pageMode === "Add" ? "Add document" : "Save changes"}
-        onPress={handleSave}
-        buttonStyle={styles.primaryButton}
-      />
+      </ReadOnlyGuard>
 
-      {pageMode !== "Add" && (
+      {!readOnly && (
+        <Button
+          title={pageMode === "Add" ? "Add document" : "Save changes"}
+          onPress={handleSave}
+          buttonStyle={styles.primaryButton}
+        />
+      )}
+
+      {pageMode !== "Add" && !readOnly && (
         <Pressable
           onPress={handleDelete}
           accessibilityRole="button"

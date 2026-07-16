@@ -28,9 +28,11 @@ import {
   updateFixedDeposit,
 } from "../../database/firebaseQuery";
 import Loader from "../components/Loader";
+import ReadOnlyBanner from "../components/ReadOnlyBanner";
+import ReadOnlyGuard from "../components/ReadOnlyGuard";
 import VisibilityToggle from "../components/VisibilityToggle";
 import { useAuth } from "../context/AuthContext";
-import { Visibility } from "../models/common";
+import { canEdit, Visibility } from "../models/common";
 import { depositorNameForUser } from "../utils/permissions";
 
 type Props = {
@@ -70,6 +72,9 @@ const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
   const { colors } = useTheme();
   const { user } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
+
+  // Public deposits are viewable family-wide but editable only by their owner.
+  const readOnly = pageMode === "Edit" && !canEdit(fixedDeposit, user?.id);
 
   useEffect(() => {
     // The picker options are data, not constants: banks come from `clients`
@@ -203,6 +208,9 @@ const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
     >
       <Loader loading={isLoading} />
 
+      <ReadOnlyBanner show={readOnly} />
+
+      <ReadOnlyGuard active={readOnly}>
       <View style={styles.card}>
         <VisibilityToggle value={visibility} onChange={setVisibility} />
       </View>
@@ -334,13 +342,17 @@ const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
         />
       </View>
 
-      <Button
-        title={pageMode == "Add" ? "Add deposit" : "Save changes"}
-        onPress={handleUpdate}
-        buttonStyle={styles.primaryButton}
-      />
+      </ReadOnlyGuard>
 
-      {pageMode !== "Add" && (
+      {!readOnly && (
+        <Button
+          title={pageMode == "Add" ? "Add deposit" : "Save changes"}
+          onPress={handleUpdate}
+          buttonStyle={styles.primaryButton}
+        />
+      )}
+
+      {pageMode !== "Add" && !readOnly && (
         <Pressable
           onPress={handleDelete}
           accessibilityRole="button"

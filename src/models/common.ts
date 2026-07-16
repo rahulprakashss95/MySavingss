@@ -71,3 +71,13 @@ export const canView = (
   }
   return !!userId && record.ownerId === userId;
 };
+
+/**
+ * True if `user` may modify or delete `record`. Only the creator can: a public
+ * record is visible to the whole family (see `canView`) but stays editable by
+ * its owner alone, so one member can't change or remove another's data.
+ */
+export const canEdit = (
+  record: Partial<Owned>,
+  userId: string | undefined
+): boolean => !!userId && record.ownerId === userId;

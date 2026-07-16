@@ -22,6 +22,7 @@ import {
   updateFamily,
   updateLoginUser,
 } from "../../database/firebaseQuery";
+import Toast from "react-native-toast-message";
 import Button from "../components/Button";
 import ModuleAccessPicker from "../components/ModuleAccessPicker";
 import { useAuth } from "../context/AuthContext";
@@ -76,7 +77,11 @@ const AdminScreen = () => {
     ])
       .then(([rows, familyDoc]) => {
         setMembers(
-          rows.sort((a, b) => displayNameOf(a).localeCompare(displayNameOf(b)))
+          rows.sort((a, b) => {
+            // Admins first, then everyone else alphabetically.
+            if (a.role !== b.role) return a.role === "admin" ? -1 : 1;
+            return displayNameOf(a).localeCompare(displayNameOf(b));
+          })
         );
         // The family doc is the source of truth for the email (the session
         // doesn't carry it); name/code stay in sync too.
@@ -467,6 +472,9 @@ const AdminScreen = () => {
             </ScrollView>
           </View>
         </View>
+        {/* A Modal renders above the app-root <Toast />, so mount a second
+            Toast inside it to keep toasts visible while the modal is open. */}
+        <Toast />
       </Modal>
     </ScrollView>
   );

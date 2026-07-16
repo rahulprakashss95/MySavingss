@@ -1,12 +1,10 @@
 import { Picker } from "@react-native-picker/picker";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { getLoginUsers } from "../../database/firebaseQuery";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
-import { displayNameOf, LoginUserModel } from "../models/LoginUserModel";
+import { displayNameOf } from "../models/LoginUserModel";
 import { ThemeColors } from "../utils/Color";
-import { showToast } from "../utils/Utils";
 
 type IPersonPicker = {
   selectedId: string;
@@ -14,52 +12,47 @@ type IPersonPicker = {
   onSelect: (personId: string, personName: string) => void;
   /** On a new document, preselect whoever is signed in. */
   autoSelectSelf?: boolean;
+  /**
+   * The stored person name for `selectedId`. Only needed when viewing another
+   * member's record (read-only): that person isn't the signed-in user, so the
+   * picker has no option for them and falls back to this label to stay filled.
+   */
+  selectedName?: string;
 };
 
 /**
- * Whose document is this? Options are the family's login accounts, so the
- * spelling of a name is decided once, at signup, and never drifts across rows.
+ * Whose document is this? Each member records only their own data, so the only
+ * option offered is the signed-in user — other family members' names are never
+ * listed, and a record can't be attributed to someone else. When an existing
+ * record belongs to someone else (a shared record opened read-only), their
+ * stored name is shown as a non-selectable option so the field isn't blank.
  */
 const PersonPicker = ({
   selectedId,
   onSelect,
   autoSelectSelf,
+  selectedName,
 }: IPersonPicker) => {
-  const [people, setPeople] = useState<LoginUserModel[]>([]);
   const { colors } = useTheme();
   const { user } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  useEffect(() => {
-    getLoginUsers()
-      .then((users) => {
-        const sorted = [...users].sort((a, b) =>
-          displayNameOf(a).localeCompare(displayNameOf(b))
-        );
-        setPeople(sorted);
+  const selfName = user ? displayNameOf(user) : "";
+  // A record owned by another member: their id matches no offered option, so
+  // add their stored name purely so the picker displays a value.
+  const showsOther = !!selectedId && selectedId !== user?.id;
 
-        if (!autoSelectSelf || selectedId) {
-          return;
-        }
-        const self = sorted.find((person) => person.id === user?.id);
-        if (self) {
-          onSelect(self.id, displayNameOf(self));
-        }
-      })
-      .catch((error) => {
-        console.log(error);
-        showToast(
-          "error",
-          "Unable to load people",
-          "The list of family members could not be fetched.",
-          "bottom"
-        );
-      });
+  useEffect(() => {
+    if (!autoSelectSelf || selectedId || !user) {
+      return;
+    }
+    onSelect(user.id, selfName);
   }, [user]);
 
-  const handleChange = (personId: string) => {
-    const person = people.find((candidate) => candidate.id === personId);
-    onSelect(personId, person ? displayNameOf(person) : "");
+  const handleChange = (id: string) => {
+    if (id === user?.id) return onSelect(id, selfName);
+    if (id === selectedId) return onSelect(id, selectedName ?? "");
+    onSelect(id, "");
   };
 
   return (
@@ -79,15 +72,22 @@ const PersonPicker = ({
             color={colors.placeholder}
             style={styles.pickerItem}
           />
-          {people.map((person) => (
+          {user && (
             <Picker.Item
-              key={person.id}
-              label={displayNameOf(person)}
-              value={person.id}
+              label={selfName}
+              value={user.id}
               color={colors.text}
               style={styles.pickerItem}
             />
-          ))}
+          )}
+          {showsOther && (
+            <Picker.Item
+              label={selectedName || "—"}
+              value={selectedId}
+              color={colors.text}
+              style={styles.pickerItem}
+            />
+          )}
         </Picker>
       </View>
     </>

@@ -17,9 +17,12 @@ import Button from "../components/Button";
 import DatePicker from "../components/DatePicker";
 import LedgerClientPicker from "../components/LedgerClientPicker";
 import Loader from "../components/Loader";
+import ReadOnlyBanner from "../components/ReadOnlyBanner";
+import ReadOnlyGuard from "../components/ReadOnlyGuard";
 import VisibilityToggle from "../components/VisibilityToggle";
+import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
-import { Visibility } from "../models/common";
+import { canEdit, Visibility } from "../models/common";
 import { SavingModel } from "../models/LedgerModel";
 import { ThemeColors } from "../utils/Color";
 import { DATE_FORMAT } from "../utils/deposits";
@@ -51,7 +54,11 @@ const SavingAddEditScreen = ({ route, navigation }: Props) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { colors } = useTheme();
+  const { user } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
+
+  // Public records are viewable family-wide but editable only by their owner.
+  const readOnly = pageMode === "Edit" && !canEdit(saving!, user?.id);
 
   const selectClient = (id: string, label: string) => {
     setClientId(id);
@@ -121,6 +128,9 @@ const SavingAddEditScreen = ({ route, navigation }: Props) => {
     >
       <Loader loading={isLoading} />
 
+      <ReadOnlyBanner show={readOnly} />
+
+      <ReadOnlyGuard active={readOnly}>
       <View style={styles.card}>
         <VisibilityToggle value={visibility} onChange={setVisibility} />
       </View>
@@ -166,13 +176,17 @@ const SavingAddEditScreen = ({ route, navigation }: Props) => {
         />
       </View>
 
-      <Button
-        title={pageMode === "Add" ? "Add saving" : "Save changes"}
-        onPress={handleSave}
-        buttonStyle={styles.primaryButton}
-      />
+      </ReadOnlyGuard>
 
-      {pageMode !== "Add" && (
+      {!readOnly && (
+        <Button
+          title={pageMode === "Add" ? "Add saving" : "Save changes"}
+          onPress={handleSave}
+          buttonStyle={styles.primaryButton}
+        />
+      )}
+
+      {pageMode !== "Add" && !readOnly && (
         <Pressable
           onPress={handleDelete}
           accessibilityRole="button"

@@ -17,9 +17,12 @@ import Button from "../components/Button";
 import DualUnitInput from "../components/DualUnitInput";
 import Loader from "../components/Loader";
 import PersonPicker from "../components/PersonPicker";
+import ReadOnlyBanner from "../components/ReadOnlyBanner";
+import ReadOnlyGuard from "../components/ReadOnlyGuard";
 import VisibilityToggle from "../components/VisibilityToggle";
+import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
-import { Visibility } from "../models/common";
+import { canEdit, Visibility } from "../models/common";
 import {
   DEFAULT_GOLD_KARAT,
   GOLD_KARATS,
@@ -60,7 +63,12 @@ const OrnamentAddEditScreen = ({ route, navigation }: Props) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { colors } = useTheme();
+  const { user } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
+
+  // A public record is visible to the whole family but editable only by its
+  // owner; anyone else lands here in view-only mode.
+  const readOnly = pageMode === "Edit" && !canEdit(ornament!, user?.id);
 
   // Only gold is karated. Silver and stones have no purity to record.
   const isGold = ornamentType === "Gold";
@@ -140,6 +148,9 @@ const OrnamentAddEditScreen = ({ route, navigation }: Props) => {
     >
       <Loader loading={isLoading} />
 
+      <ReadOnlyBanner show={readOnly} />
+
+      <ReadOnlyGuard active={readOnly}>
       <View style={styles.card}>
         <VisibilityToggle value={visibility} onChange={setVisibility} />
       </View>
@@ -149,6 +160,7 @@ const OrnamentAddEditScreen = ({ route, navigation }: Props) => {
 
         <PersonPicker
           selectedId={personId}
+          selectedName={personName}
           onSelect={selectPerson}
           autoSelectSelf={pageMode === "Add"}
         />
@@ -252,13 +264,17 @@ const OrnamentAddEditScreen = ({ route, navigation }: Props) => {
         />
       </View>
 
-      <Button
-        title={pageMode === "Add" ? "Add ornament" : "Save changes"}
-        onPress={handleSave}
-        buttonStyle={styles.primaryButton}
-      />
+      </ReadOnlyGuard>
 
-      {pageMode !== "Add" && (
+      {!readOnly && (
+        <Button
+          title={pageMode === "Add" ? "Add ornament" : "Save changes"}
+          onPress={handleSave}
+          buttonStyle={styles.primaryButton}
+        />
+      )}
+
+      {pageMode !== "Add" && !readOnly && (
         <Pressable
           onPress={handleDelete}
           accessibilityRole="button"

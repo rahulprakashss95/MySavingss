@@ -39,7 +39,7 @@ import type { LoginUserModel, StoredLoginUser, UserRole } from "../src/models/Lo
 import type { FamilyInput, FamilyModel } from "../src/models/FamilyModel";
 import { normalizeFamilyCode } from "../src/models/FamilyModel";
 import type { ModuleKey, Owned, Visibility } from "../src/models/common";
-import { DEFAULT_VISIBILITY, canView } from "../src/models/common";
+import { DEFAULT_VISIBILITY, canView, canEdit } from "../src/models/common";
 import { makeCredential, verifyPassword } from "../src/utils/passwordHash";
 import firebaseDb from "./firebaseDb";
 
@@ -131,6 +131,11 @@ const saveScoped = async <T extends { visibility?: Visibility }>(
     const existing = await getDoc(doc(db, collectionName, refId));
     if (existing.exists()) {
       const data = existing.data() as Partial<Owned>;
+      // Only the creator may edit an existing record. Public records are
+      // visible to the whole family but must not be editable by anyone else.
+      if (!canEdit(data, scope.userId)) {
+        throw new Error("You can only edit records you created.");
+      }
       ownerId = data.ownerId ?? ownerId;
       familyId = data.familyId ?? familyId;
     }
@@ -147,8 +152,19 @@ const saveScoped = async <T extends { visibility?: Visibility }>(
   return id;
 };
 
-const deleteRecord = (collectionName: string, id: string) =>
-  deleteDoc(doc(db, collectionName, id));
+/**
+ * Deletes a scoped record, but only for its owner. Public records stay
+ * removable by their creator alone — another family member who can see one
+ * still can't delete it.
+ */
+const deleteRecord = async (collectionName: string, id: string) => {
+  const scope = requireScope();
+  const existing = await getDoc(doc(db, collectionName, id));
+  if (existing.exists() && !canEdit(existing.data() as Partial<Owned>, scope.userId)) {
+    throw new Error("You can only delete records you created.");
+  }
+  return deleteDoc(doc(db, collectionName, id));
+};
 
 /* ------------------------------------------------------------------ *
  * Families
@@ -329,7 +345,11 @@ export const resetUserPassword = async (id: string, password: string) => {
   return updateDoc(doc(db, LOGIN_USERS, id), credential);
 };
 
-export const deleteLoginUser = (id: string) => deleteRecord(LOGIN_USERS, id);
+// Member removal is an admin action authorized by role (enforced in the admin
+// screen), not by record ownership — so it skips the owner check that guards
+// the domain collections.
+export const deleteLoginUser = (id: string) =>
+  deleteDoc(doc(db, LOGIN_USERS, id));
 
 /**
  * Every member of the active family, projected without credentials. Used by the

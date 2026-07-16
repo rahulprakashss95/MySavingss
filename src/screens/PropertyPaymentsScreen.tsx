@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { updateProperty } from "../../database/firebaseQuery";
+import { commitSave, useAppDispatch } from "../redux/hooks";
 import Button from "../components/Button";
 import DatePicker from "../components/DatePicker";
 import Loader from "../components/Loader";
@@ -54,6 +55,7 @@ const PropertyPaymentsScreen = ({ route, navigation }: Props) => {
   );
 
   const { colors } = useTheme();
+  const dispatch = useAppDispatch();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const totals = paymentTotals({ totalAmount: property.totalAmount, entries });
@@ -66,7 +68,7 @@ const PropertyPaymentsScreen = ({ route, navigation }: Props) => {
     setIsLoading(true);
 
     const { id, ...input } = { ...property, entries: next };
-    updateProperty(property.id, input)
+    dispatch(commitSave("properties", updateProperty(property.id, input)))
       .catch((error) => {
         setEntries(previous);
         showToast("error", failureTitle, String(error), "bottom");

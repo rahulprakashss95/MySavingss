@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
-import { getLedgerClients } from "../../database/firebaseQuery";
-import GroupedList, { useCollection } from "../components/GroupedList";
+import GroupedList from "../components/GroupedList";
+import { useCollectionState } from "../redux/hooks";
 import GroupedRow from "../components/GroupedRow";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -19,11 +19,8 @@ const contactLine = (client: LedgerClientModel) =>
 const LedgerClientListScreen = ({ navigation }: Props) => {
   const { colors } = useTheme();
   const { user } = useAuth();
-  const { items, ...list } = useCollection<LedgerClientModel>(
-    () => getLedgerClients(),
-    navigation,
-    "Unable to load clients"
-  );
+  const { items, ...list } =
+    useCollectionState<LedgerClientModel>("ledgerClients");
 
   // Private to one login and usually short, so a flat alphabetical list reads
   // cleaner than letter headings — one section, headers hidden.

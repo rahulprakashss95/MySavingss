@@ -21,6 +21,7 @@ import ReadOnlyGuard from "../components/ReadOnlyGuard";
 import VisibilityToggle from "../components/VisibilityToggle";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import { commitDelete, commitSave, useAppDispatch } from "../redux/hooks";
 import { canEdit, Visibility } from "../models/common";
 import {
   GOVERNMENT_DOCUMENT_TYPES,
@@ -58,6 +59,7 @@ const GovernmentDocumentAddEditScreen = ({ route, navigation }: Props) => {
 
   const { colors } = useTheme();
   const { user } = useAuth();
+  const dispatch = useAppDispatch();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Public records are viewable family-wide but editable only by their owner.
@@ -98,7 +100,7 @@ const GovernmentDocumentAddEditScreen = ({ route, navigation }: Props) => {
         ? addGovernmentDocument(payload)
         : updateGovernmentDocument(document!.id, payload);
 
-    save
+    dispatch(commitSave("governmentDocuments", save))
       .then(() => navigation.goBack())
       .catch((error) => {
         showToast("error", "Unable to save", String(error), "bottom");
@@ -115,7 +117,9 @@ const GovernmentDocumentAddEditScreen = ({ route, navigation }: Props) => {
         return;
       }
       setIsLoading(true);
-      deleteGovernmentDocument(document!.id)
+      dispatch(
+        commitDelete("governmentDocuments", document!.id, deleteGovernmentDocument)
+      )
         .then(() => navigation.goBack())
         .catch((error) => {
           showToast("error", "Unable to delete", String(error), "bottom");

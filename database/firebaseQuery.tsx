@@ -121,7 +121,7 @@ const saveScoped = async <T extends { visibility?: Visibility }>(
   collectionName: string,
   input: T,
   refId?: string
-): Promise<string> => {
+): Promise<T & Owned & { id: string }> => {
   const scope = requireScope();
   const id = refId ?? doc(collection(db, collectionName)).id;
 
@@ -142,14 +142,15 @@ const saveScoped = async <T extends { visibility?: Visibility }>(
   }
 
   const visibility: Visibility = input.visibility ?? DEFAULT_VISIBILITY;
-  await setDoc(doc(db, collectionName, id), {
+  const record = {
     ...input,
     visibility,
     familyId,
     ownerId,
     id,
-  });
-  return id;
+  };
+  await setDoc(doc(db, collectionName, id), record);
+  return record;
 };
 
 /**

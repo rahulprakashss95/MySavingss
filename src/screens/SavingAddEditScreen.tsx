@@ -22,6 +22,7 @@ import ReadOnlyGuard from "../components/ReadOnlyGuard";
 import VisibilityToggle from "../components/VisibilityToggle";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import { commitDelete, commitSave, useAppDispatch } from "../redux/hooks";
 import { canEdit, Visibility } from "../models/common";
 import { SavingModel } from "../models/LedgerModel";
 import { ThemeColors } from "../utils/Color";
@@ -55,6 +56,7 @@ const SavingAddEditScreen = ({ route, navigation }: Props) => {
 
   const { colors } = useTheme();
   const { user } = useAuth();
+  const dispatch = useAppDispatch();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Public records are viewable family-wide but editable only by their owner.
@@ -93,7 +95,7 @@ const SavingAddEditScreen = ({ route, navigation }: Props) => {
     const save =
       pageMode === "Add" ? addSaving(payload) : updateSaving(saving!.id, payload);
 
-    save
+    dispatch(commitSave("savings", save))
       .then(() => navigation.goBack())
       .catch((saveError) => {
         showToast("error", "Unable to save", String(saveError), "bottom");
@@ -110,7 +112,7 @@ const SavingAddEditScreen = ({ route, navigation }: Props) => {
         return;
       }
       setIsLoading(true);
-      deleteSaving(saving!.id)
+      dispatch(commitDelete("savings", saving!.id, deleteSaving))
         .then(() => navigation.goBack())
         .catch((deleteError) => {
           showToast("error", "Unable to delete", String(deleteError), "bottom");

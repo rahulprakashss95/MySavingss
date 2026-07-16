@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
-import { getSavings } from "../../database/firebaseQuery";
-import GroupedList, { useCollection } from "../components/GroupedList";
+import GroupedList from "../components/GroupedList";
+import { useCollectionState } from "../redux/hooks";
 import GroupedRow from "../components/GroupedRow";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -15,11 +15,7 @@ type Props = {
 const SavingListScreen = ({ navigation }: Props) => {
   const { colors } = useTheme();
   const { user } = useAuth();
-  const { items, ...list } = useCollection<SavingModel>(
-    () => getSavings(),
-    navigation,
-    "Unable to load savings"
-  );
+  const { items, ...list } = useCollectionState<SavingModel>("savings");
 
   const sections = useMemo(() => groupByMonth(items), [items]);
 

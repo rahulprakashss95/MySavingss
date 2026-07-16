@@ -20,6 +20,7 @@ import ReadOnlyGuard from "../components/ReadOnlyGuard";
 import VisibilityToggle from "../components/VisibilityToggle";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import { commitDelete, commitSave, useAppDispatch } from "../redux/hooks";
 import { canEdit, Visibility } from "../models/common";
 import { BankDocumentModel } from "../models/DocumentModel";
 import { ThemeColors } from "../utils/Color";
@@ -58,6 +59,7 @@ const BankDocumentAddEditScreen = ({ route, navigation }: Props) => {
 
   const { colors } = useTheme();
   const { user } = useAuth();
+  const dispatch = useAppDispatch();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Public records are viewable family-wide but editable only by their owner.
@@ -107,7 +109,7 @@ const BankDocumentAddEditScreen = ({ route, navigation }: Props) => {
         ? addBankDocument(payload)
         : updateBankDocument(document!.id, payload);
 
-    save
+    dispatch(commitSave("bankDocuments", save))
       .then(() => navigation.goBack())
       .catch((error) => {
         showToast("error", "Unable to save", String(error), "bottom");
@@ -124,7 +126,7 @@ const BankDocumentAddEditScreen = ({ route, navigation }: Props) => {
         return;
       }
       setIsLoading(true);
-      deleteBankDocument(document!.id)
+      dispatch(commitDelete("bankDocuments", document!.id, deleteBankDocument))
         .then(() => navigation.goBack())
         .catch((error) => {
           showToast("error", "Unable to delete", String(error), "bottom");

@@ -8,6 +8,8 @@ import React, {
     useState,
 } from "react";
 import { clearActiveScope, setActiveScope } from "../../database/firebaseQuery";
+import { store } from "../redux/store";
+import { resetAll } from "../redux/resetAll";
 import type { ModuleKey } from "../models/common";
 import type { UserRole } from "../models/LoginUserModel";
 
@@ -84,6 +86,8 @@ export const AuthProvider = ({ children }: Props) => {
     // Publish the data scope before flipping state, so the first screen's reads
     // are already family-scoped.
     setActiveScope({ familyId: nextUser.familyId, userId: nextUser.id });
+    // Start from an empty cache in case a different family is being entered.
+    store.dispatch(resetAll());
     // Persist before flipping state so a crash mid-write can't leave the app
     // showing a logged-in UI that won't survive a restart.
     try {
@@ -96,6 +100,8 @@ export const AuthProvider = ({ children }: Props) => {
 
   const signOut = useCallback(async () => {
     clearActiveScope();
+    // Drop every cached collection so one session's data can't leak into the next.
+    store.dispatch(resetAll());
     try {
       await AsyncStorage.removeItem(SESSION_STORAGE_KEY);
     } catch (error) {

@@ -7,6 +7,9 @@ import {
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { StatusBar } from "expo-status-bar";
 import Toast from "react-native-toast-message";
+import { Provider as StoreProvider } from "react-redux";
+
+import { store } from "./src/redux/store";
 
 import LoginScreen from "./src/screens/LoginScreen";
 import RegisterScreen from "./src/screens/RegisterScreen";
@@ -310,13 +313,15 @@ const RootNavigator = () => {
 
 const App = () => {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <DrawerProvider>
-          <RootNavigator />
-        </DrawerProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <StoreProvider store={store}>
+      <ThemeProvider>
+        <AuthProvider>
+          <DrawerProvider>
+            <RootNavigator />
+          </DrawerProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </StoreProvider>
   );
 };
 

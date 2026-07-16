@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import {
   View,
   Text,
@@ -8,13 +8,13 @@ import {
   RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { getClients } from "../../database/firebaseQuery";
+import { useCollectionState } from "../redux/hooks";
 import FloatingButton from "../components/FAB";
 import { ClientListSkeleton } from "../components/Skeleton";
 import { ClientModel } from "../models/ClientModel";
 import { useTheme } from "../context/ThemeContext";
 import { ThemeColors, tint } from "../utils/Color";
-import { NavigationProp, showToast } from "../utils/Utils";
+import { NavigationProp } from "../utils/Utils";
 
 type Props = {
   navigation: NavigationProp;
@@ -57,48 +57,21 @@ const initialsOf = (name: string) => {
 };
 
 const ClientScreen = ({ navigation }: Props) => {
-  const [clientList, setClientList] = useState<ClientModel[]>([]);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [hasLoaded, setHasLoaded] = useState(false);
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  // Reload on focus so a client added or edited elsewhere shows up on return.
-  useEffect(() => {
-    const unsubscribe = navigation.addListener("focus", loadClients);
-    return unsubscribe;
-  }, [navigation]);
+  // Served from the store: fetched once and kept in sync as clients are
+  // added/edited/deleted, so returning here doesn't re-read Firestore.
+  const clients = useCollectionState<ClientModel>("clients");
+  const { hasLoaded, isRefreshing, onRefresh } = clients;
+
+  const clientList = useMemo(
+    () => [...clients.items].sort((a, b) => a.name.localeCompare(b.name)),
+    [clients.items]
+  );
 
   const openClient = (client: ClientModel | null) =>
     navigation.navigate("ClientAddEdit", { clientData: client });
-
-  const loadClients = () => {
-    getClients()
-      .then((data: any) => {
-        const clients = (data as ClientModel[]) ?? [];
-        setClientList(
-          [...clients].sort((a, b) => a.name.localeCompare(b.name))
-        );
-      })
-      .catch((error) => {
-        console.log(error);
-        showToast(
-          "error",
-          "Unable to load clients",
-          "Check your connection and pull down to retry.",
-          "bottom"
-        );
-      })
-      .finally(() => {
-        setIsRefreshing(false);
-        setHasLoaded(true);
-      });
-  };
-
-  const onRefresh = () => {
-    setIsRefreshing(true);
-    loadClients();
-  };
 
   const renderHeader = () => {
     if (!clientList.length) {

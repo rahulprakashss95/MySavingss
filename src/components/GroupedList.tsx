@@ -1,57 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { RefreshControl, SectionList, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 import { ThemeColors } from "../utils/Color";
 import { Section } from "../utils/grouping";
-import { NavigationProp, showToast } from "../utils/Utils";
 import type { RowPosition } from "./GroupedRow";
 import FloatingButton from "./FAB";
 import { GroupedListSkeleton } from "./Skeleton";
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
-
-/**
- * Re-fetches on every focus, so a save on an add/edit screen shows the moment
- * we navigate back. Grouping is left to the caller: what a section means
- * differs per screen.
- */
-export const useCollection = <T,>(
-  fetcher: () => Promise<T[]>,
-  navigation: NavigationProp,
-  errorTitle: string
-) => {
-  const [items, setItems] = useState<T[]>([]);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [hasLoaded, setHasLoaded] = useState(false);
-
-  const load = () => {
-    fetcher()
-      .then((data) => setItems(data ?? []))
-      .catch((error) => {
-        console.log(error);
-        showToast(
-          "error",
-          errorTitle,
-          "Check your connection and pull down to retry.",
-          "bottom"
-        );
-      })
-      .finally(() => {
-        setIsRefreshing(false);
-        setHasLoaded(true);
-      });
-  };
-
-  useEffect(() => navigation.addListener("focus", load), [navigation]);
-
-  const onRefresh = () => {
-    setIsRefreshing(true);
-    load();
-  };
-
-  return { items, isRefreshing, hasLoaded, onRefresh };
-};
 
 type IGroupedList<T> = {
   sections: Section<T>[];

@@ -23,8 +23,6 @@ import Button from "../components/Button";
 import {
   addFixedDeposit,
   deleteFixedDeposit,
-  getClients,
-  getFixedDeposit,
   updateFixedDeposit,
 } from "../../database/firebaseQuery";
 import Loader from "../components/Loader";
@@ -32,6 +30,12 @@ import ReadOnlyBanner from "../components/ReadOnlyBanner";
 import ReadOnlyGuard from "../components/ReadOnlyGuard";
 import VisibilityToggle from "../components/VisibilityToggle";
 import { useAuth } from "../context/AuthContext";
+import {
+  commitDelete,
+  commitSave,
+  useAppDispatch,
+  useCollectionState,
+} from "../redux/hooks";
 import { canEdit, Visibility } from "../models/common";
 import { depositorNameForUser } from "../utils/permissions";
 
@@ -45,8 +49,6 @@ const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
   const pageMode = fixedDepositData ? "Edit" : "Add";
   const fixedDeposit: FixedDepositModel = fixedDepositData || null;
 
-  const [clients, setClients] = useState<ClientModel[]>([]);
-  const [depositorList, setDepositorList] = useState<string[]>([]);
   const [clientId, setClientId] = useState(fixedDeposit?.clientId ?? "");
   const [depositorName, setDepositorName] = useState(
     fixedDeposit?.depositorName ?? ""
@@ -67,48 +69,41 @@ const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
   const [visibility, setVisibility] = useState<Visibility>(
     fixedDeposit?.visibility ?? "private"
   );
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const { colors } = useTheme();
   const { user } = useAuth();
+  const dispatch = useAppDispatch();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Public deposits are viewable family-wide but editable only by their owner.
   const readOnly = pageMode === "Edit" && !canEdit(fixedDeposit, user?.id);
 
+  // Picker options come from the cache: banks from `clients`, and the depositor
+  // name from the user's own existing deposits — no extra reads on open.
+  const clientState = useCollectionState<ClientModel>("clients");
+  const depositState = useCollectionState<FixedDepositModel>("fixedDeposits");
+  const optionsLoading = !clientState.hasLoaded || !depositState.hasLoaded;
+
+  const clients = useMemo(
+    () => [...clientState.items].sort((a, b) => a.name.localeCompare(b.name)),
+    [clientState.items]
+  );
+
+  // Each user records their own deposits, so the only depositor offered is the
+  // signed-in user — other people's names are never listed.
+  const ownName = useMemo(
+    () => depositorNameForUser(user, depositState.items),
+    [user, depositState.items]
+  );
+  const depositorList = ownName ? [ownName] : [];
+
+  // Pre-select the depositor on a new deposit so it's scoped to this user.
   useEffect(() => {
-    // The picker options are data, not constants: banks come from `clients`
-    // and depositor names from whoever already holds a deposit.
-    Promise.all([getClients(), getFixedDeposit()])
-      .then(([clientData, depositData]: any[]) => {
-        const clientList = (clientData as ClientModel[]) ?? [];
-        setClients(
-          [...clientList].sort((a, b) => a.name.localeCompare(b.name))
-        );
-
-        const deposits = (depositData as FixedDepositModel[]) ?? [];
-
-        // Each user records their own deposits, so the only depositor offered
-        // is the signed-in user — other people's names are never listed.
-        const ownName = depositorNameForUser(user, deposits);
-        setDepositorList(ownName ? [ownName] : []);
-
-        // Pre-select it on a new deposit so the record is scoped to this user.
-        if (pageMode === "Add" && ownName) {
-          setDepositorName(ownName);
-        }
-      })
-      .catch((error) => {
-        console.log(error);
-        showToast(
-          "error",
-          "Unable to load options",
-          "Banks and depositors could not be fetched.",
-          "bottom"
-        );
-      })
-      .finally(() => setIsLoading(false));
-  }, [user]);
+    if (pageMode === "Add" && ownName && !depositorName) {
+      setDepositorName(ownName);
+    }
+  }, [ownName]);
 
   const calculateInterestAmount = () => {
     if (!amount || !interestPercentage) {
@@ -169,7 +164,7 @@ const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
             isCompleted: fixedDeposit.isCompleted,
           });
 
-    save
+    dispatch(commitSave("fixedDeposits", save))
       .then(() => {
         navigateBack();
       })
@@ -188,7 +183,7 @@ const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
         return;
       }
       setIsLoading(true);
-      deleteFixedDeposit(fixedDeposit.id)
+      dispatch(commitDelete("fixedDeposits", fixedDeposit.id, deleteFixedDeposit))
         .then(() => {
           navigateBack();
         })
@@ -206,7 +201,7 @@ const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
-      <Loader loading={isLoading} />
+      <Loader loading={isLoading || optionsLoading} />
 
       <ReadOnlyBanner show={readOnly} />
 

@@ -20,6 +20,7 @@ import ReadOnlyGuard from "../components/ReadOnlyGuard";
 import VisibilityToggle from "../components/VisibilityToggle";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import { commitDelete, commitSave, useAppDispatch } from "../redux/hooks";
 import {
   ClientModel,
   clientMobileNumbers,
@@ -57,6 +58,7 @@ const ClientAddEditScreen = ({ route, navigation }: Props) => {
 
   const { colors } = useTheme();
   const { user } = useAuth();
+  const dispatch = useAppDispatch();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Public records are viewable family-wide but editable only by their owner.
@@ -90,7 +92,7 @@ const ClientAddEditScreen = ({ route, navigation }: Props) => {
         ? addClient(payload)
         : updateClient(client!.id, payload);
 
-    save
+    dispatch(commitSave("clients", save))
       .then(() => navigation.goBack())
       .catch((error) => {
         showToast("error", "Unable to save", String(error), "bottom");
@@ -107,7 +109,7 @@ const ClientAddEditScreen = ({ route, navigation }: Props) => {
         return;
       }
       setIsLoading(true);
-      deleteClient(client!.id)
+      dispatch(commitDelete("clients", client!.id, deleteClient))
         .then(() => navigation.goBack())
         .catch((error) => {
           showToast("error", "Unable to delete", String(error), "bottom");

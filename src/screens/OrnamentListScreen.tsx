@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
-import { getOrnaments } from "../../database/firebaseQuery";
-import GroupedList, { useCollection } from "../components/GroupedList";
+import GroupedList from "../components/GroupedList";
+import { useCollectionState } from "../redux/hooks";
 import GroupedRow from "../components/GroupedRow";
 import { useTheme } from "../context/ThemeContext";
 import { ORNAMENT_TYPES, OrnamentModel } from "../models/AssetModel";
@@ -41,11 +41,7 @@ const rowMeta = (ornament: OrnamentModel) =>
 
 const OrnamentListScreen = ({ navigation }: Props) => {
   const { colors } = useTheme();
-  const { items, ...list } = useCollection<OrnamentModel>(
-    getOrnaments,
-    navigation,
-    "Unable to load ornaments"
-  );
+  const { items, ...list } = useCollectionState<OrnamentModel>("ornaments");
 
   // Grouped by metal in the order it's declared, then by holder within a group
   // so one person's pieces stay together.

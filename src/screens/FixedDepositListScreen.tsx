@@ -1,18 +1,17 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { View, Text, StyleSheet, FlatList, RefreshControl } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 import { ThemeColors } from "../utils/Color";
-import { getClients, getFixedDeposit } from "../../database/firebaseQuery";
+import { useCollectionState } from "../redux/hooks";
 import { FixedDepositModel } from "../models/FixedDepositModel";
 import { ClientModel } from "../models/ClientModel";
-import { amountFormat, NavigationProp, showToast } from "../utils/Utils";
+import { amountFormat, NavigationProp } from "../utils/Utils";
 import {
   mergeClientNames,
   sortByMaturity,
   visibleDeposits,
 } from "../utils/deposits";
-import { useAuth } from "../context/AuthContext";
 import { DepositListSkeleton } from "../components/Skeleton";
 import FDCard from "../components/FDCard";
 import FloatingButton from "../components/FAB";
@@ -22,52 +21,30 @@ type Props = {
 };
 
 const FixedDepositListScreen = ({ navigation }: Props) => {
-  const [fixedDeposits, setFixedDeposits] = useState<FixedDepositModel[]>([]);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [hasLoaded, setHasLoaded] = useState(false);
   const { colors } = useTheme();
-  const { user } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener("focus", () => {
-      getFDData();
-    });
+  // Deposits only carry a clientId, so bank names come from the `clients`
+  // cache. Both are served from the store — fetched once, not on every focus.
+  const deposits = useCollectionState<FixedDepositModel>("fixedDeposits");
+  const banks = useCollectionState<ClientModel>("clients");
 
-    return unsubscribe;
-  }, [navigation, user]);
-
-  const getFDData = () => {
-    // Deposits only carry a clientId, so the bank names come from `clients`.
-    // Both are independent reads — fetch them together.
-    Promise.all([getFixedDeposit(), getClients()])
-      .then(([deposits, clients]: any[]) => {
-        // The query layer already scopes to the family and the current user's
-        // visible records; this only drops completed/hidden ones.
-        const visible = visibleDeposits(deposits as FixedDepositModel[]);
-        setFixedDeposits(
-          sortByMaturity(mergeClientNames(visible, clients as ClientModel[]))
-        );
-      })
-      .catch((error) => {
-        console.log(error);
-        showToast(
-          "error",
-          "Unable to load deposits",
-          "Check your connection and pull down to retry.",
-          "bottom"
-        );
-      })
-      .finally(() => {
-        setIsRefreshing(false);
-        setHasLoaded(true);
-      });
-  };
-
+  const hasLoaded = deposits.hasLoaded && banks.hasLoaded;
+  const isRefreshing = deposits.isRefreshing || banks.isRefreshing;
   const onRefresh = () => {
-    setIsRefreshing(true);
-    getFDData();
+    deposits.onRefresh();
+    banks.onRefresh();
   };
+
+  // The query layer already scopes to the family and the user's visible
+  // records; this only drops completed/hidden ones and attaches bank names.
+  const fixedDeposits = useMemo(
+    () =>
+      sortByMaturity(
+        mergeClientNames(visibleDeposits(deposits.items), banks.items)
+      ),
+    [deposits.items, banks.items]
+  );
 
   const navigateFDAddEdit = (data: any) => {
     navigation.navigate("FixedDepositAddEdit", {

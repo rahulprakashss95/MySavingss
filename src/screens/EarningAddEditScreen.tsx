@@ -22,6 +22,7 @@ import ReadOnlyBanner from "../components/ReadOnlyBanner";
 import ReadOnlyGuard from "../components/ReadOnlyGuard";
 import VisibilityToggle from "../components/VisibilityToggle";
 import { useAuth } from "../context/AuthContext";
+import { commitDelete, commitSave, useAppDispatch } from "../redux/hooks";
 import { useTheme } from "../context/ThemeContext";
 import { canEdit, Visibility } from "../models/common";
 import { EARNING_TYPES, EarningModel } from "../models/LedgerModel";
@@ -60,6 +61,7 @@ const EarningAddEditScreen = ({ route, navigation }: Props) => {
 
   const { colors } = useTheme();
   const { user } = useAuth();
+  const dispatch = useAppDispatch();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Public records are viewable family-wide but editable only by their owner.
@@ -102,7 +104,7 @@ const EarningAddEditScreen = ({ route, navigation }: Props) => {
         ? addEarning(payload)
         : updateEarning(earning!.id, payload);
 
-    save
+    dispatch(commitSave("earnings", save))
       .then(() => navigation.goBack())
       .catch((saveError) => {
         showToast("error", "Unable to save", String(saveError), "bottom");
@@ -119,7 +121,7 @@ const EarningAddEditScreen = ({ route, navigation }: Props) => {
         return;
       }
       setIsLoading(true);
-      deleteEarning(earning!.id)
+      dispatch(commitDelete("earnings", earning!.id, deleteEarning))
         .then(() => navigation.goBack())
         .catch((deleteError) => {
           showToast("error", "Unable to delete", String(deleteError), "bottom");

@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import moment from "moment";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Pressable,
   RefreshControl,
@@ -9,12 +9,13 @@ import {
   Text,
   View,
 } from "react-native";
+import { saveMetalRates } from "../../database/firebaseQuery";
 import {
-  getMetalRates,
-  getOrnaments,
-  getProperties,
-  saveMetalRates,
-} from "../../database/firebaseQuery";
+  useAppDispatch,
+  useCollectionState,
+  useMetalRates,
+} from "../redux/hooks";
+import { metalRatesActions } from "../redux/metalRatesSlice";
 import MetalRatesModal from "../components/MetalRatesModal";
 import ProgressBar from "../components/ProgressBar";
 import { OverviewSkeleton } from "../components/Skeleton";
@@ -43,40 +44,34 @@ type Props = {
 const rupees = (value: number) => `₹ ${amountFormat(Math.round(value))}`;
 
 const AssetOverviewScreen = ({ navigation }: Props) => {
-  const [ornaments, setOrnaments] = useState<OrnamentModel[]>([]);
-  const [properties, setProperties] = useState<PropertyModel[]>([]);
-  const [rates, setRates] = useState<MetalRates>(EMPTY_METAL_RATES);
-  const [hasLoaded, setHasLoaded] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isRatesModalOpen, setIsRatesModalOpen] = useState(false);
   const [isSavingRates, setIsSavingRates] = useState(false);
 
   const { colors } = useTheme();
+  const dispatch = useAppDispatch();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  const load = () => {
-    Promise.all([getOrnaments(), getProperties(), getMetalRates()])
-      .then(([ornamentData, propertyData, rateData]) => {
-        setOrnaments(ornamentData ?? []);
-        setProperties(propertyData ?? []);
-        setRates(rateData);
-      })
-      .catch((error) => {
-        console.log(error);
-        showToast(
-          "error",
-          "Unable to load assets",
-          "Check your connection and pull down to retry.",
-          "bottom"
-        );
-      })
-      .finally(() => {
-        setIsRefreshing(false);
-        setHasLoaded(true);
-      });
-  };
+  // Ornaments and properties come from the shared cache; metal rates from their
+  // own cached doc — none of them re-read on focus.
+  const ornamentState = useCollectionState<OrnamentModel>("ornaments");
+  const propertyState = useCollectionState<PropertyModel>("properties");
+  const ratesState = useMetalRates();
 
-  useEffect(() => navigation.addListener("focus", load), [navigation]);
+  const ornaments = ornamentState.items;
+  const properties = propertyState.items;
+  const rates = ratesState.value ?? EMPTY_METAL_RATES;
+
+  const hasLoaded =
+    ornamentState.hasLoaded && propertyState.hasLoaded && ratesState.loaded;
+  const isRefreshing =
+    ornamentState.isRefreshing ||
+    propertyState.isRefreshing ||
+    ratesState.isRefreshing;
+  const onRefresh = () => {
+    ornamentState.onRefresh();
+    propertyState.onRefresh();
+    ratesState.onRefresh();
+  };
 
   const ornamentSummary = useMemo(
     () => ornamentTotals(ornaments, rates),
@@ -96,7 +91,7 @@ const AssetOverviewScreen = ({ navigation }: Props) => {
     const stamped = { ...next, updatedAt: new Date().toISOString() };
     saveMetalRates(stamped)
       .then(() => {
-        setRates(stamped);
+        dispatch(metalRatesActions.set(stamped));
         setIsRatesModalOpen(false);
         showToast("success", "Rates saved", "Saved for everyone.", "bottom");
       })
@@ -170,10 +165,7 @@ const AssetOverviewScreen = ({ navigation }: Props) => {
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
-            onRefresh={() => {
-              setIsRefreshing(true);
-              load();
-            }}
+            onRefresh={onRefresh}
             tintColor={colors.textMuted}
           />
         }

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import {
   RefreshControl,
   ScrollView,
@@ -6,11 +6,10 @@ import {
   Text,
   View,
 } from "react-native";
-import { getEarnings, getSavings } from "../../database/firebaseQuery";
+import { useCollectionState } from "../redux/hooks";
 import MonthlyEarningsChart from "../components/MonthlyEarningsChart";
 import ProgressBar from "../components/ProgressBar";
 import { OverviewSkeleton } from "../components/Skeleton";
-import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { EarningModel, SavingModel } from "../models/LedgerModel";
 import { ThemeColors } from "../utils/Color";
@@ -21,7 +20,7 @@ import {
   sumAmount,
   totalsBy,
 } from "../utils/ledger";
-import { amountFormat, NavigationProp, showToast } from "../utils/Utils";
+import { amountFormat, NavigationProp } from "../utils/Utils";
 
 type Props = {
   navigation: NavigationProp;
@@ -30,37 +29,22 @@ type Props = {
 const rupees = (value: number) => `₹ ${amountFormat(Math.round(value))}`;
 
 const LedgerOverviewScreen = ({ navigation }: Props) => {
-  const [earnings, setEarnings] = useState<EarningModel[]>([]);
-  const [savings, setSavings] = useState<SavingModel[]>([]);
-  const [hasLoaded, setHasLoaded] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
   const { colors } = useTheme();
-  const { user } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  const load = () => {
-    Promise.all([getEarnings(), getSavings()])
-      .then(([earningData, savingData]) => {
-        setEarnings(earningData ?? []);
-        setSavings(savingData ?? []);
-      })
-      .catch((error) => {
-        console.log(error);
-        showToast(
-          "error",
-          "Unable to load ledger",
-          "Check your connection and pull down to retry.",
-          "bottom"
-        );
-      })
-      .finally(() => {
-        setIsRefreshing(false);
-        setHasLoaded(true);
-      });
-  };
+  // Cached, so opening the ledger overview reuses what the earning/saving
+  // lists already loaded instead of re-reading both collections.
+  const earningState = useCollectionState<EarningModel>("earnings");
+  const savingState = useCollectionState<SavingModel>("savings");
+  const earnings = earningState.items;
+  const savings = savingState.items;
 
-  useEffect(() => navigation.addListener("focus", load), [navigation]);
+  const hasLoaded = earningState.hasLoaded && savingState.hasLoaded;
+  const isRefreshing = earningState.isRefreshing || savingState.isRefreshing;
+  const onRefresh = () => {
+    earningState.onRefresh();
+    savingState.onRefresh();
+  };
 
   const totalEarned = useMemo(() => sumAmount(earnings), [earnings]);
   const totalSaved = useMemo(() => sumAmount(savings), [savings]);
@@ -114,10 +98,7 @@ const LedgerOverviewScreen = ({ navigation }: Props) => {
       refreshControl={
         <RefreshControl
           refreshing={isRefreshing}
-          onRefresh={() => {
-            setIsRefreshing(true);
-            load();
-          }}
+          onRefresh={onRefresh}
           tintColor={colors.textMuted}
         />
       }

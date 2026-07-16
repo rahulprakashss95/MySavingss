@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
-import { getGovernmentDocuments } from "../../database/firebaseQuery";
-import GroupedList, { useCollection } from "../components/GroupedList";
+import GroupedList from "../components/GroupedList";
+import { useCollectionState } from "../redux/hooks";
 import GroupedRow from "../components/GroupedRow";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -15,11 +15,8 @@ type Props = {
 const GovernmentDocumentListScreen = ({ navigation }: Props) => {
   const { colors } = useTheme();
   const { user } = useAuth();
-  const { items, ...list } = useCollection<GovernmentDocumentModel>(
-    getGovernmentDocuments,
-    navigation,
-    "Unable to load documents"
-  );
+  const { items, ...list } =
+    useCollectionState<GovernmentDocumentModel>("governmentDocuments");
 
   const sections = useMemo(() => groupByPerson(items, user), [items, user]);
 

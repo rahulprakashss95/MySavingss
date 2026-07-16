@@ -19,6 +19,7 @@ import ReadOnlyGuard from "../components/ReadOnlyGuard";
 import VisibilityToggle from "../components/VisibilityToggle";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import { commitDelete, commitSave, useAppDispatch } from "../redux/hooks";
 import { canEdit, Visibility } from "../models/common";
 import { LedgerClientModel } from "../models/LedgerModel";
 import { ThemeColors } from "../utils/Color";
@@ -50,6 +51,7 @@ const LedgerClientAddEditScreen = ({ route, navigation }: Props) => {
 
   const { colors } = useTheme();
   const { user } = useAuth();
+  const dispatch = useAppDispatch();
 
   // Public records are viewable family-wide but editable only by their owner.
   const readOnly = pageMode === "Edit" && !canEdit(client!, user?.id);
@@ -75,7 +77,7 @@ const LedgerClientAddEditScreen = ({ route, navigation }: Props) => {
         ? addLedgerClient(payload)
         : updateLedgerClient(client!.id, payload);
 
-    save
+    dispatch(commitSave("ledgerClients", save))
       .then(() => navigation.goBack())
       .catch((error) => {
         showToast("error", "Unable to save", String(error), "bottom");
@@ -92,7 +94,7 @@ const LedgerClientAddEditScreen = ({ route, navigation }: Props) => {
         return;
       }
       setIsLoading(true);
-      deleteLedgerClient(client!.id)
+      dispatch(commitDelete("ledgerClients", client!.id, deleteLedgerClient))
         .then(() => navigation.goBack())
         .catch((error) => {
           showToast("error", "Unable to delete", String(error), "bottom");

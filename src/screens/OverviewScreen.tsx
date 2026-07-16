@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import {
   Text,
   View,
@@ -9,16 +9,15 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import BarList from "../components/BarList";
 import { OverviewSkeleton } from "../components/Skeleton";
-import { getClients, getFixedDeposit } from "../../database/firebaseQuery";
+import { useCollectionState } from "../redux/hooks";
 import { ClientModel } from "../models/ClientModel";
 import { FixedDepositModel } from "../models/FixedDepositModel";
-import { amountFormat, showToast } from "../utils/Utils";
+import { amountFormat } from "../utils/Utils";
 import {
   buildTotals,
   mergeClientNames,
   visibleDeposits,
 } from "../utils/deposits";
-import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { ThemeColors } from "../utils/Color";
 
@@ -26,43 +25,26 @@ const rupees = (value: number) => `₹ ${amountFormat(value)}`;
 
 const OverviewScreen = () => {
   const { colors } = useTheme();
-  const { user } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const [deposits, setDeposits] = useState<FixedDepositModel[]>([]);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [hasLoaded, setHasLoaded] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, [user]);
+  // Same cached collections the deposits list uses, so opening the overview
+  // after the list (or vice-versa) doesn't re-read Firestore.
+  const fixedDeposits = useCollectionState<FixedDepositModel>("fixedDeposits");
+  const banks = useCollectionState<ClientModel>("clients");
 
-  const loadData = () => {
-    Promise.all([getFixedDeposit(), getClients()])
-      .then(([fixedDeposits, clients]: any[]) => {
-        // The query layer already returns only the deposits this user may see,
-        // so the hero figure always agrees with the list.
-        const visible = visibleDeposits(fixedDeposits as FixedDepositModel[]);
-        setDeposits(mergeClientNames(visible, clients as ClientModel[]));
-      })
-      .catch((error) => {
-        console.log(error);
-        showToast(
-          "error",
-          "Unable to load overview",
-          "Check your connection and pull down to retry.",
-          "bottom"
-        );
-      })
-      .finally(() => {
-        setIsRefreshing(false);
-        setHasLoaded(true);
-      });
-  };
-
+  const hasLoaded = fixedDeposits.hasLoaded && banks.hasLoaded;
+  const isRefreshing = fixedDeposits.isRefreshing || banks.isRefreshing;
   const onRefresh = () => {
-    setIsRefreshing(true);
-    loadData();
+    fixedDeposits.onRefresh();
+    banks.onRefresh();
   };
+
+  // The query layer already returns only the deposits this user may see, so the
+  // hero figure always agrees with the list.
+  const deposits = useMemo(
+    () => mergeClientNames(visibleDeposits(fixedDeposits.items), banks.items),
+    [fixedDeposits.items, banks.items]
+  );
 
   const totals = useMemo(() => buildTotals(deposits), [deposits]);
 

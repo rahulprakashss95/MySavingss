@@ -22,6 +22,7 @@ import ReadOnlyGuard from "../components/ReadOnlyGuard";
 import VisibilityToggle from "../components/VisibilityToggle";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import { commitDelete, commitSave, useAppDispatch } from "../redux/hooks";
 import { canEdit, Visibility } from "../models/common";
 import {
   DEFAULT_GOLD_KARAT,
@@ -64,6 +65,7 @@ const OrnamentAddEditScreen = ({ route, navigation }: Props) => {
 
   const { colors } = useTheme();
   const { user } = useAuth();
+  const dispatch = useAppDispatch();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   // A public record is visible to the whole family but editable only by its
@@ -113,7 +115,7 @@ const OrnamentAddEditScreen = ({ route, navigation }: Props) => {
         ? addOrnament(payload)
         : updateOrnament(ornament!.id, payload);
 
-    save
+    dispatch(commitSave("ornaments", save))
       .then(() => navigation.goBack())
       .catch((saveError) => {
         showToast("error", "Unable to save", String(saveError), "bottom");
@@ -130,7 +132,7 @@ const OrnamentAddEditScreen = ({ route, navigation }: Props) => {
         return;
       }
       setIsLoading(true);
-      deleteOrnament(ornament!.id)
+      dispatch(commitDelete("ornaments", ornament!.id, deleteOrnament))
         .then(() => navigation.goBack())
         .catch((deleteError) => {
           showToast("error", "Unable to delete", String(deleteError), "bottom");

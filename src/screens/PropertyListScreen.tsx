@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { getProperties } from "../../database/firebaseQuery";
-import GroupedList, { useCollection } from "../components/GroupedList";
+import GroupedList from "../components/GroupedList";
+import { useCollectionState } from "../redux/hooks";
 import GroupedRow from "../components/GroupedRow";
 import { useTheme } from "../context/ThemeContext";
 import { PROPERTY_TYPES, PropertyModel } from "../models/AssetModel";
@@ -32,11 +32,7 @@ const PropertyListScreen = ({ navigation }: Props) => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  const { items, ...list } = useCollection<PropertyModel>(
-    getProperties,
-    navigation,
-    "Unable to load properties"
-  );
+  const { items, ...list } = useCollectionState<PropertyModel>("properties");
 
   const sections = useMemo(
     () =>

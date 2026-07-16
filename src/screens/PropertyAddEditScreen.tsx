@@ -24,6 +24,7 @@ import ReadOnlyGuard from "../components/ReadOnlyGuard";
 import VisibilityToggle from "../components/VisibilityToggle";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import { commitDelete, commitSave, useAppDispatch } from "../redux/hooks";
 import { canEdit, Visibility } from "../models/common";
 import {
   CENTS_PER_ACRE_LABEL,
@@ -76,6 +77,7 @@ const PropertyAddEditScreen = ({ route, navigation }: Props) => {
 
   const { colors } = useTheme();
   const { user } = useAuth();
+  const dispatch = useAppDispatch();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Public records are viewable family-wide but editable only by their owner.
@@ -138,7 +140,7 @@ const PropertyAddEditScreen = ({ route, navigation }: Props) => {
         ? addProperty(payload)
         : updateProperty(property!.id, payload);
 
-    save
+    dispatch(commitSave("properties", save))
       .then(() => navigation.goBack())
       .catch((saveError) => {
         showToast("error", "Unable to save", String(saveError), "bottom");
@@ -155,7 +157,7 @@ const PropertyAddEditScreen = ({ route, navigation }: Props) => {
         return;
       }
       setIsLoading(true);
-      deleteProperty(property!.id)
+      dispatch(commitDelete("properties", property!.id, deleteProperty))
         .then(() => navigation.goBack())
         .catch((deleteError) => {
           showToast("error", "Unable to delete", String(deleteError), "bottom");
@@ -178,7 +180,7 @@ const PropertyAddEditScreen = ({ route, navigation }: Props) => {
 
     setIsLoading(true);
     const payload = buildPayload();
-    updateProperty(property!.id, payload)
+    dispatch(commitSave("properties", updateProperty(property!.id, payload)))
       .then(() => {
         navigation.navigate("PropertyPayments", {
           propertyData: { ...payload, id: property!.id },

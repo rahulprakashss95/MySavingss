@@ -2,7 +2,7 @@
   "expo": {
     "name": "HomeVault",
     "slug": "HomeVault",
-    "version": "1.0.86",
+    "version": "1.1.01",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",

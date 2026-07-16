@@ -180,7 +180,7 @@ const LoginScreen = ({ navigation }: Props) => {
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="e.g. rahul_family"
+                  placeholder="e.g. smith_family"
                   placeholderTextColor={colors.placeholder}
                   value={familyCode}
                   onChangeText={(value) => {

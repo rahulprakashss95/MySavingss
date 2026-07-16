@@ -19,7 +19,6 @@ import DatePicker from "../components/DatePicker";
 import LedgerClientPicker from "../components/LedgerClientPicker";
 import Loader from "../components/Loader";
 import VisibilityToggle from "../components/VisibilityToggle";
-import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { Visibility } from "../models/common";
 import { EARNING_TYPES, EarningModel } from "../models/LedgerModel";
@@ -57,7 +56,6 @@ const EarningAddEditScreen = ({ route, navigation }: Props) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { colors } = useTheme();
-  const { user } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const selectClient = (id: string, label: string) => {
@@ -90,7 +88,6 @@ const EarningAddEditScreen = ({ route, navigation }: Props) => {
       date,
       comments: comments.trim(),
       visibility,
-      loginUserId: earning?.loginUserId ?? user?.id ?? "",
     };
 
     const save =

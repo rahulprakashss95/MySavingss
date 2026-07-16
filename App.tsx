@@ -38,6 +38,7 @@ import SavingAddEditScreen from "./src/screens/SavingAddEditScreen";
 import LedgerOverviewScreen from "./src/screens/LedgerOverviewScreen";
 import OverviewScreen from "./src/screens/OverviewScreen";
 import ClientScreen from "./src/screens/ClientScreen";
+import ClientAddEditScreen from "./src/screens/ClientAddEditScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 import MenuButton from "./src/components/MenuButton";
 import SideDrawer from "./src/components/SideDrawer";
@@ -60,6 +61,7 @@ export type RootStackParamList = {
   Home: undefined;
   Deposit: undefined;
   Clients: undefined;
+  ClientAddEdit: any;
   FixedDepositList: undefined;
   FixedDepositAddEdit: any;
   Documents: undefined;
@@ -163,6 +165,11 @@ const RootNavigator = () => {
                 name="Clients"
                 component={ClientScreen}
                 options={{ title: "Clients" }}
+              />
+              <Stack.Screen
+                name="ClientAddEdit"
+                component={ClientAddEditScreen}
+                options={{ title: "Client" }}
               />
               <Stack.Screen
                 name="FixedDepositList"

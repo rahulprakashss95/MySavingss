@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo, useState } from "react";
 import {
   Pressable,
@@ -8,16 +9,20 @@ import {
   View,
 } from "react-native";
 import {
-  addLedgerClient,
-  deleteLedgerClient,
-  updateLedgerClient,
+  addClient,
+  deleteClient,
+  updateClient,
 } from "../../database/firebaseQuery";
 import Button from "../components/Button";
 import Loader from "../components/Loader";
 import VisibilityToggle from "../components/VisibilityToggle";
 import { useTheme } from "../context/ThemeContext";
+import {
+  ClientModel,
+  clientMobileNumbers,
+  toMobileList,
+} from "../models/ClientModel";
 import { Visibility } from "../models/common";
-import { LedgerClientModel } from "../models/LedgerModel";
 import { ThemeColors } from "../utils/Color";
 import {
   NavigationProp,
@@ -31,15 +36,17 @@ type Props = {
   navigation: NavigationProp;
 };
 
-const LedgerClientAddEditScreen = ({ route, navigation }: Props) => {
+const ClientAddEditScreen = ({ route, navigation }: Props) => {
   const { clientData } = (route.params as any) || {};
-  const client: LedgerClientModel | null = clientData || null;
+  const client: ClientModel | null = clientData || null;
   const pageMode = client ? "Edit" : "Add";
 
   const [name, setName] = useState(client?.name ?? "");
-  const [phone, setPhone] = useState(client?.phone ?? "");
-  const [email, setEmail] = useState(client?.email ?? "");
-  const [description, setDescription] = useState(client?.description ?? "");
+  // Keep at least one row so there's always a field to type into.
+  const [numbers, setNumbers] = useState<string[]>(() => {
+    const existing = clientMobileNumbers(client?.mobile);
+    return existing.length ? existing : [""];
+  });
   const [visibility, setVisibility] = useState<Visibility>(
     client?.visibility ?? "private"
   );
@@ -47,6 +54,16 @@ const LedgerClientAddEditScreen = ({ route, navigation }: Props) => {
 
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
+
+  const setNumberAt = (index: number, value: string) =>
+    setNumbers((current) => current.map((n, i) => (i === index ? value : n)));
+
+  const addNumberRow = () => setNumbers((current) => [...current, ""]);
+
+  const removeNumberRow = (index: number) =>
+    setNumbers((current) =>
+      current.length === 1 ? [""] : current.filter((_, i) => i !== index)
+    );
 
   const handleSave = () => {
     if (!name.trim()) {
@@ -57,16 +74,14 @@ const LedgerClientAddEditScreen = ({ route, navigation }: Props) => {
     setIsLoading(true);
     const payload = {
       name: name.trim(),
-      phone: phone.trim(),
-      email: email.trim(),
-      description: description.trim(),
+      mobile: toMobileList(numbers),
       visibility,
     };
 
     const save =
       pageMode === "Add"
-        ? addLedgerClient(payload)
-        : updateLedgerClient(client!.id, payload);
+        ? addClient(payload)
+        : updateClient(client!.id, payload);
 
     save
       .then(() => navigation.goBack())
@@ -79,13 +94,13 @@ const LedgerClientAddEditScreen = ({ route, navigation }: Props) => {
   const handleDelete = () => {
     showConfirmationAlert(
       "Delete client",
-      "Earnings and savings already recorded against this client are kept. Continue?"
+      "Fixed deposits already recorded against this client are kept. Continue?"
     ).then((confirmed) => {
       if (!confirmed) {
         return;
       }
       setIsLoading(true);
-      deleteLedgerClient(client!.id)
+      deleteClient(client!.id)
         .then(() => navigation.goBack())
         .catch((error) => {
           showToast("error", "Unable to delete", String(error), "bottom");
@@ -112,51 +127,48 @@ const LedgerClientAddEditScreen = ({ route, navigation }: Props) => {
 
         <Text style={styles.label}>Name</Text>
         <TextInput
-          style={[styles.input, styles.inputSpacing]}
+          style={styles.input}
           onChangeText={setName}
           value={name}
-          placeholder="e.g. Acme Corp"
+          placeholder="e.g. KVB Capital"
           placeholderTextColor={colors.placeholder}
           autoCapitalize="words"
         />
 
-        <Text style={styles.label}>Phone</Text>
-        <TextInput
-          style={[styles.input, styles.inputSpacing]}
-          onChangeText={setPhone}
-          value={phone}
-          placeholder="Phone number"
-          placeholderTextColor={colors.placeholder}
-          keyboardType="phone-pad"
-        />
+        <View style={styles.numbersHeader}>
+          <Text style={styles.label}>Contact numbers</Text>
+          <Pressable
+            onPress={addNumberRow}
+            accessibilityRole="button"
+            hitSlop={8}
+            style={styles.addNumber}
+          >
+            <Ionicons name="add" size={16} color={colors.primary} />
+            <Text style={styles.addNumberText}>Add</Text>
+          </Pressable>
+        </View>
 
-        <Text style={styles.label}>Email</Text>
-        <TextInput
-          style={styles.input}
-          onChangeText={setEmail}
-          value={email}
-          placeholder="name@example.com"
-          placeholderTextColor={colors.placeholder}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Notes</Text>
-
-        <Text style={styles.label}>Description</Text>
-        <TextInput
-          style={[styles.input, styles.multiline]}
-          onChangeText={setDescription}
-          value={description}
-          placeholder="Anything worth remembering about this client…"
-          placeholderTextColor={colors.placeholder}
-          multiline
-          numberOfLines={4}
-          textAlignVertical="top"
-        />
+        {numbers.map((number, index) => (
+          <View key={index} style={styles.numberRow}>
+            <TextInput
+              style={[styles.input, styles.numberInput]}
+              onChangeText={(value) => setNumberAt(index, value)}
+              value={number}
+              placeholder="Phone number"
+              placeholderTextColor={colors.placeholder}
+              keyboardType="phone-pad"
+            />
+            <Pressable
+              onPress={() => removeNumberRow(index)}
+              accessibilityRole="button"
+              accessibilityLabel="Remove number"
+              hitSlop={8}
+              style={styles.removeNumber}
+            >
+              <Ionicons name="close" size={18} color={colors.textMuted} />
+            </Pressable>
+          </View>
+        ))}
       </View>
 
       <Button
@@ -223,11 +235,34 @@ const createStyles = (colors: ThemeColors) =>
       fontSize: 16,
       color: colors.text,
     },
-    inputSpacing: {
-      marginBottom: 18,
+    numbersHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: 18,
     },
-    multiline: {
-      minHeight: 96,
+    addNumber: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 8,
+    },
+    addNumberText: {
+      fontSize: 13,
+      fontWeight: "700",
+      color: colors.primary,
+      marginLeft: 2,
+    },
+    numberRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 10,
+    },
+    numberInput: {
+      flex: 1,
+    },
+    removeNumber: {
+      padding: 8,
+      marginLeft: 6,
     },
     primaryButton: {
       width: "100%",
@@ -248,4 +283,4 @@ const createStyles = (colors: ThemeColors) =>
     },
   });
 
-export default LedgerClientAddEditScreen;
+export default ClientAddEditScreen;

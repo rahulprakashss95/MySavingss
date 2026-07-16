@@ -41,8 +41,20 @@ const RegisterScreen = ({ navigation }: Props) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Validate on focus-out so problems surface before the user hits Register.
+  const validatePasswordField = () =>
+    setPasswordError(
+      password ? validatePassword(password, { username: username.trim() }) : null
+    );
+  const validateConfirmField = () =>
+    setConfirmError(
+      confirm && confirm !== password ? "Passwords do not match." : null
+    );
 
   const effectiveCode = codeTouched
     ? normalizeFamilyCode(familyCode)
@@ -141,7 +153,7 @@ const RegisterScreen = ({ navigation }: Props) => {
             icon="people-outline"
             value={familyName}
             onChangeText={onFamilyNameChange}
-            placeholder="e.g. Rahul's Family"
+            placeholder="e.g. The Smith Family"
             colors={colors}
             styles={styles}
           />
@@ -153,7 +165,7 @@ const RegisterScreen = ({ navigation }: Props) => {
               setCodeTouched(true);
               setFamilyCode(value);
             }}
-            placeholder="e.g. rahul_family"
+            placeholder="e.g. smith_family"
             autoCapitalize="none"
             colors={colors}
             styles={styles}
@@ -169,7 +181,7 @@ const RegisterScreen = ({ navigation }: Props) => {
             icon="person-outline"
             value={adminName}
             onChangeText={setAdminName}
-            placeholder="e.g. Rahul Prakash"
+            placeholder="e.g. John Smith"
             colors={colors}
             styles={styles}
           />
@@ -187,7 +199,12 @@ const RegisterScreen = ({ navigation }: Props) => {
             label="Password"
             icon="lock-closed-outline"
             value={password}
-            onChangeText={setPassword}
+            onChangeText={(value) => {
+              setPassword(value);
+              if (passwordError) setPasswordError(null);
+            }}
+            onBlur={validatePasswordField}
+            error={passwordError ?? undefined}
             placeholder={`${MIN_PASSWORD_LENGTH}+ chars, a letter and a number`}
             secureTextEntry={!showPassword}
             autoCapitalize="none"
@@ -211,7 +228,12 @@ const RegisterScreen = ({ navigation }: Props) => {
             label="Confirm password"
             icon="lock-closed-outline"
             value={confirm}
-            onChangeText={setConfirm}
+            onChangeText={(value) => {
+              setConfirm(value);
+              if (confirmError) setConfirmError(null);
+            }}
+            onBlur={validateConfirmField}
+            error={confirmError ?? undefined}
             placeholder="Re-enter password"
             secureTextEntry={!showPassword}
             autoCapitalize="none"
@@ -252,6 +274,10 @@ type FieldProps = {
   secureTextEntry?: boolean;
   autoCapitalize?: "none" | "sentences" | "words" | "characters";
   hint?: string;
+  /** Inline validation message; shown in red and replaces the hint. */
+  error?: string;
+  /** Fired when the field loses focus — used for on-blur validation. */
+  onBlur?: () => void;
   trailing?: React.ReactNode;
   colors: ThemeColors;
   styles: ReturnType<typeof createStyles>;
@@ -266,6 +292,8 @@ const Field = ({
   secureTextEntry,
   autoCapitalize = "sentences",
   hint,
+  error,
+  onBlur,
   trailing,
   colors,
   styles,
@@ -274,7 +302,13 @@ const Field = ({
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
-      <View style={[styles.inputRow, focused && styles.inputRowFocused]}>
+      <View
+        style={[
+          styles.inputRow,
+          focused && styles.inputRowFocused,
+          !!error && styles.inputRowError,
+        ]}
+      >
         <Ionicons
           name={icon}
           size={18}
@@ -288,14 +322,21 @@ const Field = ({
           value={value}
           onChangeText={onChangeText}
           onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
+          onBlur={() => {
+            setFocused(false);
+            onBlur?.();
+          }}
           secureTextEntry={secureTextEntry}
           autoCapitalize={autoCapitalize}
           autoCorrect={false}
         />
         {trailing}
       </View>
-      {!!hint && <Text style={styles.hint}>{hint}</Text>}
+      {error ? (
+        <Text style={styles.errorHint}>{error}</Text>
+      ) : (
+        !!hint && <Text style={styles.hint}>{hint}</Text>
+      )}
     </View>
   );
 };
@@ -380,6 +421,9 @@ const createStyles = (colors: ThemeColors) =>
     inputRowFocused: {
       borderColor: colors.primary,
     },
+    inputRowError: {
+      borderColor: colors.negative,
+    },
     inputIcon: {
       marginRight: 10,
     },
@@ -392,6 +436,11 @@ const createStyles = (colors: ThemeColors) =>
     hint: {
       fontSize: 12,
       color: colors.textMuted,
+      marginTop: 6,
+    },
+    errorHint: {
+      fontSize: 12,
+      color: colors.negative,
       marginTop: 6,
     },
     submit: {

@@ -2,13 +2,9 @@ import type { Creatable, Owned } from "./common";
 
 /**
  * The ledger is inherently personal: its records default to private, so a
- * member only ever sees their own. Ownership now rides on `ownerId` (from
- * `Owned`); `loginUserId` is retained for older rows and mirrors `ownerId`.
+ * member only ever sees their own. Ownership rides on `ownerId` (from `Owned`).
  */
-type UserOwned = Owned & {
-  /** @deprecated Mirrors `ownerId`; kept so older rows still read. */
-  loginUserId: string;
-};
+type UserOwned = Owned;
 
 /**
  * Deliberately not the existing `clients` collection: that one holds the banks

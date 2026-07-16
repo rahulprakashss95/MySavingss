@@ -11,8 +11,6 @@ export type FixedDepositModel = Owned & {
   interest: string;
   interestPercentage: string;
   isCompleted: boolean;
-  /** @deprecated Kept for older rows; visibility is now driven by `ownerId`. */
-  loginUserId: string;
   maturityDate: any;
   name: string;
   mobile: string;

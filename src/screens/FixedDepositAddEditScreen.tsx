@@ -70,7 +70,6 @@ const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
   const { colors } = useTheme();
   const { user } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const canChooseDepositor = user?.role === "admin";
 
   useEffect(() => {
     // The picker options are data, not constants: banks come from `clients`
@@ -83,23 +82,14 @@ const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
         );
 
         const deposits = (depositData as FixedDepositModel[]) ?? [];
-        const allDepositors = Array.from(
-          new Set(deposits.map((deposit) => deposit.depositorName).filter(Boolean))
-        );
 
-        // Offer every known depositor to everyone, plus the user's own name
-        // even if they have no deposits yet (otherwise the pre-selected value
-        // below wouldn't match any option and the picker would look empty).
+        // Each user records their own deposits, so the only depositor offered
+        // is the signed-in user — other people's names are never listed.
         const ownName = depositorNameForUser(user, deposits);
-        const names = new Set(allDepositors);
-        if (ownName) {
-          names.add(ownName);
-        }
-        setDepositorList([...names].sort((a, b) => a.localeCompare(b)));
+        setDepositorList(ownName ? [ownName] : []);
 
-        // Non-admins default to their own name when creating a deposit, so a
-        // new record is scoped to them and doesn't vanish from their own list.
-        if (pageMode === "Add" && ownName && !canChooseDepositor) {
+        // Pre-select it on a new deposit so the record is scoped to this user.
+        if (pageMode === "Add" && ownName) {
           setDepositorName(ownName);
         }
       })
@@ -165,12 +155,11 @@ const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
 
     const save =
       pageMode == "Add"
-        ? addFixedDeposit({ ...payload, loginUserId: user?.id ?? "" })
+        ? addFixedDeposit(payload)
         : updateFixedDeposit(fixedDeposit.id, {
             ...payload,
             // Carry the existing record's flags through; setDoc replaces the
             // whole document, so omitting these would silently reset them.
-            loginUserId: fixedDeposit.loginUserId,
             canShow: fixedDeposit.canShow,
             isCompleted: fixedDeposit.isCompleted,
           });

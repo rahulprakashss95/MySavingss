@@ -4,15 +4,21 @@ import {
   Text,
   StyleSheet,
   FlatList,
+  Pressable,
   RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { getClients } from "../../database/firebaseQuery";
+import FloatingButton from "../components/FAB";
 import { ClientListSkeleton } from "../components/Skeleton";
 import { ClientModel } from "../models/ClientModel";
 import { useTheme } from "../context/ThemeContext";
 import { ThemeColors, tint } from "../utils/Color";
-import { showToast } from "../utils/Utils";
+import { NavigationProp, showToast } from "../utils/Utils";
+
+type Props = {
+  navigation: NavigationProp;
+};
 
 /**
  * `mobile` is not consistently shaped in Firestore: some docs hold an array of
@@ -50,16 +56,21 @@ const initialsOf = (name: string) => {
   return (words[0][0] + words[1][0]).toUpperCase();
 };
 
-const ClientScreen = () => {
+const ClientScreen = ({ navigation }: Props) => {
   const [clientList, setClientList] = useState<ClientModel[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
+  // Reload on focus so a client added or edited elsewhere shows up on return.
   useEffect(() => {
-    loadClients();
-  }, []);
+    const unsubscribe = navigation.addListener("focus", loadClients);
+    return unsubscribe;
+  }, [navigation]);
+
+  const openClient = (client: ClientModel | null) =>
+    navigation.navigate("ClientAddEdit", { clientData: client });
 
   const loadClients = () => {
     getClients()
@@ -117,7 +128,11 @@ const ClientScreen = () => {
     const numbers = mobileNumbers(item.mobile);
 
     return (
-      <View style={styles.card}>
+      <Pressable
+        onPress={() => openClient(item)}
+        accessibilityRole="button"
+        style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+      >
         <View style={styles.row}>
           <View
             style={[styles.avatar, { backgroundColor: tint(colors.primary) }]}
@@ -146,8 +161,14 @@ const ClientScreen = () => {
               <Text style={styles.noMobile}>No contact number</Text>
             )}
           </View>
+
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color={colors.textMuted}
+          />
         </View>
-      </View>
+      </Pressable>
     );
   };
 
@@ -180,6 +201,10 @@ const ClientScreen = () => {
         }
         renderItem={renderClient}
       />
+      <FloatingButton
+        accessibilityLabel="Add client"
+        onPress={() => openClient(null)}
+      />
     </View>
   );
 };
@@ -192,7 +217,7 @@ const createStyles = (colors: ThemeColors) =>
     },
     listContent: {
       paddingTop: 16,
-      paddingBottom: 24,
+      paddingBottom: 90,
       flexGrow: 1,
     },
     summary: {
@@ -212,6 +237,9 @@ const createStyles = (colors: ThemeColors) =>
       padding: 16,
       marginHorizontal: 16,
       marginBottom: 12,
+    },
+    cardPressed: {
+      opacity: 0.7,
     },
     row: {
       flexDirection: "row",

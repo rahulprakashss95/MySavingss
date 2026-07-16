@@ -18,7 +18,6 @@ import DatePicker from "../components/DatePicker";
 import LedgerClientPicker from "../components/LedgerClientPicker";
 import Loader from "../components/Loader";
 import VisibilityToggle from "../components/VisibilityToggle";
-import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { Visibility } from "../models/common";
 import { SavingModel } from "../models/LedgerModel";
@@ -52,7 +51,6 @@ const SavingAddEditScreen = ({ route, navigation }: Props) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { colors } = useTheme();
-  const { user } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const selectClient = (id: string, label: string) => {
@@ -83,7 +81,6 @@ const SavingAddEditScreen = ({ route, navigation }: Props) => {
       date,
       comments: comments.trim(),
       visibility,
-      loginUserId: saving?.loginUserId ?? user?.id ?? "",
     };
 
     const save =

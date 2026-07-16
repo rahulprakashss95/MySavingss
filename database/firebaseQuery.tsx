@@ -33,7 +33,7 @@ import type {
   SavingInput,
   SavingModel,
 } from "../src/models/LedgerModel";
-import type { ClientModel } from "../src/models/ClientModel";
+import type { ClientInput, ClientModel } from "../src/models/ClientModel";
 import type { FixedDepositModel } from "../src/models/FixedDepositModel";
 import type { LoginUserModel, StoredLoginUser, UserRole } from "../src/models/LoginUserModel";
 import type { FamilyInput, FamilyModel } from "../src/models/FamilyModel";
@@ -49,7 +49,7 @@ const FAMILIES = "families";
 const FAMILY_SETTINGS = "familySettings";
 const LOGIN_USERS = "loginUsers";
 const CLIENTS = "clients";
-const FIXED_DEPOSIT = "fixedDeposit";
+const FIXED_DEPOSIT = "fixedDeposits";
 const GOVERNMENT_DOCUMENTS = "governmentDocuments";
 const BANK_DOCUMENTS = "bankDocuments";
 const ORNAMENTS = "ornaments";
@@ -361,6 +361,13 @@ export const getLoginUsers = getFamilyUsers;
 
 export const getClients = () => listScoped<ClientModel>(CLIENTS);
 
+export const addClient = (input: ClientInput) => saveScoped(CLIENTS, input);
+
+export const updateClient = (refId: string, input: ClientInput) =>
+  saveScoped(CLIENTS, input, refId);
+
+export const deleteClient = (id: string) => deleteRecord(CLIENTS, id);
+
 export const getFixedDeposit = () => listScoped<FixedDepositModel>(FIXED_DEPOSIT);
 
 export type FixedDepositInput = {
@@ -371,8 +378,6 @@ export type FixedDepositInput = {
   interestPercentage: string;
   depositedDate: string;
   maturityDate: string;
-  /** @deprecated Ownership is now `ownerId`, stamped by the data layer. */
-  loginUserId?: string;
   canShow?: boolean;
   isCompleted?: boolean;
   visibility?: Visibility;
@@ -385,7 +390,6 @@ export type FixedDepositInput = {
  */
 const withFixedDepositDefaults = (input: FixedDepositInput) => ({
   ...input,
-  loginUserId: input.loginUserId ?? "",
   canShow: input.canShow ?? true,
   isCompleted: input.isCompleted ?? false,
 });

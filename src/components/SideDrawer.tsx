@@ -44,7 +44,7 @@ const TREE: Node[] = [
     module: "deposits",
     children: [
       { label: "Fixed Deposits", icon: "cash-outline", screen: "FixedDepositList" },
-      { label: "Clients", icon: "people-outline", screen: "Clients" },
+      { label: "Banks", icon: "business-outline", screen: "Banks" },
       { label: "Overview", icon: "pie-chart-outline", screen: "OverView" },
     ],
   },

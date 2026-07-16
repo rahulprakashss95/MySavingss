@@ -1,6 +1,6 @@
 import type { Creatable, Owned } from "./common";
 
-export type ClientModel = Owned & {
+export type BankModel = Owned & {
   id: string;
   mobile: MobileModel[] | null;
   name: string;
@@ -13,13 +13,13 @@ export type MobileModel = {
   value: string;
 };
 
-export type ClientInput = Creatable<ClientModel>;
+export type BankInput = Creatable<BankModel>;
 
 /**
  * `mobile` has been stored inconsistently over time — an array of objects, a
  * bare string, a keyed map, or null. Flatten any of those into plain numbers.
  */
-export const clientMobileNumbers = (mobile: any): string[] => {
+export const bankMobileNumbers = (mobile: any): string[] => {
   if (!mobile) {
     return [];
   }

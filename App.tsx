@@ -40,8 +40,8 @@ import SavingListScreen from "./src/screens/SavingListScreen";
 import SavingAddEditScreen from "./src/screens/SavingAddEditScreen";
 import LedgerOverviewScreen from "./src/screens/LedgerOverviewScreen";
 import OverviewScreen from "./src/screens/OverviewScreen";
-import ClientScreen from "./src/screens/ClientScreen";
-import ClientAddEditScreen from "./src/screens/ClientAddEditScreen";
+import BankScreen from "./src/screens/BankScreen";
+import BankAddEditScreen from "./src/screens/BankAddEditScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 import MenuButton from "./src/components/MenuButton";
 import SideDrawer from "./src/components/SideDrawer";
@@ -63,8 +63,8 @@ export type RootStackParamList = {
   Admin: undefined;
   Home: undefined;
   Deposit: undefined;
-  Clients: undefined;
-  ClientAddEdit: any;
+  Banks: undefined;
+  BankAddEdit: any;
   FixedDepositList: undefined;
   FixedDepositAddEdit: any;
   Documents: undefined;
@@ -165,14 +165,14 @@ const RootNavigator = () => {
                 options={{ title: "Deposits" }}
               />
               <Stack.Screen
-                name="Clients"
-                component={ClientScreen}
-                options={{ title: "Clients" }}
+                name="Banks"
+                component={BankScreen}
+                options={{ title: "Banks" }}
               />
               <Stack.Screen
-                name="ClientAddEdit"
-                component={ClientAddEditScreen}
-                options={{ title: "Client" }}
+                name="BankAddEdit"
+                component={BankAddEditScreen}
+                options={{ title: "Bank" }}
               />
               <Stack.Screen
                 name="FixedDepositList"

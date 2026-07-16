@@ -1,5 +1,5 @@
 import moment from "moment";
-import { ClientModel } from "../models/ClientModel";
+import { BankModel } from "../models/BankModel";
 import { FixedDepositModel } from "../models/FixedDepositModel";
 
 export const DATE_FORMAT = "DD-MMM-YYYY";
@@ -20,17 +20,17 @@ export const parseMaturity = (maturityDate: any) => {
 export const visibleDeposits = (deposits: FixedDepositModel[]) =>
   deposits.filter((deposit: any) => deposit?.canShow);
 
-/** Attach each deposit's bank name from the client list, without mutating input. */
-export const mergeClientNames = (
+/** Attach each deposit's bank name from the bank list, without mutating input. */
+export const mergeBankNames = (
   deposits: FixedDepositModel[],
-  clients: ClientModel[]
+  banks: BankModel[]
 ): FixedDepositModel[] =>
   deposits.map((deposit) => {
-    const client = clients?.find((c) => c.id == deposit.clientId);
+    const bank = banks?.find((b) => b.id == deposit.bankId);
     return {
       ...deposit,
-      name: client?.name ?? "Unknown",
-      mobile: (client?.mobile as any) ?? null,
+      name: bank?.name ?? "Unknown",
+      mobile: (bank?.mobile as any) ?? null,
     };
   });
 

@@ -63,6 +63,20 @@ export const AuthProvider = ({ children }: Props) => {
   // before the multi-family model (no familyId) are discarded so a stale login
   // can't run without a family scope.
   useEffect(() => {
+    let settled = false;
+    const finish = () => {
+      if (!settled) {
+        settled = true;
+        setIsRestoring(false);
+      }
+    };
+    // Never let a wedged storage read hang the app on the loading screen — after
+    // a short grace period, continue as signed-out (the user can still log in).
+    const timeout = setTimeout(() => {
+      console.warn("Session restore timed out; continuing without a stored session.");
+      finish();
+    }, 3000);
+
     AsyncStorage.getItem(SESSION_STORAGE_KEY)
       .then((storedSession) => {
         if (!storedSession) {
@@ -79,7 +93,10 @@ export const AuthProvider = ({ children }: Props) => {
       .catch((error) => {
         console.log("Unable to restore session", error);
       })
-      .finally(() => setIsRestoring(false));
+      .finally(() => {
+        clearTimeout(timeout);
+        finish();
+      });
   }, []);
 
   const signIn = useCallback(async (nextUser: SessionUser) => {

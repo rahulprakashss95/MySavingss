@@ -10,12 +10,12 @@ import { Ionicons } from "@expo/vector-icons";
 import BarList from "../components/BarList";
 import { OverviewSkeleton } from "../components/Skeleton";
 import { useCollectionState } from "../redux/hooks";
-import { ClientModel } from "../models/ClientModel";
+import { BankModel } from "../models/BankModel";
 import { FixedDepositModel } from "../models/FixedDepositModel";
 import { amountFormat } from "../utils/Utils";
 import {
   buildTotals,
-  mergeClientNames,
+  mergeBankNames,
   visibleDeposits,
 } from "../utils/deposits";
 import { useTheme } from "../context/ThemeContext";
@@ -30,7 +30,7 @@ const OverviewScreen = () => {
   // Same cached collections the deposits list uses, so opening the overview
   // after the list (or vice-versa) doesn't re-read Firestore.
   const fixedDeposits = useCollectionState<FixedDepositModel>("fixedDeposits");
-  const banks = useCollectionState<ClientModel>("clients");
+  const banks = useCollectionState<BankModel>("banks");
 
   const hasLoaded = fixedDeposits.hasLoaded && banks.hasLoaded;
   const isRefreshing = fixedDeposits.isRefreshing || banks.isRefreshing;
@@ -42,7 +42,7 @@ const OverviewScreen = () => {
   // The query layer already returns only the deposits this user may see, so the
   // hero figure always agrees with the list.
   const deposits = useMemo(
-    () => mergeClientNames(visibleDeposits(fixedDeposits.items), banks.items),
+    () => mergeBankNames(visibleDeposits(fixedDeposits.items), banks.items),
     [fixedDeposits.items, banks.items]
   );
 

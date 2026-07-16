@@ -5,10 +5,10 @@ import { useTheme } from "../context/ThemeContext";
 import { ThemeColors } from "../utils/Color";
 import { useCollectionState } from "../redux/hooks";
 import { FixedDepositModel } from "../models/FixedDepositModel";
-import { ClientModel } from "../models/ClientModel";
+import { BankModel } from "../models/BankModel";
 import { amountFormat, NavigationProp } from "../utils/Utils";
 import {
-  mergeClientNames,
+  mergeBankNames,
   sortByMaturity,
   visibleDeposits,
 } from "../utils/deposits";
@@ -24,10 +24,10 @@ const FixedDepositListScreen = ({ navigation }: Props) => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  // Deposits only carry a clientId, so bank names come from the `clients`
+  // Deposits only carry a bankId, so bank names come from the `banks`
   // cache. Both are served from the store — fetched once, not on every focus.
   const deposits = useCollectionState<FixedDepositModel>("fixedDeposits");
-  const banks = useCollectionState<ClientModel>("clients");
+  const banks = useCollectionState<BankModel>("banks");
 
   const hasLoaded = deposits.hasLoaded && banks.hasLoaded;
   const isRefreshing = deposits.isRefreshing || banks.isRefreshing;
@@ -41,7 +41,7 @@ const FixedDepositListScreen = ({ navigation }: Props) => {
   const fixedDeposits = useMemo(
     () =>
       sortByMaturity(
-        mergeClientNames(visibleDeposits(deposits.items), banks.items)
+        mergeBankNames(visibleDeposits(deposits.items), banks.items)
       ),
     [deposits.items, banks.items]
   );

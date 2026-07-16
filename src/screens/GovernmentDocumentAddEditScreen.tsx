@@ -1,4 +1,3 @@
-import { Picker } from "@react-native-picker/picker";
 import React, { useMemo, useState } from "react";
 import {
   Pressable,
@@ -16,6 +15,7 @@ import {
 import Button from "../components/Button";
 import Loader from "../components/Loader";
 import PersonPicker from "../components/PersonPicker";
+import SearchableSelect from "../components/SearchableSelect";
 import ReadOnlyBanner from "../components/ReadOnlyBanner";
 import ReadOnlyGuard from "../components/ReadOnlyGuard";
 import VisibilityToggle from "../components/VisibilityToggle";
@@ -154,32 +154,17 @@ const GovernmentDocumentAddEditScreen = ({ route, navigation }: Props) => {
           autoSelectSelf={pageMode === "Add"}
         />
 
-        <Text style={styles.label}>Type</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            style={styles.picker}
-            dropdownIconColor={colors.text}
-            mode="dialog"
-            selectedValue={documentType}
-            onValueChange={setDocumentType}
-          >
-            <Picker.Item
-              label="Select a document type"
-              value=""
-              color={colors.placeholder}
-              style={styles.pickerItem}
-            />
-            {GOVERNMENT_DOCUMENT_TYPES.map((type) => (
-              <Picker.Item
-                key={type}
-                label={type}
-                value={type}
-                color={colors.text}
-                style={styles.pickerItem}
-              />
-            ))}
-          </Picker>
-        </View>
+        <SearchableSelect
+          label="Type"
+          placeholder="Select a document type"
+          selectedId={documentType}
+          selectedName={documentType}
+          options={GOVERNMENT_DOCUMENT_TYPES.map((type) => ({
+            id: type,
+            name: type,
+          }))}
+          onSelect={(id) => setDocumentType(id)}
+        />
 
         <Text style={styles.label}>Number</Text>
         <TextInput

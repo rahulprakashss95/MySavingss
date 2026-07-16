@@ -22,7 +22,7 @@ const DepositScreen = ({ navigation }: Props) => {
     >
       {/* No page title here: the stack header already reads "Deposits". */}
       <Text style={styles.lede}>
-        Manage your fixed deposits and the clients holding them.
+        Manage your fixed deposits and the banks holding them.
       </Text>
 
       <Text style={styles.sectionTitle}>Records</Text>
@@ -38,13 +38,13 @@ const DepositScreen = ({ navigation }: Props) => {
           onPress={() => navigation.navigate("FixedDepositList")}
         />
         <FeatureTile
-          title="Clients"
-          subtitle="Banks & depositors"
+          title="Banks"
+          subtitle="Banks holding deposits"
           accent={colors.accentViolet}
           renderIcon={(color) => (
-            <AntDesign name="file1" size={22} color={color} />
+            <AntDesign name="file" size={22} color={color} />
           )}
-          onPress={() => navigation.navigate("Clients")}
+          onPress={() => navigation.navigate("Banks")}
         />
       </View>
 

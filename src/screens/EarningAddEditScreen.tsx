@@ -1,4 +1,3 @@
-import { Picker } from "@react-native-picker/picker";
 import moment from "moment";
 import React, { useMemo, useState } from "react";
 import {
@@ -17,6 +16,7 @@ import {
 import Button from "../components/Button";
 import DatePicker from "../components/DatePicker";
 import LedgerClientPicker from "../components/LedgerClientPicker";
+import SearchableSelect from "../components/SearchableSelect";
 import Loader from "../components/Loader";
 import ReadOnlyBanner from "../components/ReadOnlyBanner";
 import ReadOnlyGuard from "../components/ReadOnlyGuard";
@@ -149,34 +149,20 @@ const EarningAddEditScreen = ({ route, navigation }: Props) => {
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Earning</Text>
 
-        <LedgerClientPicker selectedId={clientId} onSelect={selectClient} />
+        <LedgerClientPicker
+          selectedId={clientId}
+          selectedName={clientName}
+          onSelect={selectClient}
+        />
 
-        <Text style={styles.label}>Type</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            style={styles.picker}
-            dropdownIconColor={colors.text}
-            mode="dialog"
-            selectedValue={type}
-            onValueChange={setType}
-          >
-            <Picker.Item
-              label="Select a type"
-              value=""
-              color={colors.placeholder}
-              style={styles.pickerItem}
-            />
-            {EARNING_TYPES.map((option) => (
-              <Picker.Item
-                key={option}
-                label={option}
-                value={option}
-                color={colors.text}
-                style={styles.pickerItem}
-              />
-            ))}
-          </Picker>
-        </View>
+        <SearchableSelect
+          label="Type"
+          placeholder="Select a type"
+          selectedId={type}
+          selectedName={type}
+          options={EARNING_TYPES.map((option) => ({ id: option, name: option }))}
+          onSelect={(id) => setType(id)}
+        />
 
         <Text style={styles.label}>Amount</Text>
         <View style={[styles.affixRow, styles.inputSpacing]}>

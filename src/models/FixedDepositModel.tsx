@@ -3,7 +3,7 @@ import type { Owned } from "./common";
 export type FixedDepositModel = Owned & {
   amount: string;
   canShow: boolean;
-  clientId: string;
+  bankId: string;
   depositedDate: string;
   /** Display label for whose deposit this is; ownership is `ownerId` (from Owned). */
   depositorName: string;

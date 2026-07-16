@@ -140,7 +140,11 @@ const SavingAddEditScreen = ({ route, navigation }: Props) => {
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Saving</Text>
 
-        <LedgerClientPicker selectedId={clientId} onSelect={selectClient} />
+        <LedgerClientPicker
+          selectedId={clientId}
+          selectedName={clientName}
+          onSelect={selectClient}
+        />
 
         <Text style={styles.label}>Amount</Text>
         <View style={[styles.affixRow, styles.inputSpacing]}>

@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Picker } from "@react-native-picker/picker";
 import React, { useMemo, useState } from "react";
 import {
   Pressable,
@@ -18,6 +17,7 @@ import Button from "../components/Button";
 import DualUnitInput from "../components/DualUnitInput";
 import Loader from "../components/Loader";
 import PersonPicker from "../components/PersonPicker";
+import SearchableSelect from "../components/SearchableSelect";
 import ProgressBar from "../components/ProgressBar";
 import ReadOnlyBanner from "../components/ReadOnlyBanner";
 import ReadOnlyGuard from "../components/ReadOnlyGuard";
@@ -218,32 +218,14 @@ const PropertyAddEditScreen = ({ route, navigation }: Props) => {
           autoSelectSelf={pageMode === "Add"}
         />
 
-        <Text style={styles.label}>Type</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            style={styles.picker}
-            dropdownIconColor={colors.text}
-            mode="dialog"
-            selectedValue={propertyType}
-            onValueChange={setPropertyType}
-          >
-            <Picker.Item
-              label="Select a property type"
-              value=""
-              color={colors.placeholder}
-              style={styles.pickerItem}
-            />
-            {PROPERTY_TYPES.map((type) => (
-              <Picker.Item
-                key={type}
-                label={type}
-                value={type}
-                color={colors.text}
-                style={styles.pickerItem}
-              />
-            ))}
-          </Picker>
-        </View>
+        <SearchableSelect
+          label="Type"
+          placeholder="Select a property type"
+          selectedId={propertyType}
+          selectedName={propertyType}
+          options={PROPERTY_TYPES.map((type) => ({ id: type, name: type }))}
+          onSelect={(id) => setPropertyType(id)}
+        />
 
         <Text style={styles.label}>Name</Text>
         <TextInput
@@ -273,26 +255,19 @@ const PropertyAddEditScreen = ({ route, navigation }: Props) => {
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Payment</Text>
 
-        <Text style={styles.label}>How was it paid?</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            style={styles.picker}
-            dropdownIconColor={colors.text}
-            mode="dialog"
-            selectedValue={paymentMode}
-            onValueChange={(value) => setPaymentMode(value as PaymentMode)}
-          >
-            {PAYMENT_MODES.map((mode) => (
-              <Picker.Item
-                key={mode.value}
-                label={mode.label}
-                value={mode.value}
-                color={colors.text}
-                style={styles.pickerItem}
-              />
-            ))}
-          </Picker>
-        </View>
+        <SearchableSelect
+          label="How was it paid?"
+          placeholder="Select a payment mode"
+          selectedId={paymentMode}
+          selectedName={
+            PAYMENT_MODES.find((mode) => mode.value === paymentMode)?.label
+          }
+          options={PAYMENT_MODES.map((mode) => ({
+            id: mode.value,
+            name: mode.label,
+          }))}
+          onSelect={(id) => setPaymentMode(id as PaymentMode)}
+        />
 
         <Text style={styles.label}>
           {paymentMode === "loan" ? "Loan amount" : "Total amount"}

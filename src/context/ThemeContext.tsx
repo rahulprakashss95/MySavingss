@@ -38,6 +38,20 @@ export const ThemeProvider = ({ children }: Props) => {
   const [isRestoring, setIsRestoring] = useState(true);
 
   useEffect(() => {
+    let settled = false;
+    const finish = () => {
+      if (!settled) {
+        settled = true;
+        setIsRestoring(false);
+      }
+    };
+    // The whole app is held back until this resolves (see the null return
+    // below), so never let a wedged storage read blank the screen forever.
+    const timeout = setTimeout(() => {
+      console.warn("Theme restore timed out; using the default theme.");
+      finish();
+    }, 3000);
+
     AsyncStorage.getItem(THEME_STORAGE_KEY)
       .then((storedMode) => {
         if (isThemeMode(storedMode)) {
@@ -47,7 +61,10 @@ export const ThemeProvider = ({ children }: Props) => {
       .catch((error) => {
         console.log("Unable to restore theme preference", error);
       })
-      .finally(() => setIsRestoring(false));
+      .finally(() => {
+        clearTimeout(timeout);
+        finish();
+      });
   }, []);
 
   const setMode = useCallback((nextMode: ThemeMode) => {

@@ -101,13 +101,13 @@ export const DepositListSkeleton = ({ count = 3 }: { count?: number }) => {
   );
 };
 
-/** Mirrors a client row: initials avatar, name, contact line. */
-export const ClientListSkeleton = ({ count = 6 }: { count?: number }) => {
+/** Mirrors a bank row: initials avatar, name, contact line. */
+export const BankListSkeleton = ({ count = 6 }: { count?: number }) => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
-    <View accessibilityLabel="Loading clients">
+    <View accessibilityLabel="Loading banks">
       <View style={styles.summaryRow}>
         <Skeleton width={90} height={12} />
       </View>
@@ -226,7 +226,7 @@ const createStyles = (colors: ThemeColors) =>
       borderColor: colors.border,
       padding: 16,
       marginHorizontal: 16,
-      // Matches ClientScreen's card spacing, not the deposit list's.
+      // Matches BankScreen's card spacing, not the deposit list's.
       marginBottom: 12,
     },
     clientRow: {

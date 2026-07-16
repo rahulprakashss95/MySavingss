@@ -7,7 +7,6 @@ import {
   ScrollView,
   Pressable,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
 import DatePicker from "../components/DatePicker";
 import {
   NavigationProp,
@@ -16,7 +15,9 @@ import {
   showToast,
 } from "../utils/Utils";
 import { FixedDepositModel } from "../models/FixedDepositModel";
-import { ClientModel } from "../models/ClientModel";
+import { BankModel } from "../models/BankModel";
+import SearchableSelect from "../components/SearchableSelect";
+import BankForm from "../components/forms/BankForm";
 import { ThemeColors } from "../utils/Color";
 import { useTheme } from "../context/ThemeContext";
 import Button from "../components/Button";
@@ -49,7 +50,8 @@ const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
   const pageMode = fixedDepositData ? "Edit" : "Add";
   const fixedDeposit: FixedDepositModel = fixedDepositData || null;
 
-  const [clientId, setClientId] = useState(fixedDeposit?.clientId ?? "");
+  const [bankId, setBankId] = useState(fixedDeposit?.bankId ?? "");
+  const [bankName, setBankName] = useState(fixedDeposit?.name ?? "");
   const [depositorName, setDepositorName] = useState(
     fixedDeposit?.depositorName ?? ""
   );
@@ -79,15 +81,15 @@ const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
   // Public deposits are viewable family-wide but editable only by their owner.
   const readOnly = pageMode === "Edit" && !canEdit(fixedDeposit, user?.id);
 
-  // Picker options come from the cache: banks from `clients`, and the depositor
-  // name from the user's own existing deposits — no extra reads on open.
-  const clientState = useCollectionState<ClientModel>("clients");
+  // Options come from the cache: banks, and the depositor name from the user's
+  // own existing deposits — no extra reads on open.
+  const bankState = useCollectionState<BankModel>("banks");
   const depositState = useCollectionState<FixedDepositModel>("fixedDeposits");
-  const optionsLoading = !clientState.hasLoaded || !depositState.hasLoaded;
+  const optionsLoading = !bankState.hasLoaded || !depositState.hasLoaded;
 
-  const clients = useMemo(
-    () => [...clientState.items].sort((a, b) => a.name.localeCompare(b.name)),
-    [clientState.items]
+  const banks = useMemo(
+    () => [...bankState.items].sort((a, b) => a.name.localeCompare(b.name)),
+    [bankState.items]
   );
 
   // Each user records their own deposits, so the only depositor offered is the
@@ -127,7 +129,7 @@ const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
 
   /** Returns an error message, or null when the form is good to submit. */
   const validationError = () => {
-    if (!clientId) return "Choose a bank.";
+    if (!bankId) return "Choose a bank.";
     if (!depositorName) return "Choose a depositor.";
     if (!amount || Number(amount) <= 0) return "Enter a deposit amount.";
     if (!interestPercentage) return "Enter an interest rate.";
@@ -143,7 +145,7 @@ const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
 
     setIsLoading(true);
     const payload = {
-      clientId,
+      bankId,
       depositorName,
       amount,
       interest: interestAmount,
@@ -213,59 +215,35 @@ const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Deposit</Text>
 
-        <Text style={styles.label}>Bank</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            style={styles.picker}
-            dropdownIconColor={colors.text}
-            mode="dialog"
-            selectedValue={clientId}
-            onValueChange={setClientId}
-          >
-            <Picker.Item
-              label="Select a bank"
-              value=""
-              color={colors.placeholder}
-              style={styles.pickerItem}
+        <SearchableSelect
+          label="Bank"
+          placeholder="Select a bank"
+          selectedId={bankId}
+          selectedName={bankName}
+          options={banks}
+          onSelect={(id, name) => {
+            setBankId(id);
+            setBankName(name);
+          }}
+          addLabel="Add bank"
+          renderAddForm={({ onCreated }) => (
+            <BankForm
+              onSaved={(saved) => onCreated({ id: saved.id, name: saved.name })}
             />
-            {clients.map((client) => (
-              <Picker.Item
-                key={client.id}
-                label={client.name}
-                value={client.id}
-                color={colors.text}
-                style={styles.pickerItem}
-              />
-            ))}
-          </Picker>
-        </View>
+          )}
+        />
 
-        <Text style={styles.label}>Depositor</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            style={styles.picker}
-            dropdownIconColor={colors.text}
-            mode="dropdown"
-            selectedValue={depositorName}
-            onValueChange={setDepositorName}
-          >
-            <Picker.Item
-              label="Select a depositor"
-              value=""
-              color={colors.placeholder}
-              style={styles.pickerItem}
-            />
-            {depositorList.map((depositor) => (
-              <Picker.Item
-                key={depositor}
-                label={depositor}
-                value={depositor}
-                color={colors.text}
-                style={styles.pickerItem}
-              />
-            ))}
-          </Picker>
-        </View>
+        <SearchableSelect
+          label="Depositor"
+          placeholder="Select a depositor"
+          selectedId={depositorName}
+          selectedName={depositorName}
+          options={depositorList.map((depositor) => ({
+            id: depositor,
+            name: depositor,
+          }))}
+          onSelect={(id) => setDepositorName(id)}
+        />
 
         <Text style={styles.label}>Amount</Text>
         <View style={styles.affixRow}>

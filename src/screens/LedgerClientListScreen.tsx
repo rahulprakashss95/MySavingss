@@ -23,15 +23,20 @@ const LedgerClientListScreen = ({ navigation }: Props) => {
     useCollectionState<LedgerClientModel>("ledgerClients");
 
   // Private to one login and usually short, so a flat alphabetical list reads
-  // cleaner than letter headings — one section, headers hidden.
+  // cleaner than letter headings — one section, headers hidden. Stay empty when
+  // there are no clients so GroupedList's empty state shows (a SectionList only
+  // renders ListEmptyComponent when there are zero sections).
   const sections = useMemo(
-    () => [
-      {
-        key: "all",
-        title: "",
-        data: [...items].sort((a, b) => byText(a.name, b.name)),
-      },
-    ],
+    () =>
+      items.length
+        ? [
+            {
+              key: "all",
+              title: "",
+              data: [...items].sort((a, b) => byText(a.name, b.name)),
+            },
+          ]
+        : [],
     [items]
   );
 

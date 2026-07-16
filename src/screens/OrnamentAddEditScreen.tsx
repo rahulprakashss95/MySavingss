@@ -1,4 +1,3 @@
-import { Picker } from "@react-native-picker/picker";
 import React, { useMemo, useState } from "react";
 import {
   Pressable,
@@ -19,6 +18,7 @@ import Loader from "../components/Loader";
 import PersonPicker from "../components/PersonPicker";
 import ReadOnlyBanner from "../components/ReadOnlyBanner";
 import ReadOnlyGuard from "../components/ReadOnlyGuard";
+import SearchableSelect from "../components/SearchableSelect";
 import VisibilityToggle from "../components/VisibilityToggle";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -167,56 +167,24 @@ const OrnamentAddEditScreen = ({ route, navigation }: Props) => {
           autoSelectSelf={pageMode === "Add"}
         />
 
-        <Text style={styles.label}>Metal</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            style={styles.picker}
-            dropdownIconColor={colors.text}
-            mode="dialog"
-            selectedValue={ornamentType}
-            onValueChange={setOrnamentType}
-          >
-            <Picker.Item
-              label="Select a metal"
-              value=""
-              color={colors.placeholder}
-              style={styles.pickerItem}
-            />
-            {ORNAMENT_TYPES.map((type) => (
-              <Picker.Item
-                key={type}
-                label={type}
-                value={type}
-                color={colors.text}
-                style={styles.pickerItem}
-              />
-            ))}
-          </Picker>
-        </View>
+        <SearchableSelect
+          label="Metal"
+          placeholder="Select a metal"
+          selectedId={ornamentType}
+          selectedName={ornamentType}
+          options={ORNAMENT_TYPES.map((type) => ({ id: type, name: type }))}
+          onSelect={(id) => setOrnamentType(id)}
+        />
 
         {isGold && (
-          <>
-            <Text style={styles.label}>Purity</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                style={styles.picker}
-                dropdownIconColor={colors.text}
-                mode="dialog"
-                selectedValue={karat}
-                onValueChange={setKarat}
-              >
-                {GOLD_KARATS.map((option) => (
-                  <Picker.Item
-                    key={option}
-                    label={option}
-                    value={option}
-                    color={colors.text}
-                    style={styles.pickerItem}
-                  />
-                ))}
-              </Picker>
-            </View>
-          </>
+          <SearchableSelect
+            label="Purity"
+            placeholder="Select purity"
+            selectedId={karat}
+            selectedName={karat}
+            options={GOLD_KARATS.map((option) => ({ id: option, name: option }))}
+            onSelect={(id) => setKarat(id)}
+          />
         )}
 
         <Text style={styles.label}>Name</Text>

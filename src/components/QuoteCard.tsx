@@ -23,7 +23,7 @@ const QuoteCard = () => {
     () => Math.floor(Math.random() * QUOTES.length)
   );
   const opacity = useRef(new Animated.Value(1)).current;
-  const timer = useRef<ReturnType<typeof setInterval>>();
+  const timer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const isAnimating = useRef(false);
 
   // react-native-web's Animated has no native driver.

@@ -5,7 +5,7 @@ import {
   doc,
   getDoc,
   getDocs,
-  getFirestore,
+  initializeFirestore,
   query,
   setDoc,
   updateDoc,
@@ -33,7 +33,7 @@ import type {
   SavingInput,
   SavingModel,
 } from "../src/models/LedgerModel";
-import type { ClientInput, ClientModel } from "../src/models/ClientModel";
+import type { BankInput, BankModel } from "../src/models/BankModel";
 import type { FixedDepositModel } from "../src/models/FixedDepositModel";
 import type { LoginUserModel, StoredLoginUser, UserRole } from "../src/models/LoginUserModel";
 import type { FamilyInput, FamilyModel } from "../src/models/FamilyModel";
@@ -43,12 +43,17 @@ import { DEFAULT_VISIBILITY, canView, canEdit } from "../src/models/common";
 import { makeCredential, verifyPassword } from "../src/utils/passwordHash";
 import firebaseDb from "./firebaseDb";
 
-const db = getFirestore(firebaseDb);
+// The Firestore JS SDK's default streaming transport (WebChannel) is unreliable
+// on React Native/Hermes — reads can hang forever, leaving screens on their
+// loading skeletons. Long polling is the supported transport for RN.
+const db = initializeFirestore(firebaseDb, {
+  experimentalForceLongPolling: true,
+});
 
 const FAMILIES = "families";
 const FAMILY_SETTINGS = "familySettings";
 const LOGIN_USERS = "loginUsers";
-const CLIENTS = "clients";
+const BANKS = "banks";
 const FIXED_DEPOSIT = "fixedDeposits";
 const GOVERNMENT_DOCUMENTS = "governmentDocuments";
 const BANK_DOCUMENTS = "bankDocuments";
@@ -380,19 +385,19 @@ export const getLoginUsers = getFamilyUsers;
  * Domain collections (all scoped to the active family + visibility)
  * ------------------------------------------------------------------ */
 
-export const getClients = () => listScoped<ClientModel>(CLIENTS);
+export const getBanks = () => listScoped<BankModel>(BANKS);
 
-export const addClient = (input: ClientInput) => saveScoped(CLIENTS, input);
+export const addBank = (input: BankInput) => saveScoped(BANKS, input);
 
-export const updateClient = (refId: string, input: ClientInput) =>
-  saveScoped(CLIENTS, input, refId);
+export const updateBank = (refId: string, input: BankInput) =>
+  saveScoped(BANKS, input, refId);
 
-export const deleteClient = (id: string) => deleteRecord(CLIENTS, id);
+export const deleteBank = (id: string) => deleteRecord(BANKS, id);
 
 export const getFixedDeposit = () => listScoped<FixedDepositModel>(FIXED_DEPOSIT);
 
 export type FixedDepositInput = {
-  clientId: string;
+  bankId: string;
   depositorName: string;
   amount: string;
   interest: string;

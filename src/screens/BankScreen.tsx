@@ -8,10 +8,10 @@ import {
   RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useCollectionState } from "../redux/hooks";
 import FloatingButton from "../components/FAB";
-import { ClientListSkeleton } from "../components/Skeleton";
-import { ClientModel } from "../models/ClientModel";
+import { BankListSkeleton } from "../components/Skeleton";
+import { BankModel } from "../models/BankModel";
+import { useCollectionState } from "../redux/hooks";
 import { useTheme } from "../context/ThemeContext";
 import { ThemeColors, tint } from "../utils/Color";
 import { NavigationProp } from "../utils/Utils";
@@ -56,30 +56,30 @@ const initialsOf = (name: string) => {
   return (words[0][0] + words[1][0]).toUpperCase();
 };
 
-const ClientScreen = ({ navigation }: Props) => {
+const BankScreen = ({ navigation }: Props) => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  // Served from the store: fetched once and kept in sync as clients are
+  // Served from the store: fetched once and kept in sync as banks are
   // added/edited/deleted, so returning here doesn't re-read Firestore.
-  const clients = useCollectionState<ClientModel>("clients");
-  const { hasLoaded, isRefreshing, onRefresh } = clients;
+  const banks = useCollectionState<BankModel>("banks");
+  const { hasLoaded, isRefreshing, onRefresh } = banks;
 
-  const clientList = useMemo(
-    () => [...clients.items].sort((a, b) => a.name.localeCompare(b.name)),
-    [clients.items]
+  const bankList = useMemo(
+    () => [...banks.items].sort((a, b) => a.name.localeCompare(b.name)),
+    [banks.items]
   );
 
-  const openClient = (client: ClientModel | null) =>
-    navigation.navigate("ClientAddEdit", { clientData: client });
+  const openBank = (bank: BankModel | null) =>
+    navigation.navigate("BankAddEdit", { bankData: bank });
 
   const renderHeader = () => {
-    if (!clientList.length) {
+    if (!bankList.length) {
       return null;
     }
     return (
       <Text style={styles.summary}>
-        {clientList.length} {clientList.length === 1 ? "client" : "clients"}
+        {bankList.length} {bankList.length === 1 ? "bank" : "banks"}
       </Text>
     );
   };
@@ -88,21 +88,21 @@ const ClientScreen = ({ navigation }: Props) => {
   const renderEmpty = () => {
     return (
       <View style={styles.empty}>
-        <Ionicons name="people-outline" size={44} color={colors.textMuted} />
-        <Text style={styles.emptyTitle}>No clients yet</Text>
+        <Ionicons name="business-outline" size={44} color={colors.textMuted} />
+        <Text style={styles.emptyTitle}>No banks yet</Text>
         <Text style={styles.emptyBody}>
-          Banks and depositors you add will appear here.
+          Banks you add will appear here and in the deposit form.
         </Text>
       </View>
     );
   };
 
-  const renderClient = ({ item }: { item: ClientModel }) => {
+  const renderBank = ({ item }: { item: BankModel }) => {
     const numbers = mobileNumbers(item.mobile);
 
     return (
       <Pressable
-        onPress={() => openClient(item)}
+        onPress={() => openBank(item)}
         accessibilityRole="button"
         style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
       >
@@ -151,7 +151,7 @@ const ClientScreen = ({ navigation }: Props) => {
     return (
       <View style={styles.container}>
         <View style={styles.listContent}>
-          <ClientListSkeleton />
+          <BankListSkeleton />
         </View>
       </View>
     );
@@ -161,7 +161,7 @@ const ClientScreen = ({ navigation }: Props) => {
     <View style={styles.container}>
       <FlatList
         contentContainerStyle={styles.listContent}
-        data={clientList}
+        data={bankList}
         keyExtractor={(item, index) => item.id ?? String(index)}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmpty}
@@ -172,11 +172,11 @@ const ClientScreen = ({ navigation }: Props) => {
             tintColor={colors.textMuted}
           />
         }
-        renderItem={renderClient}
+        renderItem={renderBank}
       />
       <FloatingButton
-        accessibilityLabel="Add client"
-        onPress={() => openClient(null)}
+        accessibilityLabel="Add bank"
+        onPress={() => openBank(null)}
       />
     </View>
   );
@@ -275,4 +275,4 @@ const createStyles = (colors: ThemeColors) =>
     },
   });
 
-export default ClientScreen;
+export default BankScreen;

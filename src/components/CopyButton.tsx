@@ -18,7 +18,7 @@ const CONFIRMATION_MS = 1500;
 
 const CopyButton = ({ value, label, size = 18 }: ICopyButton) => {
   const [copied, setCopied] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout>>();
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 

@@ -8,7 +8,7 @@ import { resetAll } from "./resetAll";
  * slice.
  */
 export type CollectionName =
-  | "clients"
+  | "banks"
   | "fixedDeposits"
   | "ornaments"
   | "properties"
@@ -19,7 +19,7 @@ export type CollectionName =
   | "savings";
 
 export const COLLECTION_NAMES: CollectionName[] = [
-  "clients",
+  "banks",
   "fixedDeposits",
   "ornaments",
   "properties",

@@ -1,8 +1,8 @@
 import React, { useMemo } from "react";
 import { ScrollView, StyleSheet } from "react-native";
-import LedgerClientForm from "../components/forms/LedgerClientForm";
+import BankForm from "../components/forms/BankForm";
 import { useTheme } from "../context/ThemeContext";
-import { LedgerClientModel } from "../models/LedgerModel";
+import { BankModel } from "../models/BankModel";
 import { ThemeColors } from "../utils/Color";
 import { NavigationProp, RouteProps } from "../utils/Utils";
 
@@ -11,10 +11,10 @@ type Props = {
   navigation: NavigationProp;
 };
 
-/** Thin wrapper: fields, save, and delete all live in the shared LedgerClientForm. */
-const LedgerClientAddEditScreen = ({ route, navigation }: Props) => {
-  const { clientData } = (route.params as any) || {};
-  const client: LedgerClientModel | null = clientData || null;
+/** Thin wrapper: the fields, save, and delete all live in the shared BankForm. */
+const BankAddEditScreen = ({ route, navigation }: Props) => {
+  const { bankData } = (route.params as any) || {};
+  const bank: BankModel | null = bankData || null;
 
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -26,8 +26,8 @@ const LedgerClientAddEditScreen = ({ route, navigation }: Props) => {
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
-      <LedgerClientForm
-        initial={client}
+      <BankForm
+        initial={bank}
         onSaved={() => navigation.goBack()}
         onDeleted={() => navigation.goBack()}
       />
@@ -47,4 +47,4 @@ const createStyles = (colors: ThemeColors) =>
     },
   });
 
-export default LedgerClientAddEditScreen;
+export default BankAddEditScreen;

@@ -6,7 +6,7 @@ import {
 } from "react-redux";
 import {
   getBankDocuments,
-  getClients,
+  getBanks,
   getEarnings,
   getFixedDeposit,
   getGovernmentDocuments,
@@ -33,7 +33,7 @@ const REGISTRY: Record<
   CollectionName,
   { fetch: () => Promise<Identified[]>; errorTitle: string }
 > = {
-  clients: { fetch: getClients, errorTitle: "Unable to load banks" },
+  banks: { fetch: getBanks, errorTitle: "Unable to load banks" },
   fixedDeposits: { fetch: getFixedDeposit, errorTitle: "Unable to load deposits" },
   ornaments: { fetch: getOrnaments, errorTitle: "Unable to load ornaments" },
   properties: { fetch: getProperties, errorTitle: "Unable to load properties" },

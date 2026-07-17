@@ -39,6 +39,12 @@ import EarningAddEditScreen from "./src/screens/EarningAddEditScreen";
 import SavingListScreen from "./src/screens/SavingListScreen";
 import SavingAddEditScreen from "./src/screens/SavingAddEditScreen";
 import LedgerOverviewScreen from "./src/screens/LedgerOverviewScreen";
+import ExpenseScreen from "./src/screens/ExpenseScreen";
+import ExpenseListScreen from "./src/screens/ExpenseListScreen";
+import ExpenseAddEditScreen from "./src/screens/ExpenseAddEditScreen";
+import ExpenseTypeListScreen from "./src/screens/ExpenseTypeListScreen";
+import ExpenseTypeAddEditScreen from "./src/screens/ExpenseTypeAddEditScreen";
+import ExpenseOverviewScreen from "./src/screens/ExpenseOverviewScreen";
 import OverviewScreen from "./src/screens/OverviewScreen";
 import BankScreen from "./src/screens/BankScreen";
 import BankAddEditScreen from "./src/screens/BankAddEditScreen";
@@ -87,6 +93,12 @@ export type RootStackParamList = {
   SavingList: undefined;
   SavingAddEdit: any;
   LedgerOverview: undefined;
+  Expenses: undefined;
+  ExpenseList: undefined;
+  ExpenseAddEdit: any;
+  ExpenseTypeList: undefined;
+  ExpenseTypeAddEdit: any;
+  ExpenseOverview: undefined;
   OverView: undefined;
   Settings: undefined;
 };
@@ -283,6 +295,36 @@ const RootNavigator = () => {
                 name="LedgerOverview"
                 component={LedgerOverviewScreen}
                 options={{ title: "Ledger Overview" }}
+              />
+              <Stack.Screen
+                name="Expenses"
+                component={ExpenseScreen}
+                options={{ title: "Expenses" }}
+              />
+              <Stack.Screen
+                name="ExpenseList"
+                component={ExpenseListScreen}
+                options={{ title: "Expenses" }}
+              />
+              <Stack.Screen
+                name="ExpenseAddEdit"
+                component={ExpenseAddEditScreen}
+                options={{ title: "Expense" }}
+              />
+              <Stack.Screen
+                name="ExpenseTypeList"
+                component={ExpenseTypeListScreen}
+                options={{ title: "Expense Types" }}
+              />
+              <Stack.Screen
+                name="ExpenseTypeAddEdit"
+                component={ExpenseTypeAddEditScreen}
+                options={{ title: "Expense Type" }}
+              />
+              <Stack.Screen
+                name="ExpenseOverview"
+                component={ExpenseOverviewScreen}
+                options={{ title: "Expense Overview" }}
               />
               <Stack.Screen
                 name="OverView"

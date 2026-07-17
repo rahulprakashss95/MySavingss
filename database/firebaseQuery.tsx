@@ -34,6 +34,12 @@ import type {
   SavingModel,
 } from "../src/models/LedgerModel";
 import type { BankInput, BankModel } from "../src/models/BankModel";
+import type {
+  ExpenseInput,
+  ExpenseModel,
+  ExpenseTypeInput,
+  ExpenseTypeModel,
+} from "../src/models/ExpenseModel";
 import type { FixedDepositModel } from "../src/models/FixedDepositModel";
 import type { LoginUserModel, StoredLoginUser, UserRole } from "../src/models/LoginUserModel";
 import type { FamilyInput, FamilyModel } from "../src/models/FamilyModel";
@@ -62,6 +68,8 @@ const PROPERTIES = "properties";
 const LEDGER_CLIENTS = "ledgerClients";
 const LEDGER_EARNINGS = "ledgerEarnings";
 const LEDGER_SAVINGS = "ledgerSavings";
+const EXPENSES = "expenses";
+const EXPENSE_TYPES = "expenseTypes";
 
 /* ------------------------------------------------------------------ *
  * Active scope
@@ -518,3 +526,28 @@ export const updateSaving = (refId: string, input: SavingInput) =>
   saveScoped(LEDGER_SAVINGS, input, refId);
 
 export const deleteSaving = (id: string) => deleteRecord(LEDGER_SAVINGS, id);
+
+/* ------------------------------------------------------------------ *
+ * Expenses
+ * ------------------------------------------------------------------ */
+
+export const getExpenseTypes = () =>
+  listScoped<ExpenseTypeModel>(EXPENSE_TYPES);
+
+export const addExpenseType = (input: ExpenseTypeInput) =>
+  saveScoped(EXPENSE_TYPES, input);
+
+export const updateExpenseType = (refId: string, input: ExpenseTypeInput) =>
+  saveScoped(EXPENSE_TYPES, input, refId);
+
+export const deleteExpenseType = (id: string) =>
+  deleteRecord(EXPENSE_TYPES, id);
+
+export const getExpenses = () => listScoped<ExpenseModel>(EXPENSES);
+
+export const addExpense = (input: ExpenseInput) => saveScoped(EXPENSES, input);
+
+export const updateExpense = (refId: string, input: ExpenseInput) =>
+  saveScoped(EXPENSES, input, refId);
+
+export const deleteExpense = (id: string) => deleteRecord(EXPENSES, id);

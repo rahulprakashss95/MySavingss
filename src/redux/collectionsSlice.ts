@@ -16,7 +16,9 @@ export type CollectionName =
   | "governmentDocuments"
   | "ledgerClients"
   | "earnings"
-  | "savings";
+  | "savings"
+  | "expenses"
+  | "expenseTypes";
 
 export const COLLECTION_NAMES: CollectionName[] = [
   "banks",
@@ -28,6 +30,8 @@ export const COLLECTION_NAMES: CollectionName[] = [
   "ledgerClients",
   "earnings",
   "savings",
+  "expenses",
+  "expenseTypes",
 ];
 
 /** Every cached record is keyed by its Firestore doc id. */

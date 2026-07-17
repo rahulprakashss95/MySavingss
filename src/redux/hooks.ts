@@ -8,6 +8,8 @@ import {
   getBankDocuments,
   getBanks,
   getEarnings,
+  getExpenses,
+  getExpenseTypes,
   getFixedDeposit,
   getGovernmentDocuments,
   getLedgerClients,
@@ -45,6 +47,11 @@ const REGISTRY: Record<
   ledgerClients: { fetch: getLedgerClients, errorTitle: "Unable to load clients" },
   earnings: { fetch: getEarnings, errorTitle: "Unable to load earnings" },
   savings: { fetch: getSavings, errorTitle: "Unable to load savings" },
+  expenses: { fetch: getExpenses, errorTitle: "Unable to load expenses" },
+  expenseTypes: {
+    fetch: getExpenseTypes,
+    errorTitle: "Unable to load expense types",
+  },
 };
 
 /**

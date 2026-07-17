@@ -25,7 +25,7 @@ type Tile = {
   subtitle: string;
   accent: string;
   renderIcon: (color: string) => React.ReactNode;
-  screen: "Deposit" | "Documents" | "Assets" | "Ledger";
+  screen: "Deposit" | "Documents" | "Assets" | "Ledger" | "Expenses";
 };
 
 const HomeScreen = ({ navigation }: Props) => {
@@ -77,6 +77,16 @@ const HomeScreen = ({ navigation }: Props) => {
           <Ionicons name="book-outline" size={24} color={color} />
         ),
         screen: "Ledger",
+      },
+      {
+        key: "expenses",
+        title: "Expenses",
+        subtitle: "What you spend, by type",
+        accent: colors.accentAmber,
+        renderIcon: (color) => (
+          <Ionicons name="receipt-outline" size={24} color={color} />
+        ),
+        screen: "Expenses",
       },
     ],
     [colors]

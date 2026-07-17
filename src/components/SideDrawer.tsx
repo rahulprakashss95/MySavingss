@@ -78,6 +78,16 @@ const TREE: Node[] = [
       { label: "Overview", icon: "stats-chart-outline", screen: "LedgerOverview" },
     ],
   },
+  {
+    label: "Expenses",
+    icon: "receipt-outline",
+    module: "expenses",
+    children: [
+      { label: "Expenses", icon: "receipt-outline", screen: "ExpenseList" },
+      { label: "Types", icon: "pricetags-outline", screen: "ExpenseTypeList" },
+      { label: "Overview", icon: "stats-chart-outline", screen: "ExpenseOverview" },
+    ],
+  },
   { label: "Settings", icon: "settings-outline", screen: "Settings" },
 ];
 
@@ -102,6 +112,7 @@ const SideDrawer = () => {
     Documents: true,
     Assets: true,
     Ledger: true,
+    Expenses: true,
   });
 
   // Animation can't use the native driver on web, and translateX/opacity are

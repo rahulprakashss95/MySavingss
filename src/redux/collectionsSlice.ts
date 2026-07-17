@@ -2,8 +2,8 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { resetAll } from "./resetAll";
 
 /**
- * The domain collections we cache. Each maps 1:1 to a Firestore collection and
- * to a `getX` fetcher in `database/firebaseQuery.tsx` (see the registry in
+ * The domain collections we cache. Each maps 1:1 to a database table and
+ * to a `getX` fetcher in `database/query.ts` (see the registry in
  * `hooks.ts`). `metalRates` is a single doc, not a list, so it lives in its own
  * slice.
  */
@@ -34,7 +34,7 @@ export const COLLECTION_NAMES: CollectionName[] = [
   "expenseTypes",
 ];
 
-/** Every cached record is keyed by its Firestore doc id. */
+/** Every cached record is keyed by its row id. */
 export type Identified = { id: string };
 
 export type CollectionState = {

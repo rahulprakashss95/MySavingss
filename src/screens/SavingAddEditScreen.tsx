@@ -12,7 +12,7 @@ import {
   addSaving,
   deleteSaving,
   updateSaving,
-} from "../../database/firebaseQuery";
+} from "../../database/query";
 import Button from "../components/Button";
 import DatePicker from "../components/DatePicker";
 import LedgerClientPicker from "../components/LedgerClientPicker";
@@ -25,6 +25,7 @@ import { useTheme } from "../context/ThemeContext";
 import { commitDelete, commitSave, useAppDispatch } from "../redux/hooks";
 import { canEdit, Visibility } from "../models/common";
 import { SavingModel } from "../models/LedgerModel";
+import { isValidAmount } from "../utils/amount";
 import { ThemeColors } from "../utils/Color";
 import { DATE_FORMAT } from "../utils/deposits";
 import {
@@ -70,7 +71,7 @@ const SavingAddEditScreen = ({ route, navigation }: Props) => {
   /** Returns an error message, or null when the form is good to submit. */
   const validationError = () => {
     if (!clientId) return "Choose a client. Add one first if the list is empty.";
-    if (!amount.trim() || Number(amount) <= 0) return "Enter an amount.";
+    if (!isValidAmount(amount)) return "Enter an amount.";
     if (!date) return "Pick a date.";
     return null;
   };

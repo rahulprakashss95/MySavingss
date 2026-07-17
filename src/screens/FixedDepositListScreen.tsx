@@ -10,7 +10,6 @@ import { amountFormat, NavigationProp } from "../utils/Utils";
 import {
   mergeBankNames,
   sortByMaturity,
-  visibleDeposits,
 } from "../utils/deposits";
 import { DepositListSkeleton } from "../components/Skeleton";
 import FDCard from "../components/FDCard";
@@ -37,11 +36,11 @@ const FixedDepositListScreen = ({ navigation }: Props) => {
   };
 
   // The query layer already scopes to the family and the user's visible
-  // records; this only drops completed/hidden ones and attaches bank names.
+  // records; this only attaches bank names and orders by maturity.
   const fixedDeposits = useMemo(
     () =>
       sortByMaturity(
-        mergeBankNames(visibleDeposits(deposits.items), banks.items)
+        mergeBankNames(deposits.items, banks.items)
       ),
     [deposits.items, banks.items]
   );

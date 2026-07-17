@@ -21,7 +21,7 @@ import {
   resetUserPassword,
   updateFamily,
   updateLoginUser,
-} from "../../database/firebaseQuery";
+} from "../../database/query";
 import Toast from "react-native-toast-message";
 import Button from "../components/Button";
 import ModuleAccessPicker from "../components/ModuleAccessPicker";

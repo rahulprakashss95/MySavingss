@@ -12,7 +12,7 @@ import {
   addProperty,
   deleteProperty,
   updateProperty,
-} from "../../database/firebaseQuery";
+} from "../../database/query";
 import Button from "../components/Button";
 import DualUnitInput from "../components/DualUnitInput";
 import Loader from "../components/Loader";
@@ -33,6 +33,7 @@ import {
   PropertyModel,
 } from "../models/AssetModel";
 import { CENTS_PER_ACRE, hasArea, paymentTotals } from "../utils/assets";
+import { isValidAmount } from "../utils/amount";
 import { ThemeColors } from "../utils/Color";
 import {
   amountFormat,
@@ -99,7 +100,7 @@ const PropertyAddEditScreen = ({ route, navigation }: Props) => {
     if (!personId) return "Choose who this property belongs to.";
     if (!propertyType) return "Choose a property type.";
     if (!name.trim()) return "Give the property a name.";
-    if (paymentMode !== "full" && (!totalAmount || Number(totalAmount) <= 0)) {
+    if (paymentMode !== "full" && !isValidAmount(totalAmount)) {
       return paymentMode === "loan"
         ? "Enter the loan amount."
         : "Enter the total amount.";

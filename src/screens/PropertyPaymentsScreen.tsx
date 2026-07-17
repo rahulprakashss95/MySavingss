@@ -9,7 +9,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { updateProperty } from "../../database/firebaseQuery";
+import { updateProperty } from "../../database/query";
 import { commitSave, useAppDispatch } from "../redux/hooks";
 import Button from "../components/Button";
 import DatePicker from "../components/DatePicker";
@@ -18,6 +18,7 @@ import ProgressBar from "../components/ProgressBar";
 import { useTheme } from "../context/ThemeContext";
 import { PaymentEntry, PropertyModel } from "../models/AssetModel";
 import { newEntryId, paymentTotals, sortEntries } from "../utils/assets";
+import { isValidAmount } from "../utils/amount";
 import { ThemeColors } from "../utils/Color";
 import { DATE_FORMAT } from "../utils/deposits";
 import {
@@ -61,7 +62,7 @@ const PropertyPaymentsScreen = ({ route, navigation }: Props) => {
   const totals = paymentTotals({ totalAmount: property.totalAmount, entries });
   const sorted = useMemo(() => sortEntries(entries), [entries]);
 
-  /** Writes the new set, rolling back the local state if Firestore refuses. */
+  /** Writes the new set, rolling back the local state if the write fails. */
   const persist = (next: PaymentEntry[], failureTitle: string) => {
     const previous = entries;
     setEntries(next);
@@ -77,7 +78,7 @@ const PropertyPaymentsScreen = ({ route, navigation }: Props) => {
   };
 
   const handleAdd = () => {
-    if (!amount.trim() || Number(amount) <= 0) {
+    if (!isValidAmount(amount)) {
       showToast("error", "Missing amount", "Enter an amount.", "bottom");
       return;
     }

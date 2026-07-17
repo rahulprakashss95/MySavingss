@@ -14,12 +14,13 @@ import {
   createFamily,
   createLoginUser,
   isFamilyCodeAvailable,
-} from "../../database/firebaseQuery";
+} from "../../database/query";
 import Button from "../components/Button";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { MODULE_KEYS } from "../models/common";
 import { normalizeFamilyCode } from "../models/FamilyModel";
+import { signInWithCredentials } from "../utils/auth";
 import { MIN_PASSWORD_LENGTH, validatePassword } from "../utils/passwordStrength";
 import { ThemeColors, tint } from "../utils/Color";
 import { NavigationProp, showToast } from "../utils/Utils";
@@ -96,7 +97,7 @@ const RegisterScreen = ({ navigation }: Props) => {
         code,
         createdAt: new Date().toISOString(),
       });
-      const userId = await createLoginUser({
+      await createLoginUser({
         familyId: family.id,
         username: uname,
         name: adminName.trim() || undefined,
@@ -106,16 +107,16 @@ const RegisterScreen = ({ navigation }: Props) => {
         password,
       });
 
-      await signIn({
-        id: userId,
-        username: uname,
-        name: adminName.trim() || undefined,
-        familyId: family.id,
-        familyName: family.name,
-        familyCode: family.code,
-        role: "admin",
-        moduleAccess: [...MODULE_KEYS],
-      });
+      // Creating the account does not sign it in — that has to go through the
+      // normal credential path, which is what mints the session every read
+      // depends on. Without this the new admin would land on a home screen
+      // where nothing loads.
+      const session = await signInWithCredentials(family.id, uname, password);
+      if (!session) {
+        fail("Your family was created, but signing in failed. Try logging in.");
+        return;
+      }
+      await signIn(session);
     } catch (error) {
       console.log("RegisterError", error);
       fail("Something went wrong. Please try again.");

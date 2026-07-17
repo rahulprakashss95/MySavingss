@@ -3,7 +3,7 @@ import { MetalRates } from "../models/AssetModel";
 import { resetAll } from "./resetAll";
 
 /**
- * The family's shared gold/silver rates — a single Firestore doc, not a list,
+ * The family's shared gold/silver rates — a single database row, not a list,
  * so it gets its own slice rather than a spot in the collections map.
  */
 type MetalRatesState = {

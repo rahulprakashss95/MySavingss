@@ -89,7 +89,39 @@
       "Bash(grep -c '\\\\\\\\\\\\\\\\' dist/index.html)",
       "Bash(node -e \"console.log\\(require\\('./app.json'\\).expo.version\\)\")",
       "Bash(echo \"app.json version: $\\(node -e \"console.log\\(require\\('./app.json'\\).expo.version\\)\"\\)\")",
-      "Bash(node -e \"const m=require\\('@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/Ionicons.json'\\); ['sparkles-outline','bulb-outline','star-outline','chatbox-ellipses-outline'].forEach\\(n=>console.log\\(n, n in m ? 'OK' : 'MISSING'\\)\\)\")"
+      "Bash(node -e \"const m=require\\('@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/Ionicons.json'\\); ['sparkles-outline','bulb-outline','star-outline','chatbox-ellipses-outline'].forEach\\(n=>console.log\\(n, n in m ? 'OK' : 'MISSING'\\)\\)\")",
+      "Bash(git remote *)",
+      "Bash(node -e \"console.log\\('version:', require\\('./package.json'\\).version\\)\")",
+      "Bash(xxd)",
+      "Bash(echo \"exit: $?\")",
+      "PowerShell(npx expo install expo-crypto)",
+      "PowerShell(npx tsc --noEmit 2>&1)",
+      "Bash(node --check scripts/migrate-multi-family.mjs)",
+      "Read(//c/Users/rahul/.claude/projects/c--Corptec-Personal-HomeVault/memory/**)",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(npx expo-doctor *)",
+      "Bash(node -p \"require\\('typescript/package.json'\\).version\")",
+      "Bash(echo \"installed: $\\(node -p \"require\\('typescript/package.json'\\).version\" 2>/dev/null\\)\")",
+      "Bash(echo \"installed TS: $\\(node -p \"require\\('typescript/package.json'\\).version\"\\)\")",
+      "Bash(echo \"---tsc-exit=$?---\")",
+      "Bash(node -p \"require\\('./node_modules/expo/node_modules/babel-preset-expo/package.json'\\).version\")",
+      "Bash(echo \"nested version: $\\(node -p \"require\\('./node_modules/expo/node_modules/babel-preset-expo/package.json'\\).version\"\\)\")",
+      "Bash(node -p \"require\\('./package.json'\\).main || '\\(none\\)'\")",
+      "Bash(node -p \"require\\('./package.json'\\).scripts.start\")",
+      "Bash(npm uninstall *)",
+      "Bash(git stash *)",
+      "Bash(npx eslint *)",
+      "Bash(sed -i 's|`database/firebaseQuery.tsx`|`database/supabaseQuery.tsx`|g' multi-family-beta.md)",
+      "Bash(sed -i 's/Firebase Auth was deferred, not rejected/Supabase Auth was deferred, not rejected \\(Firebase Auth was the original deferred plan; the app moved off Firebase entirely 2026-07-17\\)/' multi-family-beta.md)",
+      "Bash(sed -i 's/\\\\*\\\\*Firestore Security Rules are NOT yet written\\\\*\\\\*/**Supabase RLS is permissive \\(anon full access\\) — real row-level policies are NOT yet written**/' multi-family-beta.md)",
+      "Bash(sed -i 's/renamed the Firestore collection/renamed the collection/' multi-family-beta.md)",
+      "Bash(sed -i 's/`deleteLoginUser` was switched to raw `deleteDoc` because/`deleteLoginUser` does a raw delete because/' multi-family-beta.md)",
+      "Bash(sed -i 's/Collections now: families, familySettings, loginUsers, banks/Collections \\(now Postgres tables, snake_case — see [[supabase-migration]]\\): families, familySettings, loginUsers, banks/' multi-family-beta.md)",
+      "Bash(sed -i 's|`database/query.tsx`|`database/query.ts`|' database/schema.sql src/redux/collectionsSlice.ts)",
+      "Bash(node -p \"require\\('./node_modules/@supabase/supabase-js/package.json'\\).version\")"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\rahul\\.claude\\projects\\c--Corptec-Personal-HomeVault\\memory"
     ]
   }
 }

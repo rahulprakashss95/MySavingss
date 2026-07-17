@@ -11,7 +11,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { getFamilyByCode } from "../../database/firebaseQuery";
+import { getFamilyByCode } from "../../database/query";
 import Button from "../components/Button";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -68,16 +68,31 @@ const LoginScreen = ({ navigation }: Props) => {
       .catch((error) => console.log("RestoreFamilyError", error));
   }, []);
 
-  /** Looks up the family for the typed code; returns it (or null) and records it. */
-  const resolveFamily = async (): Promise<FamilyModel | null> => {
+  /**
+   * Looks up the family for the typed code; returns it (or null) and records it.
+   *
+   * `force` skips the cache. The blur/typing callbacks reuse a resolved family
+   * for a snappy checkmark, but login must not: a family can be deleted and
+   * re-created with the same code and a *new* id, and a device still holding the
+   * old family would otherwise keep building its synthetic email against the
+   * dead id — an "invalid password" that no password can fix.
+   */
+  const resolveFamily = async (
+    { force = false }: { force?: boolean } = {}
+  ): Promise<FamilyModel | null> => {
     const code = familyCode.trim();
     if (!code) {
       setFamily(null);
       setNotFound(false);
       return null;
     }
-    // Already resolved to this exact code — don't re-fetch.
-    if (family && family.code === code.toLowerCase().replace(/\s+/g, "_")) {
+    // Already resolved to this exact code — don't re-fetch, unless the caller
+    // needs the authoritative id.
+    if (
+      !force &&
+      family &&
+      family.code === code.toLowerCase().replace(/\s+/g, "_")
+    ) {
       return family;
     }
     setIsResolving(true);
@@ -98,7 +113,8 @@ const LoginScreen = ({ navigation }: Props) => {
   const handleLogin = async () => {
     setIsLoading(true);
     try {
-      const resolved = await resolveFamily();
+      // Authoritative lookup: never sign in against a cached family id.
+      const resolved = await resolveFamily({ force: true });
       if (!resolved) {
         showToast(
           "error",
@@ -129,7 +145,15 @@ const LoginScreen = ({ navigation }: Props) => {
       }
     } catch (error) {
       console.log("LoginError", error);
-      showToast("error", "Login Error", "Something went wrong.", "bottom");
+      // Show what actually failed. "Something went wrong" hid real, actionable
+      // reasons — a blocked profile read, a network error — behind a message
+      // that made every one of them look the same.
+      showToast(
+        "error",
+        "Login Error",
+        error instanceof Error ? error.message : "Something went wrong.",
+        "bottom"
+      );
     } finally {
       setIsLoading(false);
     }

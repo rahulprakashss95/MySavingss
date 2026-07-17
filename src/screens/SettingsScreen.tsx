@@ -1,13 +1,11 @@
 import React, { useMemo } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import * as Clipboard from "expo-clipboard";
 import Card from "../components/Card";
-import { confirmSignOut } from "../components/HeaderActions";
 import { useAuth } from "../context/AuthContext";
 import { ThemeMode, useTheme } from "../context/ThemeContext";
 import { ThemeColors } from "../utils/Color";
-import { showToast } from "../utils/Utils";
+import { NavigationProp } from "../utils/Utils";
 
 const THEME_OPTIONS: {
   mode: ThemeMode;
@@ -35,16 +33,14 @@ const THEME_OPTIONS: {
   },
 ];
 
-const SettingsScreen = () => {
-  const { mode, setMode, colors } = useTheme();
-  const { user, signOut } = useAuth();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+type Props = {
+  navigation: NavigationProp;
+};
 
-  const copyFamilyId = async () => {
-    if (!user?.familyCode) return;
-    await Clipboard.setStringAsync(user.familyCode);
-    showToast("success", "Copied", `Family ID "${user.familyCode}" copied.`, "bottom");
-  };
+const SettingsScreen = ({ navigation }: Props) => {
+  const { mode, setMode, colors } = useTheme();
+  const { user } = useAuth();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <ScrollView
@@ -84,68 +80,30 @@ const SettingsScreen = () => {
         })}
       </Card>
 
-      {!!user?.familyCode && (
-        <>
-          <Text style={styles.sectionTitle}>Family</Text>
-          <Card customStyle={styles.card}>
-            <View style={[styles.row, styles.accountRow]}>
-              <Ionicons name="home-outline" size={22} color={colors.textMuted} />
-              <View style={styles.rowText}>
-                <Text style={styles.rowLabel}>
-                  {user.familyName || "Your family"}
-                </Text>
-                <Text style={styles.rowDescription}>Your family</Text>
-              </View>
-            </View>
-            <Pressable
-              onPress={copyFamilyId}
-              accessibilityRole="button"
-              accessibilityLabel="Copy Family ID"
-              style={({ pressed }) => [
-                styles.row,
-                styles.rowDivider,
-                pressed && styles.rowPressed,
-              ]}
-            >
-              <Ionicons name="key-outline" size={22} color={colors.textMuted} />
-              <View style={styles.rowText}>
-                <Text style={styles.rowLabel}>Family ID</Text>
-                <Text style={styles.rowDescription}>{user.familyCode}</Text>
-              </View>
-              <Ionicons name="copy-outline" size={20} color={colors.primary} />
-            </Pressable>
-          </Card>
-        </>
-      )}
-
+      {/* Account, family and log out live on the Profile screen. They were here
+          too until Profile existed; keeping both would have meant two places
+          showing the same identity, free to drift apart. */}
       <Text style={styles.sectionTitle}>Account</Text>
       <Card customStyle={styles.card}>
-        {user?.username && (
-          <View style={[styles.row, styles.accountRow]}>
-            <Ionicons
-              name="person-circle-outline"
-              size={22}
-              color={colors.textMuted}
-            />
-            <View style={styles.rowText}>
-              <Text style={styles.rowLabel}>Signed in</Text>
-              <Text style={styles.rowDescription}>{user.username}</Text>
-            </View>
-          </View>
-        )}
         <Pressable
-          onPress={() => confirmSignOut(signOut)}
+          onPress={() => navigation.navigate("Profile")}
           accessibilityRole="button"
-          style={({ pressed }) => [
-            styles.row,
-            user?.username ? styles.rowDivider : null,
-            pressed && styles.rowPressed,
-          ]}
+          style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
         >
-          <Ionicons name="log-out-outline" size={22} color={colors.negative} />
+          <Ionicons
+            name="person-circle-outline"
+            size={22}
+            color={colors.textMuted}
+          />
           <View style={styles.rowText}>
-            <Text style={[styles.rowLabel, styles.signOutLabel]}>Log out</Text>
+            <Text style={styles.rowLabel}>Profile</Text>
+            <Text style={styles.rowDescription}>
+              {user?.username
+                ? `Signed in as ${user.username}`
+                : "Your account and family"}
+            </Text>
           </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
         </Pressable>
       </Card>
     </ScrollView>
@@ -182,9 +140,6 @@ const createStyles = (colors: ThemeColors) =>
       paddingVertical: 14,
       paddingHorizontal: 16,
     },
-    accountRow: {
-      paddingVertical: 14,
-    },
     rowDivider: {
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: colors.border,
@@ -203,10 +158,6 @@ const createStyles = (colors: ThemeColors) =>
       fontSize: 13,
       color: colors.textMuted,
       marginTop: 2,
-    },
-    signOutLabel: {
-      color: colors.negative,
-      fontWeight: "500",
     },
   });
 

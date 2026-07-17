@@ -12,7 +12,7 @@ import {
   addEarning,
   deleteEarning,
   updateEarning,
-} from "../../database/firebaseQuery";
+} from "../../database/query";
 import Button from "../components/Button";
 import DatePicker from "../components/DatePicker";
 import LedgerClientPicker from "../components/LedgerClientPicker";
@@ -26,6 +26,7 @@ import { commitDelete, commitSave, useAppDispatch } from "../redux/hooks";
 import { useTheme } from "../context/ThemeContext";
 import { canEdit, Visibility } from "../models/common";
 import { EARNING_TYPES, EarningModel } from "../models/LedgerModel";
+import { isValidAmount } from "../utils/amount";
 import { ThemeColors } from "../utils/Color";
 import { DATE_FORMAT } from "../utils/deposits";
 import {
@@ -76,7 +77,7 @@ const EarningAddEditScreen = ({ route, navigation }: Props) => {
   const validationError = () => {
     if (!clientId) return "Choose a client. Add one first if the list is empty.";
     if (!type) return "Choose an earning type.";
-    if (!amount.trim() || Number(amount) <= 0) return "Enter an amount.";
+    if (!isValidAmount(amount)) return "Enter an amount.";
     if (!date) return "Pick a date.";
     return null;
   };

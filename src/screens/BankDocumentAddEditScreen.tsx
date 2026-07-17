@@ -11,7 +11,7 @@ import {
   addBankDocument,
   deleteBankDocument,
   updateBankDocument,
-} from "../../database/firebaseQuery";
+} from "../../database/query";
 import Button from "../components/Button";
 import Loader from "../components/Loader";
 import PersonPicker from "../components/PersonPicker";

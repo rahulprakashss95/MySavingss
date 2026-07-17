@@ -27,7 +27,7 @@ export const formatNumber = (value: number) => {
 };
 
 /**
- * All of these take `string | undefined`: a Firestore row written before a
+ * All of these take `string | undefined`: a row written before a
  * field existed comes back with it undefined, and `undefined.trim()` throws.
  */
 

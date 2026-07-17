@@ -6,6 +6,7 @@ import {
 } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { StatusBar } from "expo-status-bar";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import { Provider as StoreProvider } from "react-redux";
 
@@ -49,7 +50,10 @@ import OverviewScreen from "./src/screens/OverviewScreen";
 import BankScreen from "./src/screens/BankScreen";
 import BankAddEditScreen from "./src/screens/BankAddEditScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
+import ProfileScreen from "./src/screens/ProfileScreen";
+import BottomTabBar from "./src/components/BottomTabBar";
 import MenuButton from "./src/components/MenuButton";
+import ProfileButton from "./src/components/ProfileButton";
 import SideDrawer from "./src/components/SideDrawer";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import { ThemeProvider, useTheme } from "./src/context/ThemeContext";
@@ -100,6 +104,7 @@ export type RootStackParamList = {
   ExpenseTypeAddEdit: any;
   ExpenseOverview: undefined;
   OverView: undefined;
+  Profile: undefined;
   Settings: undefined;
 };
 
@@ -161,10 +166,22 @@ const RootNavigator = () => {
               />
             </Stack.Group>
           ) : (
-            // The hamburger lives on the right so it never collides with the
-            // stack's automatic back button on pushed screens.
+            // The hamburger sits on the left, matching the side the drawer
+            // slides in from. On a pushed screen the back button owns that slot
+            // and wins — so the drawer is reached from the top level, as it is
+            // in most apps that have one. `canGoBack` is what distinguishes the
+            // two: it is only false for the stack's first route.
             <Stack.Group
-              screenOptions={{ headerRight: () => <MenuButton /> }}
+              screenOptions={({ navigation, route }) => ({
+                headerLeft: navigation.canGoBack()
+                  ? undefined
+                  : () => <MenuButton />,
+                // The right slot is free on every screen — the back button only
+                // ever takes the left — so the avatar is one tap away app-wide.
+                // Except on Profile itself, where it would push a second copy.
+                headerRight:
+                  route.name === "Profile" ? undefined : () => <ProfileButton />,
+              })}
             >
               <Stack.Screen
                 name="Home"
@@ -332,6 +349,11 @@ const RootNavigator = () => {
                 options={{ title: "Overview" }}
               />
               <Stack.Screen
+                name="Profile"
+                component={ProfileScreen}
+                options={{ title: "Profile" }}
+              />
+              <Stack.Screen
                 name="Settings"
                 component={SettingsScreen}
                 options={{ title: "Settings" }}
@@ -347,7 +369,12 @@ const RootNavigator = () => {
         <Toast />
       </NavigationContainer>
 
-      {/* App-wide overlay: only meaningful once signed in. */}
+      {/* A sibling of the navigator, not an overlay: it occupies real layout
+          space, so screens scroll to just above it instead of underneath. */}
+      {user != null && <BottomTabBar />}
+
+      {/* App-wide overlay: only meaningful once signed in. Last, so the drawer
+          covers the tab bar rather than sliding in beside it. */}
       {user != null && <SideDrawer />}
     </View>
   );
@@ -355,15 +382,20 @@ const RootNavigator = () => {
 
 const App = () => {
   return (
-    <StoreProvider store={store}>
-      <ThemeProvider>
-        <AuthProvider>
-          <DrawerProvider>
-            <RootNavigator />
-          </DrawerProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </StoreProvider>
+    // The stack provides safe-area context to its own screens, but BottomTabBar
+    // sits outside the navigator and still has to clear the home indicator and
+    // the gesture bar — so the provider has to be above both.
+    <SafeAreaProvider>
+      <StoreProvider store={store}>
+        <ThemeProvider>
+          <AuthProvider>
+            <DrawerProvider>
+              <RootNavigator />
+            </DrawerProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </StoreProvider>
+    </SafeAreaProvider>
   );
 };
 

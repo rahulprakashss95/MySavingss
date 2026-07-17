@@ -11,7 +11,7 @@ import {
   addOrnament,
   deleteOrnament,
   updateOrnament,
-} from "../../database/firebaseQuery";
+} from "../../database/query";
 import Button from "../components/Button";
 import DualUnitInput from "../components/DualUnitInput";
 import Loader from "../components/Loader";

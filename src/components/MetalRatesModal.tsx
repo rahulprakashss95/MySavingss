@@ -19,7 +19,7 @@ import { showToast } from "../utils/Utils";
 type IMetalRatesModal = {
   visible: boolean;
   rates: MetalRates;
-  /** True while the parent is writing to Firestore. */
+  /** True while the parent is writing to the database. */
   isSaving: boolean;
   onClose: () => void;
   onSave: (rates: MetalRates) => void;

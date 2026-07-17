@@ -18,6 +18,7 @@ import { FixedDepositModel } from "../models/FixedDepositModel";
 import { BankModel } from "../models/BankModel";
 import SearchableSelect from "../components/SearchableSelect";
 import BankForm from "../components/forms/BankForm";
+import { isValidAmount } from "../utils/amount";
 import { ThemeColors } from "../utils/Color";
 import { useTheme } from "../context/ThemeContext";
 import Button from "../components/Button";
@@ -25,7 +26,7 @@ import {
   addFixedDeposit,
   deleteFixedDeposit,
   updateFixedDeposit,
-} from "../../database/firebaseQuery";
+} from "../../database/query";
 import Loader from "../components/Loader";
 import ReadOnlyBanner from "../components/ReadOnlyBanner";
 import ReadOnlyGuard from "../components/ReadOnlyGuard";
@@ -131,7 +132,7 @@ const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
   const validationError = () => {
     if (!bankId) return "Choose a bank.";
     if (!depositorName) return "Choose a depositor.";
-    if (!amount || Number(amount) <= 0) return "Enter a deposit amount.";
+    if (!isValidAmount(amount)) return "Enter a deposit amount.";
     if (!interestPercentage) return "Enter an interest rate.";
     return null;
   };
@@ -158,13 +159,7 @@ const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
     const save =
       pageMode == "Add"
         ? addFixedDeposit(payload)
-        : updateFixedDeposit(fixedDeposit.id, {
-            ...payload,
-            // Carry the existing record's flags through; setDoc replaces the
-            // whole document, so omitting these would silently reset them.
-            canShow: fixedDeposit.canShow,
-            isCompleted: fixedDeposit.isCompleted,
-          });
+        : updateFixedDeposit(fixedDeposit.id, payload);
 
     dispatch(commitSave("fixedDeposits", save))
       .then(() => {

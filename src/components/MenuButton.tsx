@@ -25,6 +25,10 @@ const MenuButton = () => {
 const styles = StyleSheet.create({
   icon: {
     padding: 2,
+    // Inset from the screen edge. The stack gives `headerLeft` no padding of
+    // its own, so without this the hamburger sits flush against the edge —
+    // unlike the back button it replaces, which brings its own.
+    marginLeft: 12,
     marginRight: 4,
   },
   pressed: {

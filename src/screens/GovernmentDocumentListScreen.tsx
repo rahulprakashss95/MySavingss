@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import AttachmentSection from "../components/AttachmentSection";
 import GroupedList from "../components/GroupedList";
 import { useCollectionState } from "../redux/hooks";
 import GroupedRow from "../components/GroupedRow";
@@ -44,6 +45,7 @@ const GovernmentDocumentListScreen = ({ navigation }: Props) => {
           copyValue={item.documentNumber}
           valueLabel={`${item.documentType} number`}
           description={item.description}
+          footer={<AttachmentSection attachments={item.attachments} />}
           onPress={() => navigateAddEdit(item)}
           position={position}
         />

@@ -241,7 +241,19 @@ const SideDrawer = () => {
           { width: panelWidth, transform: [{ translateX }] },
         ]}
       >
-        <View style={styles.header}>
+        {/* The header already names the signed-in member, so it doubles as the
+            way into their profile rather than the menu carrying a second row
+            saying the same thing. */}
+        <Pressable
+          onPress={() => go("Profile")}
+          accessibilityRole="button"
+          accessibilityLabel="Open your profile"
+          style={({ pressed }) => [
+            styles.header,
+            activeRoute === "Profile" && styles.headerActive,
+            pressed && styles.rowPressed,
+          ]}
+        >
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{initial}</Text>
           </View>
@@ -260,7 +272,12 @@ const SideDrawer = () => {
               </Text>
             )}
           </View>
-        </View>
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color={colors.textMuted}
+          />
+        </Pressable>
 
         <ScrollView
           style={styles.tree}
@@ -356,10 +373,14 @@ const createStyles = (colors: ThemeColors) =>
     header: {
       flexDirection: "row",
       alignItems: "center",
+      gap: 12,
       paddingHorizontal: 20,
       paddingBottom: 18,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.border,
+    },
+    headerActive: {
+      backgroundColor: tint(colors.primary),
     },
     avatar: {
       width: 48,
@@ -368,7 +389,6 @@ const createStyles = (colors: ThemeColors) =>
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: tint(colors.primary),
-      marginRight: 12,
     },
     avatarText: {
       fontSize: 20,

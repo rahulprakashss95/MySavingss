@@ -100,11 +100,19 @@ function patchIndexHtml() {
   // Match html/body to the app background so no white bleeds past the root in
   // standalone mode, and stop the overscroll rubber-band that shifts the whole
   // page (leaving a gap at the top or bottom).
+  //
+  // Expo's reset sizes html/body/#root with `height: 100%`, which in an
+  // installed iOS PWA resolves short of the screen — it excludes the
+  // home-indicator band — so #root ends above the true bottom and the body
+  // background shows through as a dead strip under the tab bar. Sizing the
+  // chain by the dynamic viewport (100dvh) makes the root fill the real visual
+  // viewport; the 100vh line is the fallback for iOS < 15.4 (no dvh support).
   const bleedFix = `<style id="pwa-bleed-fix">
       html, body { background-color: ${BG_LIGHT}; overscroll-behavior: none; }
       @media (prefers-color-scheme: dark) {
         html, body { background-color: ${BG_DARK}; }
       }
+      html, body, #root { height: 100vh; height: 100dvh; }
     </style>`;
 
   const tags = [

@@ -31,6 +31,11 @@ type IGroupedRow = {
   description?: string;
   /** Right-aligned status, e.g. "Paid 3/12". Replaces the copy button. */
   trailing?: React.ReactNode;
+  /** Full-width content under the row, e.g. an attachment panel. Indented to
+   * the text column rather than the card edge, so it sits under the value and
+   * not under the icon gutter. Rendered outside the icon/text/trailing row so
+   * that however tall it grows, it can't drag those out of alignment. */
+  footer?: React.ReactNode;
   onPress: () => void;
   position: RowPosition;
 };
@@ -64,7 +69,7 @@ const GroupedRow = (props: IGroupedRow) => {
           card edge — the icon column reads as a gutter. */}
       {!isFirst && <View style={styles.separator} />}
 
-      <View style={styles.body}>
+      <View style={[styles.body, !!props.footer && styles.bodyWithFooter]}>
         <View style={[styles.iconChip, { backgroundColor: tint(accent) }]}>
           <Ionicons name={icon} size={18} color={accent} />
         </View>
@@ -114,6 +119,8 @@ const GroupedRow = (props: IGroupedRow) => {
           <CopyButton value={props.copyValue!} label={props.valueLabel!} />
         )}
       </View>
+
+      {!!props.footer && <View style={styles.footer}>{props.footer}</View>}
     </Pressable>
   );
 };
@@ -151,6 +158,17 @@ const createStyles = (colors: ThemeColors) =>
       alignItems: "center",
       paddingHorizontal: 14,
       paddingVertical: 14,
+    },
+    // The footer owns the gap below it, so the row doesn't pad twice.
+    bodyWithFooter: {
+      paddingBottom: 0,
+    },
+    // 62 = card padding (14) + icon chip (34) + its gutter (14), the same
+    // alignment the separator uses, so the footer lines up under the value.
+    footer: {
+      marginLeft: 62,
+      marginRight: 14,
+      paddingBottom: 14,
     },
     iconChip: {
       width: 34,

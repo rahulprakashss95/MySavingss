@@ -78,3 +78,9 @@ yarn-error.*
 .claude/
 
 # @end expo-cli
+
+# Local env files. The generated block above only covers `.env*.local`, which
+# would let a plain `.env` be committed. `.env.example` is the tracked template.
+.env
+.env.*
+!.env.example

@@ -9,7 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { saveMetalRates } from "../../database/firebaseQuery";
+import { saveMetalRates } from "../../database/query";
 import {
   useAppDispatch,
   useCollectionState,

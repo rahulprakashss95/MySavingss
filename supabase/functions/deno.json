@@ -1,0 +1,4 @@
+{
+  "//": "Edge Functions run on Deno, not React Native. Without this, a local `deno check` walks up and resolves imports out of the app's node_modules — which holds a React Native build of supabase-js — and fails. Imports in the function are fully qualified (jsr:), so nothing here is needed at deploy time.",
+  "nodeModulesDir": "none"
+}

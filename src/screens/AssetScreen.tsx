@@ -1,37 +1,29 @@
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
-import { ScrollView, Text, View } from "react-native";
+import React, { useMemo } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import FeatureTile from "../components/FeatureTile";
 import { useTheme } from "../context/ThemeContext";
-import { NavigationProp } from "../utils/Utils";
+import { ThemeColors } from "../utils/Color";
 
-type Props = {
-  navigation: NavigationProp;
-};
-
-// Proof-of-concept: this screen is styled with NativeWind (Tailwind) classes
-// instead of StyleSheet. The colour tokens (bg-background, text-muted, …) resolve
-// to the app's ThemeColors via src/utils/themeVars.ts, so it follows the same
-// light/dark toggle. FeatureTile below is still StyleSheet-based — the two
-// approaches coexist, so a migration can be incremental.
-const AssetScreen = ({ navigation }: Props) => {
+const AssetScreen = () => {
+  const router = useRouter();
   const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <ScrollView
-      className="flex-1 bg-background"
-      contentContainerClassName="p-5 pb-8"
+      style={styles.container}
+      contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <Text className="mt-1 mb-7 text-base leading-[23px] text-muted">
+      <Text style={styles.lede}>
         What the family owns — jewellery by metal, and property with its payments.
       </Text>
 
-      <Text className="mb-3 text-[13px] font-semibold uppercase tracking-[0.6px] text-muted">
-        Records
-      </Text>
+      <Text style={styles.sectionTitle}>Records</Text>
 
-      <View className="flex-row flex-wrap justify-between">
+      <View style={styles.grid}>
         <FeatureTile
           title="Ornaments"
           subtitle="Gold, silver & stones"
@@ -39,7 +31,7 @@ const AssetScreen = ({ navigation }: Props) => {
           renderIcon={(color) => (
             <Ionicons name="ribbon-outline" size={24} color={color} />
           )}
-          onPress={() => navigation.navigate("OrnamentList")}
+          onPress={() => router.push("/assets/ornaments")}
         />
         <FeatureTile
           title="Properties"
@@ -48,13 +40,11 @@ const AssetScreen = ({ navigation }: Props) => {
           renderIcon={(color) => (
             <Ionicons name="home-outline" size={24} color={color} />
           )}
-          onPress={() => navigation.navigate("PropertyList")}
+          onPress={() => router.push("/assets/properties")}
         />
       </View>
 
-      <Text className="mt-7 mb-3 text-[13px] font-semibold uppercase tracking-[0.6px] text-muted">
-        Insights
-      </Text>
+      <Text style={[styles.sectionTitle, styles.sectionSpacing]}>Insights</Text>
 
       <FeatureTile
         wide
@@ -64,10 +54,45 @@ const AssetScreen = ({ navigation }: Props) => {
         renderIcon={(color) => (
           <Ionicons name="stats-chart-outline" size={24} color={color} />
         )}
-        onPress={() => navigation.navigate("AssetOverview")}
+        onPress={() => router.push("/assets/overview")}
       />
     </ScrollView>
   );
 };
+
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      padding: 20,
+      paddingBottom: 32,
+    },
+    lede: {
+      fontSize: 16,
+      color: colors.textMuted,
+      lineHeight: 23,
+      marginTop: 4,
+      marginBottom: 28,
+    },
+    sectionTitle: {
+      fontSize: 13,
+      fontWeight: "600",
+      textTransform: "uppercase",
+      letterSpacing: 0.6,
+      color: colors.textMuted,
+      marginBottom: 12,
+    },
+    sectionSpacing: {
+      marginTop: 28,
+    },
+    grid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "space-between",
+    },
+  });
 
 export default AssetScreen;

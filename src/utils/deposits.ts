@@ -5,34 +5,40 @@ import { FixedDepositModel } from "../models/FixedDepositModel";
 export const DATE_FORMAT = "DD-MMM-YYYY";
 
 /**
- * `maturityDate` arrives as "", "0", 0 or a DD-MMM-YYYY string depending on how
- * the record was written, so normalise before parsing.
+ * `maturityDate` is either "" (none set) or DD-MMM-YYYY: it comes from a real
+ * `date` column via `dateToApp` in `database/query.ts`, which can't produce
+ * anything else. The old "0"/0 shapes were Firestore-era and are gone.
  */
-export const parseMaturity = (maturityDate: any) => {
-  if (!maturityDate || maturityDate === "0") {
+export const parseMaturity = (maturityDate: string) => {
+  if (!maturityDate) {
     return null;
   }
   const parsed = moment(maturityDate, DATE_FORMAT, true);
   return parsed.isValid() ? parsed : null;
 };
 
-/** Rows flagged `canShow: false` are soft-deleted and must never be counted. */
-export const visibleDeposits = (deposits: FixedDepositModel[]) =>
-  deposits.filter((deposit: any) => deposit?.canShow);
-
-/** Attach each deposit's bank name from the bank list, without mutating input. */
+/**
+ * Attach each deposit's bank name from the bank list, without mutating input.
+ *
+ * A deposit stores `bankId`, not the bank's name — so renaming a bank updates
+ * every deposit at once, with no stored copies to go stale. The join happens
+ * here rather than in Postgres because the bank list is already cached for the
+ * picker, which makes it free; and rather than denormalising a `bankName` onto
+ * the deposit, which is what would go stale on a rename.
+ *
+ * A bank that no longer exists reads as "Unknown" — deleting a bank leaves its
+ * deposits intact by design (see the `owner_id` note in `database/schema.sql`).
+ */
 export const mergeBankNames = (
   deposits: FixedDepositModel[],
   banks: BankModel[]
-): FixedDepositModel[] =>
-  deposits.map((deposit) => {
-    const bank = banks?.find((b) => b.id == deposit.bankId);
-    return {
-      ...deposit,
-      name: bank?.name ?? "Unknown",
-      mobile: (bank?.mobile as any) ?? null,
-    };
-  });
+): FixedDepositModel[] => {
+  const byId = new Map((banks ?? []).map((bank) => [bank.id, bank]));
+  return deposits.map((deposit) => ({
+    ...deposit,
+    name: byId.get(deposit.bankId)?.name ?? "Unknown",
+  }));
+};
 
 /**
  * Soonest maturity first; deposits with no maturity date sort to the end.

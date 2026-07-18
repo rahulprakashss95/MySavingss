@@ -11,7 +11,7 @@ import {
   addBankDocument,
   deleteBankDocument,
   updateBankDocument,
-} from "../../database/firebaseQuery";
+} from "../../database/query";
 import Button from "../components/Button";
 import Loader from "../components/Loader";
 import PersonPicker from "../components/PersonPicker";
@@ -24,21 +24,17 @@ import { commitDelete, commitSave, useAppDispatch } from "../redux/hooks";
 import { canEdit, Visibility } from "../models/common";
 import { BankDocumentModel } from "../models/DocumentModel";
 import { ThemeColors } from "../utils/Color";
-import {
-  NavigationProp,
-  RouteProps,
-  showConfirmationAlert,
-  showToast,
-} from "../utils/Utils";
+import { showConfirmationAlert, showToast } from "../utils/Utils";
+import { useRouter } from "expo-router";
 
 type Props = {
-  route: RouteProps;
-  navigation: NavigationProp;
+  /** The account being edited, or null to create. Resolved by the route. */
+  initial: BankDocumentModel | null;
 };
 
-const BankDocumentAddEditScreen = ({ route, navigation }: Props) => {
-  const { documentData } = (route.params as any) || {};
-  const document: BankDocumentModel | null = documentData || null;
+const BankDocumentAddEditScreen = ({ initial }: Props) => {
+  const router = useRouter();
+  const document = initial;
   const pageMode = document ? "Edit" : "Add";
 
   const [personId, setPersonId] = useState(document?.personId ?? "");
@@ -110,7 +106,7 @@ const BankDocumentAddEditScreen = ({ route, navigation }: Props) => {
         : updateBankDocument(document!.id, payload);
 
     dispatch(commitSave("bankDocuments", save))
-      .then(() => navigation.goBack())
+      .then(() => router.back())
       .catch((error) => {
         showToast("error", "Unable to save", String(error), "bottom");
       })
@@ -127,7 +123,7 @@ const BankDocumentAddEditScreen = ({ route, navigation }: Props) => {
       }
       setIsLoading(true);
       dispatch(commitDelete("bankDocuments", document!.id, deleteBankDocument))
-        .then(() => navigation.goBack())
+        .then(() => router.back())
         .catch((error) => {
           showToast("error", "Unable to delete", String(error), "bottom");
         })

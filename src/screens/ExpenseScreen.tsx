@@ -4,13 +4,10 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import FeatureTile from "../components/FeatureTile";
 import { useTheme } from "../context/ThemeContext";
 import { ThemeColors } from "../utils/Color";
-import { NavigationProp } from "../utils/Utils";
+import { useRouter } from "expo-router";
 
-type Props = {
-  navigation: NavigationProp;
-};
-
-const ExpenseScreen = ({ navigation }: Props) => {
+const ExpenseScreen = () => {
+  const router = useRouter();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -34,7 +31,7 @@ const ExpenseScreen = ({ navigation }: Props) => {
           renderIcon={(color) => (
             <Ionicons name="receipt-outline" size={24} color={color} />
           )}
-          onPress={() => navigation.navigate("ExpenseList")}
+          onPress={() => router.push("/expenses/list")}
         />
         <FeatureTile
           title="Types"
@@ -43,7 +40,7 @@ const ExpenseScreen = ({ navigation }: Props) => {
           renderIcon={(color) => (
             <Ionicons name="pricetags-outline" size={24} color={color} />
           )}
-          onPress={() => navigation.navigate("ExpenseTypeList")}
+          onPress={() => router.push("/expenses/types")}
         />
       </View>
 
@@ -57,7 +54,7 @@ const ExpenseScreen = ({ navigation }: Props) => {
         renderIcon={(color) => (
           <Ionicons name="stats-chart-outline" size={24} color={color} />
         )}
-        onPress={() => navigation.navigate("ExpenseOverview")}
+        onPress={() => router.push("/expenses/overview")}
       />
     </ScrollView>
   );

@@ -2,33 +2,34 @@
   "expo": {
     "name": "HomeVault",
     "slug": "HomeVault",
-    "version": "1.1.131",
+    "scheme": "homevault",
+    "version": "1.2.100",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "cover",
-      "backgroundColor": "#ffffff"
-    },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSFaceIDUsageDescription": "Your usage description for Face ID"
-      }
+        "NSFaceIDUsageDescription": "Your usage description for Face ID",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.app.homevault"
     },
     "android": {
       "permissions": [
-        "USE_FINGERPRINT"
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.RECORD_AUDIO"
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.app.savings"
+      "package": "com.app.homevault"
     },
     "web": {
       "bundler": "metro",
@@ -37,7 +38,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "4531fc5c-e0da-4ae9-9d63-448a35b27b4f"
+        "projectId": "c2ce8ba5-10dd-444d-ab87-52b0a7a580c3"
       }
     },
     "experiments": {
@@ -50,8 +51,27 @@
           "faceIDPermission": "Allow $(PRODUCT_NAME) to use Face ID."
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to photograph your documents.",
+          "photosPermission": "Allow $(PRODUCT_NAME) to attach scans and photos to your records."
+        }
+      ],
       "@react-native-community/datetimepicker",
-      "expo-font"
-    ]
+      "expo-font",
+      "expo-sharing",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "resizeMode": "cover",
+          "backgroundColor": "#ffffff"
+        }
+      ],
+      "expo-status-bar",
+      "expo-router"
+    ],
+    "owner": "rahulprakashss"
   }
 }

@@ -9,11 +9,8 @@ import { PROPERTY_TYPES, PropertyModel } from "../models/AssetModel";
 import { areaSummary, paymentTotals } from "../utils/assets";
 import { ThemeColors } from "../utils/Color";
 import { byFixedOrder, byText, groupBy, UNGROUPED } from "../utils/grouping";
-import { amountFormat, NavigationProp } from "../utils/Utils";
-
-type Props = {
-  navigation: NavigationProp;
-};
+import { amountFormat } from "../utils/Utils";
+import { useRouter } from "expo-router";
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -28,7 +25,8 @@ const ICONS: Record<string, IconName> = {
 /** Area for land, nothing for vehicles — a car has no cents. */
 const metaFor = (property: PropertyModel) => areaSummary(property.cents ?? "");
 
-const PropertyListScreen = ({ navigation }: Props) => {
+const PropertyListScreen = () => {
+  const router = useRouter();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -48,7 +46,7 @@ const PropertyListScreen = ({ navigation }: Props) => {
   );
 
   const navigateAddEdit = (data: PropertyModel | null) => {
-    navigation.navigate("PropertyAddEdit", { propertyData: data });
+    router.push(data ? `/assets/properties/${data.id}` : "/assets/properties/new");
   };
 
   /** The one number you want at a glance: what's still owed. */

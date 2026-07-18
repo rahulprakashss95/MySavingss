@@ -1,4 +1,4 @@
-import type { Creatable, Owned } from "./common";
+import type { Attachable, Creatable, Owned } from "./common";
 
 /** The fixed set of government IDs the picker offers. */
 export const GOVERNMENT_DOCUMENT_TYPES = [
@@ -24,7 +24,7 @@ type PersonOwned = {
   personName: string;
 };
 
-export type GovernmentDocumentModel = PersonOwned & Owned & {
+export type GovernmentDocumentModel = PersonOwned & Owned & Attachable & {
   id: string;
   /** One of GOVERNMENT_DOCUMENT_TYPES. Typed loosely so older rows still read. */
   documentType: string;

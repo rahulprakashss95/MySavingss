@@ -100,11 +100,19 @@ function patchIndexHtml() {
   // Match html/body to the app background so no white bleeds past the root in
   // standalone mode, and stop the overscroll rubber-band that shifts the whole
   // page (leaving a gap at the top or bottom).
+  //
+  // Expo's reset sizes html/body/#root with `height: 100%`, which in an
+  // installed iOS PWA resolves short of the screen — it excludes the
+  // home-indicator band — so #root ends above the true bottom and the body
+  // background shows through as a dead strip under the tab bar. Sizing the
+  // chain by the dynamic viewport (100dvh) makes the root fill the real visual
+  // viewport; the 100vh line is the fallback for iOS < 15.4 (no dvh support).
   const bleedFix = `<style id="pwa-bleed-fix">
       html, body { background-color: ${BG_LIGHT}; overscroll-behavior: none; }
       @media (prefers-color-scheme: dark) {
         html, body { background-color: ${BG_DARK}; }
       }
+      html, body, #root { height: 100vh; height: 100dvh; }
     </style>`;
 
   const tags = [
@@ -150,12 +158,19 @@ async function main() {
   writeManifest(icons);
   patchIndexHtml();
 
+  // SPA deep-link fallback. Expo Router does client-side routing under a single
+  // index.html, but GitHub Pages has no server to rewrite unknown paths to it —
+  // so a hard refresh on a route like /HomeVault/deposits/banks/new would 404.
+  // Pages serves 404.html for any unmatched path; making it a copy of the
+  // patched index boots the same app shell and the router resolves the URL.
+  fs.copyFileSync(path.join(DIST, "index.html"), path.join(DIST, "404.html"));
+
   // GitHub Pages / Jekyll strips folders that start with "_"; without this the
   // _expo/ JS bundle 404s and the site is blank.
   fs.writeFileSync(path.join(DIST, ".nojekyll"), "");
 
   console.log(
-    `patch-pwa: wrote ${icons.length} icons + manifest.json, injected PWA markup, added .nojekyll under ${BASE}`
+    `patch-pwa: wrote ${icons.length} icons + manifest.json, injected PWA markup, 404.html SPA fallback, and .nojekyll under ${BASE}`
   );
 }
 

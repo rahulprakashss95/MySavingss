@@ -11,7 +11,8 @@ import {
   addGovernmentDocument,
   deleteGovernmentDocument,
   updateGovernmentDocument,
-} from "../../database/firebaseQuery";
+} from "../../database/query";
+import AttachmentField, { useAttachments } from "../components/AttachmentField";
 import Button from "../components/Button";
 import Loader from "../components/Loader";
 import PersonPicker from "../components/PersonPicker";
@@ -28,21 +29,17 @@ import {
   GovernmentDocumentModel,
 } from "../models/DocumentModel";
 import { ThemeColors } from "../utils/Color";
-import {
-  NavigationProp,
-  RouteProps,
-  showConfirmationAlert,
-  showToast,
-} from "../utils/Utils";
+import { showConfirmationAlert, showToast } from "../utils/Utils";
+import { useRouter } from "expo-router";
 
 type Props = {
-  route: RouteProps;
-  navigation: NavigationProp;
+  /** The document being edited, or null to create. Resolved by the route. */
+  initial: GovernmentDocumentModel | null;
 };
 
-const GovernmentDocumentAddEditScreen = ({ route, navigation }: Props) => {
-  const { documentData } = (route.params as any) || {};
-  const document: GovernmentDocumentModel | null = documentData || null;
+const GovernmentDocumentAddEditScreen = ({ initial }: Props) => {
+  const router = useRouter();
+  const document = initial;
   const pageMode = document ? "Edit" : "Add";
 
   const [personId, setPersonId] = useState(document?.personId ?? "");
@@ -56,6 +53,7 @@ const GovernmentDocumentAddEditScreen = ({ route, navigation }: Props) => {
     document?.visibility ?? "private"
   );
   const [isLoading, setIsLoading] = useState(false);
+  const attachments = useAttachments(document?.attachments);
 
   const { colors } = useTheme();
   const { user } = useAuth();
@@ -78,7 +76,7 @@ const GovernmentDocumentAddEditScreen = ({ route, navigation }: Props) => {
     return null;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const error = validationError();
     if (error) {
       showToast("error", "Incomplete form", error, "bottom");
@@ -86,26 +84,36 @@ const GovernmentDocumentAddEditScreen = ({ route, navigation }: Props) => {
     }
 
     setIsLoading(true);
-    const payload = {
-      personId,
-      personName,
-      documentType,
-      documentNumber: documentNumber.trim(),
-      description: description.trim(),
-      visibility,
-    };
+    try {
+      // Files first: if an upload fails the record is left untouched, rather
+      // than saved pointing at a scan that never made it to the bucket.
+      const files = await attachments.commit();
 
-    const save =
-      pageMode === "Add"
-        ? addGovernmentDocument(payload)
-        : updateGovernmentDocument(document!.id, payload);
+      const payload = {
+        personId,
+        personName,
+        documentType,
+        documentNumber: documentNumber.trim(),
+        description: description.trim(),
+        attachments: files,
+        visibility,
+      };
 
-    dispatch(commitSave("governmentDocuments", save))
-      .then(() => navigation.goBack())
-      .catch((error) => {
-        showToast("error", "Unable to save", String(error), "bottom");
-      })
-      .finally(() => setIsLoading(false));
+      const save =
+        pageMode === "Add"
+          ? addGovernmentDocument(payload)
+          : updateGovernmentDocument(document!.id, payload);
+
+      await dispatch(commitSave("governmentDocuments", save));
+      // Only once the row no longer references them: a save that threw above
+      // leaves the old row intact, and its files must still be there.
+      await attachments.cleanup(files);
+      router.back();
+    } catch (error) {
+      showToast("error", "Unable to save", String(error), "bottom");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDelete = () => {
@@ -120,7 +128,7 @@ const GovernmentDocumentAddEditScreen = ({ route, navigation }: Props) => {
       dispatch(
         commitDelete("governmentDocuments", document!.id, deleteGovernmentDocument)
       )
-        .then(() => navigation.goBack())
+        .then(() => router.back())
         .catch((error) => {
           showToast("error", "Unable to delete", String(error), "bottom");
         })
@@ -175,6 +183,14 @@ const GovernmentDocumentAddEditScreen = ({ route, navigation }: Props) => {
           placeholderTextColor={colors.placeholder}
           autoCapitalize="characters"
           autoCorrect={false}
+        />
+      </View>
+
+      <View style={styles.card}>
+        <AttachmentField
+          drafts={attachments.drafts}
+          onChange={attachments.setDrafts}
+          readOnly={readOnly}
         />
       </View>
 

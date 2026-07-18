@@ -4,7 +4,7 @@ import {
   addLedgerClient,
   deleteLedgerClient,
   updateLedgerClient,
-} from "../../../database/firebaseQuery";
+} from "../../../database/query";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { canEdit, Visibility } from "../../models/common";

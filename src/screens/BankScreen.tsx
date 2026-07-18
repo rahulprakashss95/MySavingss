@@ -10,39 +10,11 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import FloatingButton from "../components/FAB";
 import { BankListSkeleton } from "../components/Skeleton";
-import { BankModel } from "../models/BankModel";
+import { BankModel, bankMobileNumbers } from "../models/BankModel";
 import { useCollectionState } from "../redux/hooks";
 import { useTheme } from "../context/ThemeContext";
+import { useRouter } from "expo-router";
 import { ThemeColors, tint } from "../utils/Color";
-import { NavigationProp } from "../utils/Utils";
-
-type Props = {
-  navigation: NavigationProp;
-};
-
-/**
- * `mobile` is not consistently shaped in Firestore: some docs hold an array of
- * `{ value }` objects, some a bare string, some a keyed map, most `null`.
- * Flatten whatever comes back into a plain list of numbers.
- */
-const mobileNumbers = (mobile: any): string[] => {
-  if (!mobile) {
-    return [];
-  }
-  let entries: any[];
-  if (typeof mobile === "string") {
-    entries = [mobile];
-  } else if (Array.isArray(mobile)) {
-    entries = mobile;
-  } else {
-    entries = Object.values(mobile);
-  }
-  return entries
-    .map((entry: any) => (typeof entry === "string" ? entry : entry?.value))
-    .map((value: any) => (typeof value === "string" ? value.trim() : ""))
-    // Some records literally store the text "null" rather than an absent field.
-    .filter((value) => value && value !== "null" && value !== "undefined");
-};
 
 /** "KVB Capital" -> "KC", "HDFC" -> "HD". */
 const initialsOf = (name: string) => {
@@ -56,12 +28,13 @@ const initialsOf = (name: string) => {
   return (words[0][0] + words[1][0]).toUpperCase();
 };
 
-const BankScreen = ({ navigation }: Props) => {
+const BankScreen = () => {
+  const router = useRouter();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Served from the store: fetched once and kept in sync as banks are
-  // added/edited/deleted, so returning here doesn't re-read Firestore.
+  // added/edited/deleted, so returning here doesn't re-read the database.
   const banks = useCollectionState<BankModel>("banks");
   const { hasLoaded, isRefreshing, onRefresh } = banks;
 
@@ -71,7 +44,7 @@ const BankScreen = ({ navigation }: Props) => {
   );
 
   const openBank = (bank: BankModel | null) =>
-    navigation.navigate("BankAddEdit", { bankData: bank });
+    router.push(bank ? `/deposits/banks/${bank.id}` : "/deposits/banks/new");
 
   const renderHeader = () => {
     if (!bankList.length) {
@@ -98,7 +71,7 @@ const BankScreen = ({ navigation }: Props) => {
   };
 
   const renderBank = ({ item }: { item: BankModel }) => {
-    const numbers = mobileNumbers(item.mobile);
+    const numbers = bankMobileNumbers(item.mobile);
 
     return (
       <Pressable

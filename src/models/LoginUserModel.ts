@@ -1,15 +1,16 @@
 import type { ModuleKey } from "./common";
 
 /**
- * A family member's account, as projected to the UI (pickers, admin list).
- * Deliberately narrow: the `loginUsers` collection also holds credentials, and
- * nothing outside the login/admin flow should read the hash.
+ * A family member's account. This is the whole stored shape — credentials are
+ * not here and never were: Supabase Auth owns them, keyed by a synthetic email
+ * derived from (familyId, username). See `database/query.ts`.
  */
 export type LoginUserModel = {
+  /** Also the Supabase Auth user id, so `auth.uid()` identifies this row. */
   id: string;
-  /** `families` doc id this account belongs to. */
+  /** `families` row id this account belongs to. */
   familyId: string;
-  /** Globally unique across all families — the login handle. */
+  /** The login handle — unique within the family, not globally. */
   username: string;
   /** Display name, e.g. "Rahul Prakash". Falls back to `username` when absent. */
   name?: string;
@@ -20,15 +21,6 @@ export type LoginUserModel = {
 };
 
 export type UserRole = "admin" | "member";
-
-/**
- * The full stored shape, including credentials. Only the login and admin data
- * layers touch this; the rest of the app uses `LoginUserModel`.
- */
-export type StoredLoginUser = LoginUserModel & {
-  passwordHash: string;
-  passwordSalt: string;
-};
 
 export const displayNameOf = (user: Pick<LoginUserModel, "name" | "username">) =>
   user.name || user.username;

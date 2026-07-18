@@ -1,7 +1,7 @@
 export type Section<T> = { key: string; title: string; data: T[] };
 
 /**
- * Compares two possibly-missing strings. Firestore rows written before a field
+ * Compares two possibly-missing strings. Rows written before a field
  * existed come back with it `undefined`, and `undefined.localeCompare` throws.
  */
 export const byText = (a?: string, b?: string) => (a ?? "").localeCompare(b ?? "");

@@ -6,13 +6,10 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { BankDocumentModel } from "../models/DocumentModel";
 import { groupByPerson, groupDigits } from "../utils/documents";
-import { NavigationProp } from "../utils/Utils";
+import { useRouter } from "expo-router";
 
-type Props = {
-  navigation: NavigationProp;
-};
-
-const BankDocumentListScreen = ({ navigation }: Props) => {
+const BankDocumentListScreen = () => {
+  const router = useRouter();
   const { colors } = useTheme();
   const { user } = useAuth();
   const { items, ...list } =
@@ -21,7 +18,11 @@ const BankDocumentListScreen = ({ navigation }: Props) => {
   const sections = useMemo(() => groupByPerson(items, user), [items, user]);
 
   const navigateAddEdit = (data: BankDocumentModel | null) => {
-    navigation.navigate("BankDocumentAddEdit", { documentData: data });
+    router.push(
+      data
+        ? `/documents/bank-accounts/${data.id}`
+        : "/documents/bank-accounts/new"
+    );
   };
 
   return (

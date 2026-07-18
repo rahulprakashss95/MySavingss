@@ -12,7 +12,7 @@ import {
   addExpense,
   deleteExpense,
   updateExpense,
-} from "../../database/firebaseQuery";
+} from "../../database/query";
 import Button from "../components/Button";
 import DatePicker from "../components/DatePicker";
 import ExpenseTypePicker from "../components/ExpenseTypePicker";
@@ -25,23 +25,20 @@ import { useTheme } from "../context/ThemeContext";
 import { canEdit, Visibility } from "../models/common";
 import { ExpenseModel } from "../models/ExpenseModel";
 import { commitDelete, commitSave, useAppDispatch } from "../redux/hooks";
+import { isValidAmount } from "../utils/amount";
 import { ThemeColors } from "../utils/Color";
 import { DATE_FORMAT } from "../utils/deposits";
-import {
-  NavigationProp,
-  RouteProps,
-  showConfirmationAlert,
-  showToast,
-} from "../utils/Utils";
+import { showConfirmationAlert, showToast } from "../utils/Utils";
+import { useRouter } from "expo-router";
 
 type Props = {
-  route: RouteProps;
-  navigation: NavigationProp;
+  /** The expense being edited, or null to create. Resolved by the route. */
+  initial: ExpenseModel | null;
 };
 
-const ExpenseAddEditScreen = ({ route, navigation }: Props) => {
-  const { expenseData } = (route.params as any) || {};
-  const expense: ExpenseModel | null = expenseData || null;
+const ExpenseAddEditScreen = ({ initial }: Props) => {
+  const router = useRouter();
+  const expense: ExpenseModel | null = initial;
   const pageMode = expense ? "Edit" : "Add";
 
   const [typeId, setTypeId] = useState(expense?.typeId ?? "");
@@ -71,7 +68,7 @@ const ExpenseAddEditScreen = ({ route, navigation }: Props) => {
   /** Returns an error message, or null when the form is good to submit. */
   const validationError = () => {
     if (!typeId) return "Choose a type. Add one first if the list is empty.";
-    if (!amount.trim() || Number(amount) <= 0) return "Enter an amount.";
+    if (!isValidAmount(amount)) return "Enter an amount.";
     if (!date) return "Pick a date.";
     return null;
   };
@@ -99,7 +96,7 @@ const ExpenseAddEditScreen = ({ route, navigation }: Props) => {
         : updateExpense(expense!.id, payload);
 
     dispatch(commitSave("expenses", save))
-      .then(() => navigation.goBack())
+      .then(() => router.back())
       .catch((saveError) => {
         showToast("error", "Unable to save", String(saveError), "bottom");
       })
@@ -116,7 +113,7 @@ const ExpenseAddEditScreen = ({ route, navigation }: Props) => {
       }
       setIsLoading(true);
       dispatch(commitDelete("expenses", expense!.id, deleteExpense))
-        .then(() => navigation.goBack())
+        .then(() => router.back())
         .catch((deleteError) => {
           showToast("error", "Unable to delete", String(deleteError), "bottom");
         })

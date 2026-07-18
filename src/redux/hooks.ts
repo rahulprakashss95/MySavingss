@@ -17,7 +17,7 @@ import {
   getOrnaments,
   getProperties,
   getSavings,
-} from "../../database/firebaseQuery";
+} from "../../database/query";
 import { showToast } from "../utils/Utils";
 import {
   CollectionName,
@@ -30,7 +30,7 @@ import type { AppDispatch, RootState } from "./store";
 export const useAppDispatch = () => useDispatch<AppDispatch>();
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 
-/** Maps each cached collection to its Firestore fetcher and its error copy. */
+/** Maps each cached collection to its fetcher and its error copy. */
 const REGISTRY: Record<
   CollectionName,
   { fetch: () => Promise<Identified[]>; errorTitle: string }

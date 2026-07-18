@@ -16,7 +16,6 @@ import { amountFormat } from "../utils/Utils";
 import {
   buildTotals,
   mergeBankNames,
-  visibleDeposits,
 } from "../utils/deposits";
 import { useTheme } from "../context/ThemeContext";
 import { ThemeColors } from "../utils/Color";
@@ -28,7 +27,7 @@ const OverviewScreen = () => {
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Same cached collections the deposits list uses, so opening the overview
-  // after the list (or vice-versa) doesn't re-read Firestore.
+  // after the list (or vice-versa) doesn't re-read the database.
   const fixedDeposits = useCollectionState<FixedDepositModel>("fixedDeposits");
   const banks = useCollectionState<BankModel>("banks");
 
@@ -42,7 +41,7 @@ const OverviewScreen = () => {
   // The query layer already returns only the deposits this user may see, so the
   // hero figure always agrees with the list.
   const deposits = useMemo(
-    () => mergeBankNames(visibleDeposits(fixedDeposits.items), banks.items),
+    () => mergeBankNames(fixedDeposits.items, banks.items),
     [fixedDeposits.items, banks.items]
   );
 

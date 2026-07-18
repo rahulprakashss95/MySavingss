@@ -11,23 +11,21 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { findFamiliesForCredentials } from "../../database/firebaseQuery";
+import { findFamiliesForCredentials } from "../../database/query";
 import Button from "../components/Button";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import type { FamilyModel } from "../models/FamilyModel";
-import type { StoredLoginUser } from "../models/LoginUserModel";
-import { rememberFamily, toSession } from "../utils/auth";
+import type { LoginUserModel } from "../models/LoginUserModel";
+import { rememberFamily, signInWithCredentials } from "../utils/auth";
+import { useRouter } from "expo-router";
 import { ThemeColors, tint } from "../utils/Color";
-import { NavigationProp, showToast } from "../utils/Utils";
+import { showToast } from "../utils/Utils";
 
-type Props = {
-  navigation: NavigationProp;
-};
+type Match = { family: FamilyModel; user: LoginUserModel };
 
-type Match = { family: FamilyModel; user: StoredLoginUser };
-
-const RecoverFamilyScreen = ({ navigation }: Props) => {
+const RecoverFamilyScreen = () => {
+  const router = useRouter();
   const { colors } = useTheme();
   const { signIn } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -77,8 +75,21 @@ const RecoverFamilyScreen = ({ navigation }: Props) => {
 
   const continueAs = async (match: Match) => {
     try {
+      // Finding the family only proved the credentials are good somewhere — it
+      // deliberately leaves no session behind. Signing in for the family the
+      // user actually picked is what gives the app one, and without it every
+      // subsequent read would come back empty.
+      const session = await signInWithCredentials(
+        match.family.id,
+        match.user.username,
+        password
+      );
+      if (!session) {
+        showToast("error", "Unable to continue", "Please try again.", "bottom");
+        return;
+      }
       rememberFamily(match.family);
-      await signIn(toSession(match.user, match.family));
+      await signIn(session);
     } catch (error) {
       console.log("RecoverSignInError", error);
       showToast("error", "Unable to continue", "Please try again.", "bottom");
@@ -183,7 +194,7 @@ const RecoverFamilyScreen = ({ navigation }: Props) => {
         )}
 
         <Pressable
-          onPress={() => navigation.navigate("Login")}
+          onPress={() => router.push("/login")}
           accessibilityRole="button"
           hitSlop={8}
           style={styles.backLink}

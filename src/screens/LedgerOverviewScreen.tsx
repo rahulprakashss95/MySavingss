@@ -20,15 +20,11 @@ import {
   sumAmount,
   totalsBy,
 } from "../utils/ledger";
-import { amountFormat, NavigationProp } from "../utils/Utils";
-
-type Props = {
-  navigation: NavigationProp;
-};
+import { amountFormat } from "../utils/Utils";
 
 const rupees = (value: number) => `₹ ${amountFormat(Math.round(value))}`;
 
-const LedgerOverviewScreen = ({ navigation }: Props) => {
+const LedgerOverviewScreen = () => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 

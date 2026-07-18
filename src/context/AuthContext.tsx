@@ -7,7 +7,12 @@ import React, {
     useMemo,
     useState,
 } from "react";
-import { clearActiveScope, setActiveScope } from "../../database/firebaseQuery";
+import {
+  clearActiveScope,
+  hasActiveSession,
+  setActiveScope,
+  signOut as endDatabaseSession,
+} from "../../database/query";
 import { store } from "../redux/store";
 import { resetAll } from "../redux/resetAll";
 import type { ModuleKey } from "../models/common";
@@ -78,12 +83,15 @@ export const AuthProvider = ({ children }: Props) => {
     }, 3000);
 
     AsyncStorage.getItem(SESSION_STORAGE_KEY)
-      .then((storedSession) => {
+      .then(async (storedSession) => {
         if (!storedSession) {
           return;
         }
         const parsed = JSON.parse(storedSession);
-        if (isCompleteSession(parsed)) {
+        // A stored login is only good if the database session behind it is
+        // still alive — otherwise the app would look signed in while every
+        // read came back empty.
+        if (isCompleteSession(parsed) && (await hasActiveSession())) {
           setActiveScope({ familyId: parsed.familyId, userId: parsed.id });
           setUser(parsed);
         } else {
@@ -119,6 +127,14 @@ export const AuthProvider = ({ children }: Props) => {
     clearActiveScope();
     // Drop every cached collection so one session's data can't leak into the next.
     store.dispatch(resetAll());
+    try {
+      // Ends the database session too. Without this the tokens would outlive
+      // the logout in storage, and the next user on this device would start
+      // with the previous one's read access.
+      await endDatabaseSession();
+    } catch (error) {
+      console.log("Unable to end the database session", error);
+    }
     try {
       await AsyncStorage.removeItem(SESSION_STORAGE_KEY);
     } catch (error) {

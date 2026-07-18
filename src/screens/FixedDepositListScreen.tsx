@@ -6,21 +6,18 @@ import { ThemeColors } from "../utils/Color";
 import { useCollectionState } from "../redux/hooks";
 import { FixedDepositModel } from "../models/FixedDepositModel";
 import { BankModel } from "../models/BankModel";
-import { amountFormat, NavigationProp } from "../utils/Utils";
+import { amountFormat } from "../utils/Utils";
 import {
   mergeBankNames,
   sortByMaturity,
-  visibleDeposits,
 } from "../utils/deposits";
 import { DepositListSkeleton } from "../components/Skeleton";
 import FDCard from "../components/FDCard";
 import FloatingButton from "../components/FAB";
+import { useRouter } from "expo-router";
 
-type Props = {
-  navigation: NavigationProp;
-};
-
-const FixedDepositListScreen = ({ navigation }: Props) => {
+const FixedDepositListScreen = () => {
+  const router = useRouter();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -37,19 +34,21 @@ const FixedDepositListScreen = ({ navigation }: Props) => {
   };
 
   // The query layer already scopes to the family and the user's visible
-  // records; this only drops completed/hidden ones and attaches bank names.
+  // records; this only attaches bank names and orders by maturity.
   const fixedDeposits = useMemo(
     () =>
       sortByMaturity(
-        mergeBankNames(visibleDeposits(deposits.items), banks.items)
+        mergeBankNames(deposits.items, banks.items)
       ),
     [deposits.items, banks.items]
   );
 
   const navigateFDAddEdit = (data: any) => {
-    navigation.navigate("FixedDepositAddEdit", {
-      fixedDepositData: data,
-    });
+    router.push(
+      data
+        ? `/deposits/fixed-deposits/${data.id}`
+        : "/deposits/fixed-deposits/new"
+    );
   };
 
   const totalAmount = useMemo(

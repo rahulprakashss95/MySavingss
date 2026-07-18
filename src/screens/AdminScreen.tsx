@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useCallback, useMemo, useState } from "react";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect } from "expo-router";
 import {
   ActivityIndicator,
   Modal,
@@ -21,7 +21,7 @@ import {
   resetUserPassword,
   updateFamily,
   updateLoginUser,
-} from "../../database/firebaseQuery";
+} from "../../database/query";
 import Toast from "react-native-toast-message";
 import Button from "../components/Button";
 import ModuleAccessPicker from "../components/ModuleAccessPicker";

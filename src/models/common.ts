@@ -32,6 +32,67 @@ export type Visibility = "private" | "public";
 
 export const DEFAULT_VISIBILITY: Visibility = "private";
 
+/**
+ * A file hanging off a record — a scan of an ID, a photo of a jewellery bill, a
+ * property deed. The bytes live in the `documents` Storage bucket; this is the
+ * metadata, and it is stored in the owning record's `data.attachments` array
+ * rather than in a table of its own, so an attachment is exactly as visible as
+ * the record it belongs to. See the attachments section of `schema.sql`.
+ */
+export type Attachment = {
+  /** Also the file's name in the bucket, minus the extension. */
+  id: string;
+  /** The name as the user picked it, for display only. Never used as a path. */
+  name: string;
+  /** Full object path: `{familyId}/{id}.{ext}`. The one field reads need. */
+  path: string;
+  mime: string;
+  /** Bytes, for the size hint under the file name. */
+  size: number;
+  /** ISO date. Display-only, so unlike the measured tables this stays a string. */
+  uploadedAt: string;
+};
+
+/** Mixed into any record that can carry files. */
+export type Attachable = {
+  attachments: Attachment[];
+};
+
+/** The file types the picker offers and the bucket accepts — keep in step with
+ * `allowed_mime_types` in `schema.sql`. */
+export const ATTACHMENT_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "application/pdf",
+] as const;
+
+/** Mirrors the bucket's `file_size_limit`, so the form can reject an oversized
+ * file with a readable message instead of letting the upload fail. */
+export const ATTACHMENT_MAX_BYTES = 10 * 1024 * 1024;
+
+/**
+ * Files per record. A government ID needs a front and a back and nothing more,
+ * which is the shape of every module here — a deed, a bill, a passbook.
+ *
+ * Only the form enforces this. Postgres could (a jsonb length check on `data`),
+ * but the cap is a product decision that will move, and a row written under an
+ * older, laxer limit must stay readable rather than fail every later save.
+ */
+export const ATTACHMENT_MAX_PER_RECORD = 2;
+
+export const isImageAttachment = (attachment: { mime: string }): boolean =>
+  attachment.mime.startsWith("image/");
+
+/** "184 KB" / "1.4 MB", for the row under a file name. */
+export const formatFileSize = (bytes: number): string => {
+  if (!bytes || bytes < 0) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
 /** Stamped on every record so reads can be filtered to one family. */
 export type FamilyScoped = {
   /** `families` doc id. Immutable once written. */

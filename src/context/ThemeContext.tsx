@@ -21,6 +21,8 @@ type ThemeContextValue = {
   /** The resolved palette for the currently active scheme. */
   colors: ThemeColors;
   isDark: boolean;
+  /** True until the stored theme preference has been read from storage. */
+  isRestoring: boolean;
 };
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
@@ -94,16 +96,14 @@ export const ThemeProvider = ({ children }: Props) => {
       setMode,
       colors: isDark ? DarkColors : LightColors,
       isDark,
+      isRestoring,
     }),
-    [mode, setMode, isDark]
+    [mode, setMode, isDark, isRestoring]
   );
 
-  // Hold rendering until the stored preference is known, otherwise the app
-  // paints in light mode for a frame before flipping to dark.
-  if (isRestoring) {
-    return null;
-  }
-
+  // Note: we no longer return null while restoring. Expo Router requires the
+  // root layout to always render a navigator, so the app root keeps the splash
+  // screen up (see app/_layout.tsx) until this resolves instead of unmounting.
   return (
     <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
   );

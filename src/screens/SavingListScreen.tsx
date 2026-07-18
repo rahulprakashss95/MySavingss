@@ -6,13 +6,11 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { SavingModel } from "../models/LedgerModel";
 import { groupByMonth, sumAmount } from "../utils/ledger";
-import { amountFormat, NavigationProp } from "../utils/Utils";
+import { amountFormat } from "../utils/Utils";
+import { useRouter } from "expo-router";
 
-type Props = {
-  navigation: NavigationProp;
-};
-
-const SavingListScreen = ({ navigation }: Props) => {
+const SavingListScreen = () => {
+  const router = useRouter();
   const { colors } = useTheme();
   const { user } = useAuth();
   const { items, ...list } = useCollectionState<SavingModel>("savings");
@@ -20,7 +18,7 @@ const SavingListScreen = ({ navigation }: Props) => {
   const sections = useMemo(() => groupByMonth(items), [items]);
 
   const navigateAddEdit = (data: SavingModel | null) => {
-    navigation.navigate("SavingAddEdit", { savingData: data });
+    router.push(data ? `/ledger/savings/${data.id}` : "/ledger/savings/new");
   };
 
   return (

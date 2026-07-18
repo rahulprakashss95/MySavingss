@@ -5,13 +5,10 @@ import { useTheme } from "../context/ThemeContext";
 import { ExpenseTypeModel } from "../models/ExpenseModel";
 import { useCollectionState } from "../redux/hooks";
 import { byText } from "../utils/grouping";
-import { NavigationProp } from "../utils/Utils";
+import { useRouter } from "expo-router";
 
-type Props = {
-  navigation: NavigationProp;
-};
-
-const ExpenseTypeListScreen = ({ navigation }: Props) => {
+const ExpenseTypeListScreen = () => {
+  const router = useRouter();
   const { colors } = useTheme();
   const { items, ...list } =
     useCollectionState<ExpenseTypeModel>("expenseTypes");
@@ -34,7 +31,7 @@ const ExpenseTypeListScreen = ({ navigation }: Props) => {
   );
 
   const navigateAddEdit = (data: ExpenseTypeModel | null) => {
-    navigation.navigate("ExpenseTypeAddEdit", { expenseTypeData: data });
+    router.push(data ? `/expenses/types/${data.id}` : "/expenses/types/new");
   };
 
   return (

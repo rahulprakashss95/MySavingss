@@ -2,10 +2,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   authenticate,
   getFamilyById,
-} from "../../database/firebaseQuery";
+} from "../../database/query";
 import type { SessionUser } from "../context/AuthContext";
 import type { FamilyModel } from "../models/FamilyModel";
-import type { StoredLoginUser } from "../models/LoginUserModel";
+import type { LoginUserModel } from "../models/LoginUserModel";
 
 /**
  * The last family signed into, remembered on the device so returning users
@@ -21,7 +21,7 @@ export const rememberFamily = (family: FamilyModel) =>
 
 /** Assembles the persisted session from a stored user and its family. */
 export const toSession = (
-  stored: StoredLoginUser,
+  stored: LoginUserModel,
   family: FamilyModel
 ): SessionUser => ({
   id: stored.id,

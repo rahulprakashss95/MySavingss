@@ -1,6 +1,6 @@
 /**
  * A registered family — the tenant boundary of the whole app. `id` is the
- * internal, immutable Firestore doc id that every record references as
+ * internal, immutable row id that every record references as
  * `familyId`; `code` is the human-facing unique handle the admin can edit, and
  * `name` is the display name shown as "Welcome to HomeVault, <name>".
  *

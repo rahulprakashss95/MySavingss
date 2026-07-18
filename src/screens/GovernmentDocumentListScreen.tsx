@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import AttachmentSection from "../components/AttachmentSection";
 import GroupedList from "../components/GroupedList";
 import { useCollectionState } from "../redux/hooks";
 import GroupedRow from "../components/GroupedRow";
@@ -6,13 +7,10 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { GovernmentDocumentModel } from "../models/DocumentModel";
 import { groupByPerson, groupDigits } from "../utils/documents";
-import { NavigationProp } from "../utils/Utils";
+import { useRouter } from "expo-router";
 
-type Props = {
-  navigation: NavigationProp;
-};
-
-const GovernmentDocumentListScreen = ({ navigation }: Props) => {
+const GovernmentDocumentListScreen = () => {
+  const router = useRouter();
   const { colors } = useTheme();
   const { user } = useAuth();
   const { items, ...list } =
@@ -21,7 +19,9 @@ const GovernmentDocumentListScreen = ({ navigation }: Props) => {
   const sections = useMemo(() => groupByPerson(items, user), [items, user]);
 
   const navigateAddEdit = (data: GovernmentDocumentModel | null) => {
-    navigation.navigate("GovernmentDocumentAddEdit", { documentData: data });
+    router.push(
+      data ? `/documents/government/${data.id}` : "/documents/government/new"
+    );
   };
 
   return (
@@ -44,6 +44,7 @@ const GovernmentDocumentListScreen = ({ navigation }: Props) => {
           copyValue={item.documentNumber}
           valueLabel={`${item.documentType} number`}
           description={item.description}
+          footer={<AttachmentSection attachments={item.attachments} />}
           onPress={() => navigateAddEdit(item)}
           position={position}
         />

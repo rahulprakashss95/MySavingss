@@ -4,14 +4,10 @@ import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { ThemeColors } from "../utils/Color";
 import FeatureTile from "../components/FeatureTile";
 import QuoteCard from "../components/QuoteCard";
-import { NavigationProp } from "../utils/Utils";
+import { useRouter } from "expo-router";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 import { ModuleKey } from "../models/common";
-
-type Props = {
-  navigation: NavigationProp;
-};
 
 const greetingForHour = (hour: number) => {
   if (hour < 12) return "Good morning";
@@ -25,10 +21,10 @@ type Tile = {
   subtitle: string;
   accent: string;
   renderIcon: (color: string) => React.ReactNode;
-  screen: "Deposit" | "Documents" | "Assets" | "Ledger" | "Expenses";
 };
 
-const HomeScreen = ({ navigation }: Props) => {
+const HomeScreen = () => {
+  const router = useRouter();
   const { colors } = useTheme();
   const { user } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -46,7 +42,6 @@ const HomeScreen = ({ navigation }: Props) => {
         renderIcon: (color) => (
           <FontAwesome name="credit-card" size={22} color={color} />
         ),
-        screen: "Deposit",
       },
       {
         key: "documents",
@@ -56,7 +51,6 @@ const HomeScreen = ({ navigation }: Props) => {
         renderIcon: (color) => (
           <Ionicons name="document-text-outline" size={24} color={color} />
         ),
-        screen: "Documents",
       },
       {
         key: "assets",
@@ -66,7 +60,6 @@ const HomeScreen = ({ navigation }: Props) => {
         renderIcon: (color) => (
           <Ionicons name="cube-outline" size={24} color={color} />
         ),
-        screen: "Assets",
       },
       {
         key: "ledger",
@@ -76,7 +69,6 @@ const HomeScreen = ({ navigation }: Props) => {
         renderIcon: (color) => (
           <Ionicons name="book-outline" size={24} color={color} />
         ),
-        screen: "Ledger",
       },
       {
         key: "expenses",
@@ -86,7 +78,6 @@ const HomeScreen = ({ navigation }: Props) => {
         renderIcon: (color) => (
           <Ionicons name="receipt-outline" size={24} color={color} />
         ),
-        screen: "Expenses",
       },
     ],
     [colors]
@@ -138,7 +129,7 @@ const HomeScreen = ({ navigation }: Props) => {
               subtitle={tile.subtitle}
               accent={tile.accent}
               renderIcon={tile.renderIcon}
-              onPress={() => navigation.navigate(tile.screen)}
+              onPress={() => router.push(`/${tile.key}`)}
             />
           </View>
         ))
@@ -155,7 +146,7 @@ const HomeScreen = ({ navigation }: Props) => {
             renderIcon={(color) => (
               <Ionicons name="settings-outline" size={24} color={color} />
             )}
-            onPress={() => navigation.navigate("Admin")}
+            onPress={() => router.push("/admin")}
           />
         </>
       )}

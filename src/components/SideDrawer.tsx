@@ -11,20 +11,18 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
-import type { RootStackParamList } from "../../App";
+import { usePathname, useRouter } from "expo-router";
 import { APP_VERSION } from "../appVersion";
 import { useAuth } from "../context/AuthContext";
 import { useDrawer } from "../context/DrawerContext";
 import { useTheme } from "../context/ThemeContext";
-import { navigationRef } from "../navigation/navigationRef";
 import { ModuleKey } from "../models/common";
 import { ThemeColors, tint } from "../utils/Color";
 import { confirmSignOut } from "./HeaderActions";
 
-type ScreenName = keyof RootStackParamList;
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
 
-type Leaf = { label: string; icon: IconName; screen: ScreenName };
+type Leaf = { label: string; icon: IconName; href: string };
 type Group = {
   label: string;
   icon: IconName;
@@ -35,17 +33,18 @@ type Group = {
 type Node = Leaf | Group;
 
 // The drawer mirrors the app's screen hierarchy as a tree: top-level
-// destinations plus one expandable group per module.
+// destinations plus one expandable group per module. `href` values are the
+// Expo Router paths under app/(app)/(tabs).
 const TREE: Node[] = [
-  { label: "Home", icon: "home-outline", screen: "Home" },
+  { label: "Home", icon: "home-outline", href: "/home" },
   {
     label: "Deposits",
     icon: "card-outline",
     module: "deposits",
     children: [
-      { label: "Fixed Deposits", icon: "cash-outline", screen: "FixedDepositList" },
-      { label: "Banks", icon: "business-outline", screen: "Banks" },
-      { label: "Overview", icon: "pie-chart-outline", screen: "OverView" },
+      { label: "Fixed Deposits", icon: "cash-outline", href: "/deposits/fixed-deposits" },
+      { label: "Banks", icon: "business-outline", href: "/deposits/banks" },
+      { label: "Overview", icon: "pie-chart-outline", href: "/deposits/overview" },
     ],
   },
   {
@@ -53,8 +52,8 @@ const TREE: Node[] = [
     icon: "document-text-outline",
     module: "documents",
     children: [
-      { label: "Government", icon: "shield-checkmark-outline", screen: "GovernmentDocumentList" },
-      { label: "Bank", icon: "business-outline", screen: "BankDocumentList" },
+      { label: "Government", icon: "shield-checkmark-outline", href: "/documents/government" },
+      { label: "Bank", icon: "business-outline", href: "/documents/bank-accounts" },
     ],
   },
   {
@@ -62,9 +61,9 @@ const TREE: Node[] = [
     icon: "cube-outline",
     module: "assets",
     children: [
-      { label: "Ornaments", icon: "ribbon-outline", screen: "OrnamentList" },
-      { label: "Properties", icon: "home-outline", screen: "PropertyList" },
-      { label: "Overview", icon: "stats-chart-outline", screen: "AssetOverview" },
+      { label: "Ornaments", icon: "ribbon-outline", href: "/assets/ornaments" },
+      { label: "Properties", icon: "home-outline", href: "/assets/properties" },
+      { label: "Overview", icon: "stats-chart-outline", href: "/assets/overview" },
     ],
   },
   {
@@ -72,10 +71,10 @@ const TREE: Node[] = [
     icon: "book-outline",
     module: "ledger",
     children: [
-      { label: "Earnings", icon: "trending-up-outline", screen: "EarningList" },
-      { label: "Savings", icon: "wallet-outline", screen: "SavingList" },
-      { label: "Clients", icon: "people-outline", screen: "LedgerClientList" },
-      { label: "Overview", icon: "stats-chart-outline", screen: "LedgerOverview" },
+      { label: "Earnings", icon: "trending-up-outline", href: "/ledger/earnings" },
+      { label: "Savings", icon: "wallet-outline", href: "/ledger/savings" },
+      { label: "Clients", icon: "people-outline", href: "/ledger/clients" },
+      { label: "Overview", icon: "stats-chart-outline", href: "/ledger/overview" },
     ],
   },
   {
@@ -83,17 +82,19 @@ const TREE: Node[] = [
     icon: "receipt-outline",
     module: "expenses",
     children: [
-      { label: "Expenses", icon: "receipt-outline", screen: "ExpenseList" },
-      { label: "Types", icon: "pricetags-outline", screen: "ExpenseTypeList" },
-      { label: "Overview", icon: "stats-chart-outline", screen: "ExpenseOverview" },
+      { label: "Expenses", icon: "receipt-outline", href: "/expenses/list" },
+      { label: "Types", icon: "pricetags-outline", href: "/expenses/types" },
+      { label: "Overview", icon: "stats-chart-outline", href: "/expenses/overview" },
     ],
   },
-  { label: "Settings", icon: "settings-outline", screen: "Settings" },
+  { label: "Settings", icon: "settings-outline", href: "/settings" },
 ];
 
 const isGroup = (node: Node): node is Group => "children" in node;
 
 const SideDrawer = () => {
+  const router = useRouter();
+  const pathname = usePathname();
   const { colors } = useTheme();
   const { user, signOut } = useAuth();
   const { isOpen, close } = useDrawer();
@@ -105,7 +106,11 @@ const SideDrawer = () => {
   const translateX = useRef(new Animated.Value(-panelWidth)).current;
   const backdrop = useRef(new Animated.Value(0)).current;
   const [mounted, setMounted] = useState(false);
-  const [activeRoute, setActiveRoute] = useState<string | undefined>();
+
+  // A row is lit for its own route and anything pushed beneath it, so a deep
+  // screen (e.g. /deposits/banks/new) keeps "Banks" highlighted.
+  const isActive = (href: string) =>
+    pathname === href || pathname.startsWith(href + "/");
   // Groups start expanded so their children are reachable in one tap.
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
     Deposits: true,
@@ -122,9 +127,6 @@ const SideDrawer = () => {
   useEffect(() => {
     if (isOpen) {
       setMounted(true);
-      if (navigationRef.isReady()) {
-        setActiveRoute(navigationRef.getCurrentRoute()?.name);
-      }
       Animated.parallel([
         Animated.timing(translateX, {
           toValue: 0,
@@ -179,23 +181,21 @@ const SideDrawer = () => {
   const nodes: Node[] = isAdmin
     ? [
         ...visibleTree,
-        { label: "Family Admin", icon: "shield-outline", screen: "Admin" },
+        { label: "Family Admin", icon: "shield-outline", href: "/admin" },
       ]
     : visibleTree;
 
-  const go = (screen: ScreenName) => {
+  const go = (href: string) => {
     close();
-    if (navigationRef.isReady()) {
-      navigationRef.navigate(screen as any);
-    }
+    router.push(href as never);
   };
 
   const renderLeaf = (leaf: Leaf, nested: boolean) => {
-    const active = activeRoute === leaf.screen;
+    const active = isActive(leaf.href);
     return (
       <Pressable
         key={leaf.label}
-        onPress={() => go(leaf.screen)}
+        onPress={() => go(leaf.href)}
         accessibilityRole="button"
         style={({ pressed }) => [
           styles.row,
@@ -245,12 +245,12 @@ const SideDrawer = () => {
             way into their profile rather than the menu carrying a second row
             saying the same thing. */}
         <Pressable
-          onPress={() => go("Profile")}
+          onPress={() => go("/profile")}
           accessibilityRole="button"
           accessibilityLabel="Open your profile"
           style={({ pressed }) => [
             styles.header,
-            activeRoute === "Profile" && styles.headerActive,
+            isActive("/profile") && styles.headerActive,
             pressed && styles.rowPressed,
           ]}
         >

@@ -1,23 +1,34 @@
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo } from "react";
-import { ScrollView, StyleSheet } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 import LedgerClientForm from "../components/forms/LedgerClientForm";
 import { useTheme } from "../context/ThemeContext";
 import { LedgerClientModel } from "../models/LedgerModel";
+import { useCollectionState } from "../redux/hooks";
 import { ThemeColors } from "../utils/Color";
-import { NavigationProp, RouteProps } from "../utils/Utils";
 
-type Props = {
-  route: RouteProps;
-  navigation: NavigationProp;
-};
-
-/** Thin wrapper: fields, save, and delete all live in the shared LedgerClientForm. */
-const LedgerClientAddEditScreen = ({ route, navigation }: Props) => {
-  const { clientData } = (route.params as any) || {};
-  const client: LedgerClientModel | null = clientData || null;
-
+/**
+ * Thin wrapper: fields, save, and delete all live in the shared LedgerClientForm.
+ * The route carries just the id (`new` = create); the record is read from the
+ * RTK cache, which hydrates on mount, so this works on a cold deep link too.
+ */
+const LedgerClientAddEditScreen = () => {
+  const router = useRouter();
+  const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
+
+  const clients = useCollectionState<LedgerClientModel>("ledgerClients");
+  const isNew = id === "new";
+  const client = isNew ? null : clients.items.find((c) => c.id === id) ?? null;
+
+  if (!isNew && !client && !clients.hasLoaded) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <ScrollView
@@ -28,8 +39,8 @@ const LedgerClientAddEditScreen = ({ route, navigation }: Props) => {
     >
       <LedgerClientForm
         initial={client}
-        onSaved={() => navigation.goBack()}
-        onDeleted={() => navigation.goBack()}
+        onSaved={() => router.back()}
+        onDeleted={() => router.back()}
       />
     </ScrollView>
   );
@@ -40,6 +51,10 @@ const createStyles = (colors: ThemeColors) =>
     container: {
       flex: 1,
       backgroundColor: colors.background,
+    },
+    center: {
+      alignItems: "center",
+      justifyContent: "center",
     },
     content: {
       padding: 20,

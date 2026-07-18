@@ -22,14 +22,12 @@ import { MODULE_KEYS } from "../models/common";
 import { normalizeFamilyCode } from "../models/FamilyModel";
 import { signInWithCredentials } from "../utils/auth";
 import { MIN_PASSWORD_LENGTH, validatePassword } from "../utils/passwordStrength";
+import { useRouter } from "expo-router";
 import { ThemeColors, tint } from "../utils/Color";
-import { NavigationProp, showToast } from "../utils/Utils";
+import { showToast } from "../utils/Utils";
 
-type Props = {
-  navigation: NavigationProp;
-};
-
-const RegisterScreen = ({ navigation }: Props) => {
+const RegisterScreen = () => {
+  const router = useRouter();
   const { colors } = useTheme();
   const { signIn } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -251,7 +249,7 @@ const RegisterScreen = ({ navigation }: Props) => {
         </View>
 
         <Pressable
-          onPress={() => navigation.navigate("Login")}
+          onPress={() => router.push("/login")}
           accessibilityRole="button"
           hitSlop={8}
           style={styles.backLink}

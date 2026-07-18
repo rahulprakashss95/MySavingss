@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:989185139177:android:367fd8661274d71705ab78",
         "android_client_info": {
-          "package_name": "com.app.savings"
+          "package_name": "com.app.homevault"
         }
       },
       "oauth_client": [
@@ -34,7 +34,7 @@
               "client_id": "989185139177-hl5hl0guotca55pkdl8h0dd9og86hivi.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.app.savings"
+                "bundle_id": "com.app.homevault"
               }
             }
           ]

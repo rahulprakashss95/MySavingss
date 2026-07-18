@@ -1,23 +1,34 @@
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo } from "react";
-import { ScrollView, StyleSheet } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 import ExpenseTypeForm from "../components/forms/ExpenseTypeForm";
 import { useTheme } from "../context/ThemeContext";
 import { ExpenseTypeModel } from "../models/ExpenseModel";
+import { useCollectionState } from "../redux/hooks";
 import { ThemeColors } from "../utils/Color";
-import { NavigationProp, RouteProps } from "../utils/Utils";
 
-type Props = {
-  route: RouteProps;
-  navigation: NavigationProp;
-};
-
-/** Thin wrapper: fields, save, and delete all live in the shared ExpenseTypeForm. */
-const ExpenseTypeAddEditScreen = ({ route, navigation }: Props) => {
-  const { expenseTypeData } = (route.params as any) || {};
-  const type: ExpenseTypeModel | null = expenseTypeData || null;
-
+/**
+ * Thin wrapper: fields, save, and delete all live in the shared ExpenseTypeForm.
+ * The route carries just the id (`new` = create); the record is read from the
+ * RTK cache, which hydrates on mount, so this works on a cold deep link too.
+ */
+const ExpenseTypeAddEditScreen = () => {
+  const router = useRouter();
+  const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
+
+  const types = useCollectionState<ExpenseTypeModel>("expenseTypes");
+  const isNew = id === "new";
+  const type = isNew ? null : types.items.find((t) => t.id === id) ?? null;
+
+  if (!isNew && !type && !types.hasLoaded) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <ScrollView
@@ -28,8 +39,8 @@ const ExpenseTypeAddEditScreen = ({ route, navigation }: Props) => {
     >
       <ExpenseTypeForm
         initial={type}
-        onSaved={() => navigation.goBack()}
-        onDeleted={() => navigation.goBack()}
+        onSaved={() => router.back()}
+        onDeleted={() => router.back()}
       />
     </ScrollView>
   );
@@ -40,6 +51,10 @@ const createStyles = (colors: ThemeColors) =>
     container: {
       flex: 1,
       backgroundColor: colors.background,
+    },
+    center: {
+      alignItems: "center",
+      justifyContent: "center",
     },
     content: {
       padding: 20,

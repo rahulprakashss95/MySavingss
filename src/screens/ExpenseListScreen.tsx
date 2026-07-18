@@ -5,20 +5,18 @@ import { useTheme } from "../context/ThemeContext";
 import { ExpenseModel } from "../models/ExpenseModel";
 import { useCollectionState } from "../redux/hooks";
 import { groupByMonth, sumAmount } from "../utils/ledger";
-import { amountFormat, NavigationProp } from "../utils/Utils";
+import { amountFormat } from "../utils/Utils";
+import { useRouter } from "expo-router";
 
-type Props = {
-  navigation: NavigationProp;
-};
-
-const ExpenseListScreen = ({ navigation }: Props) => {
+const ExpenseListScreen = () => {
+  const router = useRouter();
   const { colors } = useTheme();
   const { items, ...list } = useCollectionState<ExpenseModel>("expenses");
 
   const sections = useMemo(() => groupByMonth(items), [items]);
 
   const navigateAddEdit = (data: ExpenseModel | null) => {
-    navigation.navigate("ExpenseAddEdit", { expenseData: data });
+    router.push(data ? `/expenses/list/${data.id}` : "/expenses/list/new");
   };
 
   return (

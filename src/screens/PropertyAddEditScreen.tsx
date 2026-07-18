@@ -35,17 +35,12 @@ import {
 import { CENTS_PER_ACRE, hasArea, paymentTotals } from "../utils/assets";
 import { isValidAmount } from "../utils/amount";
 import { ThemeColors } from "../utils/Color";
-import {
-  amountFormat,
-  NavigationProp,
-  RouteProps,
-  showConfirmationAlert,
-  showToast,
-} from "../utils/Utils";
+import { amountFormat, showConfirmationAlert, showToast } from "../utils/Utils";
+import { useRouter } from "expo-router";
 
 type Props = {
-  route: RouteProps;
-  navigation: NavigationProp;
+  /** The property being edited, or null to create. Resolved by the route. */
+  initial: PropertyModel | null;
 };
 
 const PAYMENT_MODES: { value: PaymentMode; label: string }[] = [
@@ -54,9 +49,9 @@ const PAYMENT_MODES: { value: PaymentMode; label: string }[] = [
   { value: "loan", label: "Loan" },
 ];
 
-const PropertyAddEditScreen = ({ route, navigation }: Props) => {
-  const { propertyData } = (route.params as any) || {};
-  const property: PropertyModel | null = propertyData || null;
+const PropertyAddEditScreen = ({ initial }: Props) => {
+  const router = useRouter();
+  const property: PropertyModel | null = initial;
   const pageMode = property ? "Edit" : "Add";
 
   const [personId, setPersonId] = useState(property?.personId ?? "");
@@ -142,7 +137,7 @@ const PropertyAddEditScreen = ({ route, navigation }: Props) => {
         : updateProperty(property!.id, payload);
 
     dispatch(commitSave("properties", save))
-      .then(() => navigation.goBack())
+      .then(() => router.back())
       .catch((saveError) => {
         showToast("error", "Unable to save", String(saveError), "bottom");
       })
@@ -159,7 +154,7 @@ const PropertyAddEditScreen = ({ route, navigation }: Props) => {
       }
       setIsLoading(true);
       dispatch(commitDelete("properties", property!.id, deleteProperty))
-        .then(() => navigation.goBack())
+        .then(() => router.back())
         .catch((deleteError) => {
           showToast("error", "Unable to delete", String(deleteError), "bottom");
         })
@@ -183,9 +178,9 @@ const PropertyAddEditScreen = ({ route, navigation }: Props) => {
     const payload = buildPayload();
     dispatch(commitSave("properties", updateProperty(property!.id, payload)))
       .then(() => {
-        navigation.navigate("PropertyPayments", {
-          propertyData: { ...payload, id: property!.id },
-        });
+        // The save above committed the payload to the cache, so the payments
+        // route can resolve the property by id.
+        router.push(`/assets/properties/${property!.id}/payments`);
       })
       .catch((saveError) => {
         showToast("error", "Unable to save", String(saveError), "bottom");

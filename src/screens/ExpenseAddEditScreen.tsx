@@ -28,21 +28,17 @@ import { commitDelete, commitSave, useAppDispatch } from "../redux/hooks";
 import { isValidAmount } from "../utils/amount";
 import { ThemeColors } from "../utils/Color";
 import { DATE_FORMAT } from "../utils/deposits";
-import {
-  NavigationProp,
-  RouteProps,
-  showConfirmationAlert,
-  showToast,
-} from "../utils/Utils";
+import { showConfirmationAlert, showToast } from "../utils/Utils";
+import { useRouter } from "expo-router";
 
 type Props = {
-  route: RouteProps;
-  navigation: NavigationProp;
+  /** The expense being edited, or null to create. Resolved by the route. */
+  initial: ExpenseModel | null;
 };
 
-const ExpenseAddEditScreen = ({ route, navigation }: Props) => {
-  const { expenseData } = (route.params as any) || {};
-  const expense: ExpenseModel | null = expenseData || null;
+const ExpenseAddEditScreen = ({ initial }: Props) => {
+  const router = useRouter();
+  const expense: ExpenseModel | null = initial;
   const pageMode = expense ? "Edit" : "Add";
 
   const [typeId, setTypeId] = useState(expense?.typeId ?? "");
@@ -100,7 +96,7 @@ const ExpenseAddEditScreen = ({ route, navigation }: Props) => {
         : updateExpense(expense!.id, payload);
 
     dispatch(commitSave("expenses", save))
-      .then(() => navigation.goBack())
+      .then(() => router.back())
       .catch((saveError) => {
         showToast("error", "Unable to save", String(saveError), "bottom");
       })
@@ -117,7 +113,7 @@ const ExpenseAddEditScreen = ({ route, navigation }: Props) => {
       }
       setIsLoading(true);
       dispatch(commitDelete("expenses", expense!.id, deleteExpense))
-        .then(() => navigation.goBack())
+        .then(() => router.back())
         .catch((deleteError) => {
           showToast("error", "Unable to delete", String(deleteError), "bottom");
         })

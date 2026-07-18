@@ -13,12 +13,8 @@ import { BankListSkeleton } from "../components/Skeleton";
 import { BankModel, bankMobileNumbers } from "../models/BankModel";
 import { useCollectionState } from "../redux/hooks";
 import { useTheme } from "../context/ThemeContext";
+import { useRouter } from "expo-router";
 import { ThemeColors, tint } from "../utils/Color";
-import { NavigationProp } from "../utils/Utils";
-
-type Props = {
-  navigation: NavigationProp;
-};
 
 /** "KVB Capital" -> "KC", "HDFC" -> "HD". */
 const initialsOf = (name: string) => {
@@ -32,7 +28,8 @@ const initialsOf = (name: string) => {
   return (words[0][0] + words[1][0]).toUpperCase();
 };
 
-const BankScreen = ({ navigation }: Props) => {
+const BankScreen = () => {
+  const router = useRouter();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -47,7 +44,7 @@ const BankScreen = ({ navigation }: Props) => {
   );
 
   const openBank = (bank: BankModel | null) =>
-    navigation.navigate("BankAddEdit", { bankData: bank });
+    router.push(bank ? `/deposits/banks/${bank.id}` : "/deposits/banks/new");
 
   const renderHeader = () => {
     if (!bankList.length) {

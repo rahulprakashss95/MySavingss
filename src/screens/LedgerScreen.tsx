@@ -4,13 +4,10 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import FeatureTile from "../components/FeatureTile";
 import { useTheme } from "../context/ThemeContext";
 import { ThemeColors } from "../utils/Color";
-import { NavigationProp } from "../utils/Utils";
+import { useRouter } from "expo-router";
 
-type Props = {
-  navigation: NavigationProp;
-};
-
-const LedgerScreen = ({ navigation }: Props) => {
+const LedgerScreen = () => {
+  const router = useRouter();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -34,7 +31,7 @@ const LedgerScreen = ({ navigation }: Props) => {
           renderIcon={(color) => (
             <Ionicons name="trending-up-outline" size={24} color={color} />
           )}
-          onPress={() => navigation.navigate("EarningList")}
+          onPress={() => router.push("/ledger/earnings")}
         />
         <FeatureTile
           title="Savings"
@@ -43,7 +40,7 @@ const LedgerScreen = ({ navigation }: Props) => {
           renderIcon={(color) => (
             <Ionicons name="wallet-outline" size={24} color={color} />
           )}
-          onPress={() => navigation.navigate("SavingList")}
+          onPress={() => router.push("/ledger/savings")}
         />
       </View>
 
@@ -56,7 +53,7 @@ const LedgerScreen = ({ navigation }: Props) => {
           renderIcon={(color) => (
             <Ionicons name="people-outline" size={24} color={color} />
           )}
-          onPress={() => navigation.navigate("LedgerClientList")}
+          onPress={() => router.push("/ledger/clients")}
         />
       </View>
 
@@ -70,7 +67,7 @@ const LedgerScreen = ({ navigation }: Props) => {
         renderIcon={(color) => (
           <Ionicons name="stats-chart-outline" size={24} color={color} />
         )}
-        onPress={() => navigation.navigate("LedgerOverview")}
+        onPress={() => router.push("/ledger/overview")}
       />
     </ScrollView>
   );

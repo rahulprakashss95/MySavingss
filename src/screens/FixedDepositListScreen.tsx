@@ -6,7 +6,7 @@ import { ThemeColors } from "../utils/Color";
 import { useCollectionState } from "../redux/hooks";
 import { FixedDepositModel } from "../models/FixedDepositModel";
 import { BankModel } from "../models/BankModel";
-import { amountFormat, NavigationProp } from "../utils/Utils";
+import { amountFormat } from "../utils/Utils";
 import {
   mergeBankNames,
   sortByMaturity,
@@ -14,12 +14,10 @@ import {
 import { DepositListSkeleton } from "../components/Skeleton";
 import FDCard from "../components/FDCard";
 import FloatingButton from "../components/FAB";
+import { useRouter } from "expo-router";
 
-type Props = {
-  navigation: NavigationProp;
-};
-
-const FixedDepositListScreen = ({ navigation }: Props) => {
+const FixedDepositListScreen = () => {
+  const router = useRouter();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -46,9 +44,11 @@ const FixedDepositListScreen = ({ navigation }: Props) => {
   );
 
   const navigateFDAddEdit = (data: any) => {
-    navigation.navigate("FixedDepositAddEdit", {
-      fixedDepositData: data,
-    });
+    router.push(
+      data
+        ? `/deposits/fixed-deposits/${data.id}`
+        : "/deposits/fixed-deposits/new"
+    );
   };
 
   const totalAmount = useMemo(

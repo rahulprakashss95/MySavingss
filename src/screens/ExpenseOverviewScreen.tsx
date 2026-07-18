@@ -16,15 +16,11 @@ import { useCollectionState } from "../redux/hooks";
 import { ThemeColors } from "../utils/Color";
 import { DATE_FORMAT } from "../utils/deposits";
 import { Bucket, monthKey, monthlyByType, sumAmount, totalsBy } from "../utils/ledger";
-import { amountFormat, NavigationProp } from "../utils/Utils";
-
-type Props = {
-  navigation: NavigationProp;
-};
+import { amountFormat } from "../utils/Utils";
 
 const rupees = (value: number) => `₹ ${amountFormat(Math.round(value))}`;
 
-const ExpenseOverviewScreen = ({ navigation }: Props) => {
+const ExpenseOverviewScreen = () => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 

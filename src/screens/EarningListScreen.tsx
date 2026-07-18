@@ -6,13 +6,11 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { EarningModel } from "../models/LedgerModel";
 import { groupByMonth, sumAmount } from "../utils/ledger";
-import { amountFormat, NavigationProp } from "../utils/Utils";
+import { amountFormat } from "../utils/Utils";
+import { useRouter } from "expo-router";
 
-type Props = {
-  navigation: NavigationProp;
-};
-
-const EarningListScreen = ({ navigation }: Props) => {
+const EarningListScreen = () => {
+  const router = useRouter();
   const { colors } = useTheme();
   const { user } = useAuth();
   const { items, ...list } = useCollectionState<EarningModel>("earnings");
@@ -20,7 +18,7 @@ const EarningListScreen = ({ navigation }: Props) => {
   const sections = useMemo(() => groupByMonth(items), [items]);
 
   const navigateAddEdit = (data: EarningModel | null) => {
-    navigation.navigate("EarningAddEdit", { earningData: data });
+    router.push(data ? `/ledger/earnings/${data.id}` : "/ledger/earnings/new");
   };
 
   return (

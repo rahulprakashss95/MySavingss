@@ -1,16 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import FeatureTile from "../components/FeatureTile";
 import { useTheme } from "../context/ThemeContext";
 import { ThemeColors } from "../utils/Color";
-import { NavigationProp } from "../utils/Utils";
 
-type Props = {
-  navigation: NavigationProp;
-};
-
-const DocumentScreen = ({ navigation }: Props) => {
+const DocumentScreen = () => {
+  const router = useRouter();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -34,7 +31,7 @@ const DocumentScreen = ({ navigation }: Props) => {
           renderIcon={(color) => (
             <Ionicons name="shield-checkmark-outline" size={24} color={color} />
           )}
-          onPress={() => navigation.navigate("GovernmentDocumentList")}
+          onPress={() => router.push("/documents/government")}
         />
         <FeatureTile
           title="Bank"
@@ -43,7 +40,7 @@ const DocumentScreen = ({ navigation }: Props) => {
           renderIcon={(color) => (
             <Ionicons name="business-outline" size={24} color={color} />
           )}
-          onPress={() => navigation.navigate("BankDocumentList")}
+          onPress={() => router.push("/documents/bank-accounts")}
         />
       </View>
     </ScrollView>

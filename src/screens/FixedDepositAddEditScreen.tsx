@@ -7,13 +7,9 @@ import {
   ScrollView,
   Pressable,
 } from "react-native";
+import { useRouter } from "expo-router";
 import DatePicker from "../components/DatePicker";
-import {
-  NavigationProp,
-  RouteProps,
-  showConfirmationAlert,
-  showToast,
-} from "../utils/Utils";
+import { showConfirmationAlert, showToast } from "../utils/Utils";
 import { FixedDepositModel } from "../models/FixedDepositModel";
 import { BankModel } from "../models/BankModel";
 import SearchableSelect from "../components/SearchableSelect";
@@ -42,14 +38,14 @@ import { canEdit, Visibility } from "../models/common";
 import { depositorNameForUser } from "../utils/permissions";
 
 type Props = {
-  route: RouteProps;
-  navigation: NavigationProp;
+  /** Resolved by the [id] route from the cache; null = create. */
+  initial: FixedDepositModel | null;
 };
 
-const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
-  const { fixedDepositData } = route.params || {};
-  const pageMode = fixedDepositData ? "Edit" : "Add";
-  const fixedDeposit: FixedDepositModel = fixedDepositData || null;
+const FixedDepositAddEditScreen = ({ initial }: Props) => {
+  const router = useRouter();
+  const pageMode = initial ? "Edit" : "Add";
+  const fixedDeposit: FixedDepositModel = initial as FixedDepositModel;
 
   const [bankId, setBankId] = useState(fixedDeposit?.bankId ?? "");
   const [bankName, setBankName] = useState(fixedDeposit?.name ?? "");
@@ -125,7 +121,7 @@ const FixedDepositAddEditScreen = ({ route, navigation }: Props) => {
   };
 
   const navigateBack = () => {
-    navigation.goBack();
+    router.back();
   };
 
   /** Returns an error message, or null when the form is good to submit. */

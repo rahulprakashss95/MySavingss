@@ -1,5 +1,5 @@
 import { createNavigationContainerRef } from "@react-navigation/native";
-import type { RootStackParamList } from "../../App";
+import type { RootStackParamList } from "./routeTypes";
 
 /**
  * A global navigation handle so components rendered *outside* the navigator

@@ -1,9 +1,9 @@
+import { useRouter } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { displayNameOf } from "../models/LoginUserModel";
-import { navigationRef } from "../navigation/navigationRef";
 import { tint } from "../utils/Color";
 
 /**
@@ -14,6 +14,7 @@ import { tint } from "../utils/Color";
  * the drawer header and the admin roster already show.
  */
 const ProfileButton = () => {
+  const router = useRouter();
   const { colors } = useTheme();
   const { user } = useAuth();
 
@@ -25,11 +26,7 @@ const ProfileButton = () => {
 
   return (
     <Pressable
-      onPress={() => {
-        if (navigationRef.isReady()) {
-          navigationRef.navigate("Profile");
-        }
-      }}
+      onPress={() => router.push("/profile")}
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel="Open your profile"

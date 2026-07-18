@@ -29,21 +29,17 @@ import { EARNING_TYPES, EarningModel } from "../models/LedgerModel";
 import { isValidAmount } from "../utils/amount";
 import { ThemeColors } from "../utils/Color";
 import { DATE_FORMAT } from "../utils/deposits";
-import {
-  NavigationProp,
-  RouteProps,
-  showConfirmationAlert,
-  showToast,
-} from "../utils/Utils";
+import { showConfirmationAlert, showToast } from "../utils/Utils";
+import { useRouter } from "expo-router";
 
 type Props = {
-  route: RouteProps;
-  navigation: NavigationProp;
+  /** The earning being edited, or null to create. Resolved by the route. */
+  initial: EarningModel | null;
 };
 
-const EarningAddEditScreen = ({ route, navigation }: Props) => {
-  const { earningData } = (route.params as any) || {};
-  const earning: EarningModel | null = earningData || null;
+const EarningAddEditScreen = ({ initial }: Props) => {
+  const router = useRouter();
+  const earning: EarningModel | null = initial;
   const pageMode = earning ? "Edit" : "Add";
 
   const [clientId, setClientId] = useState(earning?.clientId ?? "");
@@ -106,7 +102,7 @@ const EarningAddEditScreen = ({ route, navigation }: Props) => {
         : updateEarning(earning!.id, payload);
 
     dispatch(commitSave("earnings", save))
-      .then(() => navigation.goBack())
+      .then(() => router.back())
       .catch((saveError) => {
         showToast("error", "Unable to save", String(saveError), "bottom");
       })
@@ -123,7 +119,7 @@ const EarningAddEditScreen = ({ route, navigation }: Props) => {
       }
       setIsLoading(true);
       dispatch(commitDelete("earnings", earning!.id, deleteEarning))
-        .then(() => navigation.goBack())
+        .then(() => router.back())
         .catch((deleteError) => {
           showToast("error", "Unable to delete", String(deleteError), "bottom");
         })

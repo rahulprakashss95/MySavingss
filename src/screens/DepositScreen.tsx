@@ -1,16 +1,13 @@
 import React, { useMemo } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { FontAwesome, AntDesign, Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import FeatureTile from "../components/FeatureTile";
 import { ThemeColors } from "../utils/Color";
-import { NavigationProp } from "../utils/Utils";
 import { useTheme } from "../context/ThemeContext";
 
-type Props = {
-  navigation: NavigationProp;
-};
-
-const DepositScreen = ({ navigation }: Props) => {
+const DepositScreen = () => {
+  const router = useRouter();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -35,7 +32,7 @@ const DepositScreen = ({ navigation }: Props) => {
           renderIcon={(color) => (
             <FontAwesome name="credit-card" size={22} color={color} />
           )}
-          onPress={() => navigation.navigate("FixedDepositList")}
+          onPress={() => router.push("/deposits/fixed-deposits")}
         />
         <FeatureTile
           title="Banks"
@@ -44,7 +41,7 @@ const DepositScreen = ({ navigation }: Props) => {
           renderIcon={(color) => (
             <AntDesign name="file" size={22} color={color} />
           )}
-          onPress={() => navigation.navigate("Banks")}
+          onPress={() => router.push("/deposits/banks")}
         />
       </View>
 
@@ -58,7 +55,7 @@ const DepositScreen = ({ navigation }: Props) => {
         renderIcon={(color) => (
           <Ionicons name="pie-chart-outline" size={24} color={color} />
         )}
-        onPress={() => navigation.navigate("OverView")}
+        onPress={() => router.push("/deposits/overview")}
       />
     </ScrollView>
   );

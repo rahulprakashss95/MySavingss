@@ -28,21 +28,17 @@ import { SavingModel } from "../models/LedgerModel";
 import { isValidAmount } from "../utils/amount";
 import { ThemeColors } from "../utils/Color";
 import { DATE_FORMAT } from "../utils/deposits";
-import {
-  NavigationProp,
-  RouteProps,
-  showConfirmationAlert,
-  showToast,
-} from "../utils/Utils";
+import { showConfirmationAlert, showToast } from "../utils/Utils";
+import { useRouter } from "expo-router";
 
 type Props = {
-  route: RouteProps;
-  navigation: NavigationProp;
+  /** The saving being edited, or null to create. Resolved by the route. */
+  initial: SavingModel | null;
 };
 
-const SavingAddEditScreen = ({ route, navigation }: Props) => {
-  const { savingData } = (route.params as any) || {};
-  const saving: SavingModel | null = savingData || null;
+const SavingAddEditScreen = ({ initial }: Props) => {
+  const router = useRouter();
+  const saving: SavingModel | null = initial;
   const pageMode = saving ? "Edit" : "Add";
 
   const [clientId, setClientId] = useState(saving?.clientId ?? "");
@@ -97,7 +93,7 @@ const SavingAddEditScreen = ({ route, navigation }: Props) => {
       pageMode === "Add" ? addSaving(payload) : updateSaving(saving!.id, payload);
 
     dispatch(commitSave("savings", save))
-      .then(() => navigation.goBack())
+      .then(() => router.back())
       .catch((saveError) => {
         showToast("error", "Unable to save", String(saveError), "bottom");
       })
@@ -114,7 +110,7 @@ const SavingAddEditScreen = ({ route, navigation }: Props) => {
       }
       setIsLoading(true);
       dispatch(commitDelete("savings", saving!.id, deleteSaving))
-        .then(() => navigation.goBack())
+        .then(() => router.back())
         .catch((deleteError) => {
           showToast("error", "Unable to delete", String(deleteError), "bottom");
         })

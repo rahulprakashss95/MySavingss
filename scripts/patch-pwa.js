@@ -158,12 +158,19 @@ async function main() {
   writeManifest(icons);
   patchIndexHtml();
 
+  // SPA deep-link fallback. Expo Router does client-side routing under a single
+  // index.html, but GitHub Pages has no server to rewrite unknown paths to it —
+  // so a hard refresh on a route like /HomeVault/deposits/banks/new would 404.
+  // Pages serves 404.html for any unmatched path; making it a copy of the
+  // patched index boots the same app shell and the router resolves the URL.
+  fs.copyFileSync(path.join(DIST, "index.html"), path.join(DIST, "404.html"));
+
   // GitHub Pages / Jekyll strips folders that start with "_"; without this the
   // _expo/ JS bundle 404s and the site is blank.
   fs.writeFileSync(path.join(DIST, ".nojekyll"), "");
 
   console.log(
-    `patch-pwa: wrote ${icons.length} icons + manifest.json, injected PWA markup, added .nojekyll under ${BASE}`
+    `patch-pwa: wrote ${icons.length} icons + manifest.json, injected PWA markup, 404.html SPA fallback, and .nojekyll under ${BASE}`
   );
 }
 

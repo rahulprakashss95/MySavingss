@@ -6,17 +6,14 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { LedgerClientModel } from "../models/LedgerModel";
 import { byText } from "../utils/grouping";
-import { NavigationProp } from "../utils/Utils";
-
-type Props = {
-  navigation: NavigationProp;
-};
+import { useRouter } from "expo-router";
 
 /** Phone and email on one line, whichever of them exists. */
 const contactLine = (client: LedgerClientModel) =>
   [client.phone, client.email].filter(Boolean).join(" · ");
 
-const LedgerClientListScreen = ({ navigation }: Props) => {
+const LedgerClientListScreen = () => {
+  const router = useRouter();
   const { colors } = useTheme();
   const { user } = useAuth();
   const { items, ...list } =
@@ -41,7 +38,7 @@ const LedgerClientListScreen = ({ navigation }: Props) => {
   );
 
   const navigateAddEdit = (data: LedgerClientModel | null) => {
-    navigation.navigate("LedgerClientAddEdit", { clientData: data });
+    router.push(data ? `/ledger/clients/${data.id}` : "/ledger/clients/new");
   };
 
   return (

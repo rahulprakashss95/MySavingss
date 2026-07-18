@@ -7,11 +7,7 @@ import { ORNAMENT_TYPES, OrnamentModel } from "../models/AssetModel";
 import { karatOf, weightSummary } from "../utils/assets";
 import { ThemeColors } from "../utils/Color";
 import { byFixedOrder, byText, groupBy, UNGROUPED } from "../utils/grouping";
-import { NavigationProp } from "../utils/Utils";
-
-type Props = {
-  navigation: NavigationProp;
-};
+import { useRouter } from "expo-router";
 
 /** One hue per metal, so a section is recognisable before you read its heading. */
 const accentFor = (ornamentType: string, colors: ThemeColors) => {
@@ -39,7 +35,8 @@ const pieceCount = (count: string) => {
 const rowMeta = (ornament: OrnamentModel) =>
   [karatOf(ornament), pieceCount(ornament.count)].filter(Boolean).join(" · ");
 
-const OrnamentListScreen = ({ navigation }: Props) => {
+const OrnamentListScreen = () => {
+  const router = useRouter();
   const { colors } = useTheme();
   const { items, ...list } = useCollectionState<OrnamentModel>("ornaments");
 
@@ -59,7 +56,7 @@ const OrnamentListScreen = ({ navigation }: Props) => {
   );
 
   const navigateAddEdit = (data: OrnamentModel | null) => {
-    navigation.navigate("OrnamentAddEdit", { ornamentData: data });
+    router.push(data ? `/assets/ornaments/${data.id}` : "/assets/ornaments/new");
   };
 
   return (

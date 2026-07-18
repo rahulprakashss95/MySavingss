@@ -29,21 +29,17 @@ import {
   GovernmentDocumentModel,
 } from "../models/DocumentModel";
 import { ThemeColors } from "../utils/Color";
-import {
-  NavigationProp,
-  RouteProps,
-  showConfirmationAlert,
-  showToast,
-} from "../utils/Utils";
+import { showConfirmationAlert, showToast } from "../utils/Utils";
+import { useRouter } from "expo-router";
 
 type Props = {
-  route: RouteProps;
-  navigation: NavigationProp;
+  /** The document being edited, or null to create. Resolved by the route. */
+  initial: GovernmentDocumentModel | null;
 };
 
-const GovernmentDocumentAddEditScreen = ({ route, navigation }: Props) => {
-  const { documentData } = (route.params as any) || {};
-  const document: GovernmentDocumentModel | null = documentData || null;
+const GovernmentDocumentAddEditScreen = ({ initial }: Props) => {
+  const router = useRouter();
+  const document = initial;
   const pageMode = document ? "Edit" : "Add";
 
   const [personId, setPersonId] = useState(document?.personId ?? "");
@@ -112,7 +108,7 @@ const GovernmentDocumentAddEditScreen = ({ route, navigation }: Props) => {
       // Only once the row no longer references them: a save that threw above
       // leaves the old row intact, and its files must still be there.
       await attachments.cleanup(files);
-      navigation.goBack();
+      router.back();
     } catch (error) {
       showToast("error", "Unable to save", String(error), "bottom");
     } finally {
@@ -132,7 +128,7 @@ const GovernmentDocumentAddEditScreen = ({ route, navigation }: Props) => {
       dispatch(
         commitDelete("governmentDocuments", document!.id, deleteGovernmentDocument)
       )
-        .then(() => navigation.goBack())
+        .then(() => router.back())
         .catch((error) => {
           showToast("error", "Unable to delete", String(error), "bottom");
         })

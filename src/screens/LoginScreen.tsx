@@ -21,16 +21,14 @@ import {
   rememberFamily,
   signInWithCredentials,
 } from "../utils/auth";
+import { useRouter } from "expo-router";
 import { ThemeColors, tint } from "../utils/Color";
-import { NavigationProp, showToast } from "../utils/Utils";
-
-type Props = {
-  navigation: NavigationProp;
-};
+import { showToast } from "../utils/Utils";
 
 type FocusField = "family" | "username" | "password" | null;
 
-const LoginScreen = ({ navigation }: Props) => {
+const LoginScreen = () => {
+  const router = useRouter();
   const [familyCode, setFamilyCode] = useState("");
   // The resolved family for the typed code. `notFound` distinguishes "haven't
   // looked up yet" (null + false) from "looked up, nothing there" (null + true).
@@ -272,7 +270,7 @@ const LoginScreen = ({ navigation }: Props) => {
           )}
 
           <Pressable
-            onPress={() => navigation.navigate("RecoverFamily")}
+            onPress={() => router.push("/recover-family")}
             accessibilityRole="button"
             hitSlop={6}
             style={styles.forgotLink}
@@ -362,7 +360,7 @@ const LoginScreen = ({ navigation }: Props) => {
         </View>
 
         <Pressable
-          onPress={() => navigation.navigate("Register")}
+          onPress={() => router.push("/register")}
           accessibilityRole="button"
           hitSlop={8}
           style={styles.registerLink}

@@ -23,15 +23,13 @@ import { ThemeColors } from "../utils/Color";
 import { DATE_FORMAT } from "../utils/deposits";
 import {
   amountFormat,
-  NavigationProp,
-  RouteProps,
   showConfirmationAlert,
   showToast,
 } from "../utils/Utils";
 
 type Props = {
-  route: RouteProps;
-  navigation: NavigationProp;
+  /** The property whose payments are being managed. Resolved by the route. */
+  property: PropertyModel;
 };
 
 /**
@@ -39,9 +37,7 @@ type Props = {
  * rewrites the whole property. State is held locally and pushed on each edit —
  * the list is small, and it keeps the screen responsive.
  */
-const PropertyPaymentsScreen = ({ route, navigation }: Props) => {
-  const { propertyData } = (route.params as any) || {};
-  const property: PropertyModel = propertyData;
+const PropertyPaymentsScreen = ({ property }: Props) => {
   const isLoan = property.paymentMode === "loan";
 
   const [entries, setEntries] = useState<PaymentEntry[]>(property.entries ?? []);

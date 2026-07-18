@@ -18,16 +18,14 @@ import { useTheme } from "../context/ThemeContext";
 import type { FamilyModel } from "../models/FamilyModel";
 import type { LoginUserModel } from "../models/LoginUserModel";
 import { rememberFamily, signInWithCredentials } from "../utils/auth";
+import { useRouter } from "expo-router";
 import { ThemeColors, tint } from "../utils/Color";
-import { NavigationProp, showToast } from "../utils/Utils";
-
-type Props = {
-  navigation: NavigationProp;
-};
+import { showToast } from "../utils/Utils";
 
 type Match = { family: FamilyModel; user: LoginUserModel };
 
-const RecoverFamilyScreen = ({ navigation }: Props) => {
+const RecoverFamilyScreen = () => {
+  const router = useRouter();
   const { colors } = useTheme();
   const { signIn } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -196,7 +194,7 @@ const RecoverFamilyScreen = ({ navigation }: Props) => {
         )}
 
         <Pressable
-          onPress={() => navigation.navigate("Login")}
+          onPress={() => router.push("/login")}
           accessibilityRole="button"
           hitSlop={8}
           style={styles.backLink}

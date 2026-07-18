@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, StyleSheet } from "react-native";
+import { Platform, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 import { useDrawer } from "../context/DrawerContext";
@@ -25,11 +25,12 @@ const MenuButton = () => {
 const styles = StyleSheet.create({
   icon: {
     padding: 2,
-    // Inset from the screen edge. The stack gives `headerLeft` no padding of
-    // its own, so without this the hamburger sits flush against the edge —
-    // unlike the back button it replaces, which brings its own.
-    marginLeft: 12,
-    marginRight: 4,
+    // The native-stack header already insets `headerLeft` from the edge on
+    // Android/iOS, so no left margin is needed there. react-native-web's header
+    // gives it none, so the icon would sit flush against the edge — add it back
+    // on web only. The right margin is the gap before the title.
+    marginLeft: Platform.OS === "web" ? 12 : 0,
+    marginRight: 16,
   },
   pressed: {
     opacity: 0.5,

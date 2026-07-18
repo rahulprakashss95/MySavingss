@@ -35,15 +35,11 @@ import {
   propertyPortfolio,
 } from "../utils/assets";
 import { ThemeColors } from "../utils/Color";
-import { amountFormat, NavigationProp, showToast } from "../utils/Utils";
-
-type Props = {
-  navigation: NavigationProp;
-};
+import { amountFormat, showToast } from "../utils/Utils";
 
 const rupees = (value: number) => `₹ ${amountFormat(Math.round(value))}`;
 
-const AssetOverviewScreen = ({ navigation }: Props) => {
+const AssetOverviewScreen = () => {
   const [isRatesModalOpen, setIsRatesModalOpen] = useState(false);
   const [isSavingRates, setIsSavingRates] = useState(false);
 

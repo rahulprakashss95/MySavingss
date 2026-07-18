@@ -2,10 +2,8 @@ import React, { useMemo } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Card from "../components/Card";
-import { useAuth } from "../context/AuthContext";
 import { ThemeMode, useTheme } from "../context/ThemeContext";
 import { ThemeColors } from "../utils/Color";
-import { NavigationProp } from "../utils/Utils";
 
 const THEME_OPTIONS: {
   mode: ThemeMode;
@@ -33,13 +31,8 @@ const THEME_OPTIONS: {
   },
 ];
 
-type Props = {
-  navigation: NavigationProp;
-};
-
-const SettingsScreen = ({ navigation }: Props) => {
+const SettingsScreen = () => {
   const { mode, setMode, colors } = useTheme();
-  const { user } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
@@ -78,33 +71,6 @@ const SettingsScreen = ({ navigation }: Props) => {
             </Pressable>
           );
         })}
-      </Card>
-
-      {/* Account, family and log out live on the Profile screen. They were here
-          too until Profile existed; keeping both would have meant two places
-          showing the same identity, free to drift apart. */}
-      <Text style={styles.sectionTitle}>Account</Text>
-      <Card customStyle={styles.card}>
-        <Pressable
-          onPress={() => navigation.navigate("Profile")}
-          accessibilityRole="button"
-          style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
-        >
-          <Ionicons
-            name="person-circle-outline"
-            size={22}
-            color={colors.textMuted}
-          />
-          <View style={styles.rowText}>
-            <Text style={styles.rowLabel}>Profile</Text>
-            <Text style={styles.rowDescription}>
-              {user?.username
-                ? `Signed in as ${user.username}`
-                : "Your account and family"}
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-        </Pressable>
       </Card>
     </ScrollView>
   );

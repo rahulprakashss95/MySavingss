@@ -12,6 +12,7 @@ export type CollectionName =
   | "fixedDeposits"
   | "ornaments"
   | "properties"
+  | "vehicles"
   | "bankDocuments"
   | "governmentDocuments"
   | "ledgerClients"
@@ -25,6 +26,7 @@ export const COLLECTION_NAMES: CollectionName[] = [
   "fixedDeposits",
   "ornaments",
   "properties",
+  "vehicles",
   "bankDocuments",
   "governmentDocuments",
   "ledgerClients",

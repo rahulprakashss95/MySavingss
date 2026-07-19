@@ -3,7 +3,7 @@
     "name": "HomeVault",
     "slug": "HomeVault",
     "scheme": "homevault",
-    "version": "1.2.100",
+    "version": "1.2.102",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",

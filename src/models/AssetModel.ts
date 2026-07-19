@@ -1,4 +1,4 @@
-import type { Creatable, Owned } from "./common";
+import type { Attachable, Creatable, Owned } from "./common";
 
 /** Precious metals, in the order the list groups them. */
 export const ORNAMENT_TYPES = ["Gold", "Silver", "Diamond", "Platinum"] as const;
@@ -104,6 +104,35 @@ export type PropertyModel = PersonOwned & Owned & {
 
 export type OrnamentInput = Creatable<OrnamentModel>;
 export type PropertyInput = Creatable<PropertyModel>;
+
+/** The kinds of vehicle the picker offers, in the order the list groups them. */
+export const VEHICLE_TYPES = ["Car", "Bike", "Scooter", "Other"] as const;
+
+export type VehicleType = (typeof VEHICLE_TYPES)[number];
+
+/**
+ * A family vehicle: its identity (name + registration number), insurance and any
+ * scans (RC, policy, pollution certificate). Owned by a person like ornaments
+ * and documents, so the list groups by holder. Insurance fields are optional —
+ * a vehicle is worth recording before its policy is to hand.
+ */
+export type VehicleModel = PersonOwned & Owned & Attachable & {
+  id: string;
+  /** One of VEHICLE_TYPES. Typed loosely so older rows still read. */
+  vehicleType: string;
+  /** What to call it, e.g. "Honda City". */
+  name: string;
+  /** Registration number, e.g. "TN 01 AB 1234". */
+  number: string;
+  /** Insurance company. */
+  insurer: string;
+  policyNumber: string;
+  /** Policy expiry, in the app's display format (DATE_FORMAT). Blank if unset. */
+  insuranceExpiry: string;
+  description: string;
+};
+
+export type VehicleInput = Creatable<VehicleModel>;
 
 /**
  * Shared across the family: one rate, stored once, so everyone's overview

@@ -31,10 +31,10 @@
 -- visibility, and (on the four tables below) amounts, dates and lookup ids — as
 -- real typed columns. Everything else is payload in `data`.
 --
--- The seven small tables (banks, ornaments, properties, documents, ledger
--- clients, expense types) are tens of rows, are never filtered or totalled in
--- SQL, and hold nested structures — a property's payment entries are an array
--- inside the record. They stay entirely in jsonb on purpose.
+-- The eight small tables (banks, ornaments, properties, vehicles, documents,
+-- ledger clients, expense types) are tens of rows, are never filtered or
+-- totalled in SQL, and hold nested structures — a property's payment entries are
+-- an array inside the record. They stay entirely in jsonb on purpose.
 --
 -- The four below grow and are what filters and totals will actually hit, so
 -- their amounts are `numeric` and their dates are `date`. Note the app formats
@@ -231,7 +231,7 @@ declare
 begin
   foreach t in array array[
     'banks', 'government_documents', 'bank_documents',
-    'ornaments', 'properties', 'ledger_clients', 'expense_types'
+    'ornaments', 'properties', 'vehicles', 'ledger_clients', 'expense_types'
   ]
   loop
     execute format($fmt$
@@ -263,7 +263,7 @@ declare
 begin
   foreach t in array array[
     'banks', 'fixed_deposits', 'government_documents', 'bank_documents',
-    'ornaments', 'properties', 'ledger_clients', 'ledger_earnings',
+    'ornaments', 'properties', 'vehicles', 'ledger_clients', 'ledger_earnings',
     'ledger_savings', 'expenses', 'expense_types'
   ]
   loop

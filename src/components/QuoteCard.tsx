@@ -108,6 +108,9 @@ const createStyles = (colors: ThemeColors) =>
     },
     textWrap: {
       flex: 1,
+      // Always reserve two lines so short and long quotes occupy the same
+      // height — otherwise the strip (and the tiles below) jump on each rotate.
+      minHeight: 38,
     },
     text: {
       fontSize: 13,

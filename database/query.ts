@@ -37,6 +37,8 @@ import type {
   OrnamentModel,
   PropertyInput,
   PropertyModel,
+  VehicleInput,
+  VehicleModel,
 } from "../src/models/AssetModel";
 import { EMPTY_METAL_RATES } from "../src/models/AssetModel";
 import type {
@@ -82,6 +84,7 @@ const GOVERNMENT_DOCUMENTS = "government_documents";
 const BANK_DOCUMENTS = "bank_documents";
 const ORNAMENTS = "ornaments";
 const PROPERTIES = "properties";
+const VEHICLES = "vehicles";
 const LEDGER_CLIENTS = "ledger_clients";
 const LEDGER_EARNINGS = "ledger_earnings";
 const LEDGER_SAVINGS = "ledger_savings";
@@ -985,6 +988,15 @@ export const updateProperty = (refId: string, input: PropertyInput) =>
   saveScoped(PROPERTIES, input, refId);
 
 export const deleteProperty = (id: string) => deleteRecord(PROPERTIES, id);
+
+export const getVehicles = () => listScoped<VehicleModel>(VEHICLES);
+
+export const addVehicle = (input: VehicleInput) => saveScoped(VEHICLES, input);
+
+export const updateVehicle = (refId: string, input: VehicleInput) =>
+  saveScoped(VEHICLES, input, refId);
+
+export const deleteVehicle = (id: string) => deleteRecord(VEHICLES, id);
 
 /**
  * Metal rates are shared within a family — one rate so everyone's overview

@@ -18,7 +18,8 @@ const AssetScreen = () => {
       showsVerticalScrollIndicator={false}
     >
       <Text style={styles.lede}>
-        What the family owns — jewellery by metal, and property with its payments.
+        What the family owns — jewellery by metal, property with its payments,
+        and vehicles with their papers.
       </Text>
 
       <Text style={styles.sectionTitle}>Records</Text>
@@ -35,12 +36,25 @@ const AssetScreen = () => {
         />
         <FeatureTile
           title="Properties"
-          subtitle="Land, homes & vehicles"
+          subtitle="Land & homes"
           accent={colors.accentBlue}
           renderIcon={(color) => (
             <Ionicons name="home-outline" size={24} color={color} />
           )}
           onPress={() => router.push("/assets/properties")}
+        />
+      </View>
+
+      <View style={styles.tileSpacing}>
+        <FeatureTile
+          wide
+          title="Vehicles"
+          subtitle="Cars, bikes & insurance"
+          accent={colors.positive}
+          renderIcon={(color) => (
+            <Ionicons name="car-outline" size={24} color={color} />
+          )}
+          onPress={() => router.push("/assets/vehicles")}
         />
       </View>
 
@@ -87,6 +101,9 @@ const createStyles = (colors: ThemeColors) =>
     },
     sectionSpacing: {
       marginTop: 28,
+    },
+    tileSpacing: {
+      marginTop: 14,
     },
     grid: {
       flexDirection: "row",

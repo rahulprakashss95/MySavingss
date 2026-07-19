@@ -17,6 +17,7 @@ import {
   getOrnaments,
   getProperties,
   getSavings,
+  getVehicles,
 } from "../../database/query";
 import { showToast } from "../utils/Utils";
 import {
@@ -39,6 +40,7 @@ const REGISTRY: Record<
   fixedDeposits: { fetch: getFixedDeposit, errorTitle: "Unable to load deposits" },
   ornaments: { fetch: getOrnaments, errorTitle: "Unable to load ornaments" },
   properties: { fetch: getProperties, errorTitle: "Unable to load properties" },
+  vehicles: { fetch: getVehicles, errorTitle: "Unable to load vehicles" },
   bankDocuments: { fetch: getBankDocuments, errorTitle: "Unable to load accounts" },
   governmentDocuments: {
     fetch: getGovernmentDocuments,

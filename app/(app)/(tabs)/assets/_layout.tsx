@@ -29,6 +29,8 @@ export default function AssetsStack() {
         name="properties/[id]/payments"
         options={{ title: "Payments" }}
       />
+      <Stack.Screen name="vehicles/index" options={{ title: "Vehicles" }} />
+      <Stack.Screen name="vehicles/[id]" options={{ title: "Vehicle" }} />
       <Stack.Screen name="overview" options={{ title: "Overview" }} />
     </Stack>
   );

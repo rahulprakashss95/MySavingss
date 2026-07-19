@@ -135,8 +135,8 @@ const MetalRatesModal = (props: IMetalRatesModal) => {
             </View>
 
             <Text style={styles.hint}>
-              Rates are the 24K spot price. Each ornament is valued at its own
-              purity, so a 22K piece counts at 22/24 of the gold rate.
+              Rates are the 24K India (IBJA) benchmark. Each ornament is valued
+              at its own purity, so a 22K piece counts at 22/24 of the gold rate.
             </Text>
 
             <Pressable

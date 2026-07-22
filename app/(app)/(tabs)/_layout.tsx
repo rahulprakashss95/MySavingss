@@ -22,6 +22,8 @@ const TABS: TabDef[] = [
   { name: "ledger", label: "Ledger", icon: "book-outline", activeIcon: "book", module: "ledger" },
   { name: "assets", label: "Assets", icon: "cube-outline", activeIcon: "cube", module: "assets" },
   { name: "documents", label: "Documents", icon: "document-text-outline", activeIcon: "document-text", module: "documents" },
+  // No `module`: games are open to everyone, like Home — no tile-gating.
+  { name: "games", label: "Games", icon: "game-controller-outline", activeIcon: "game-controller" },
   { name: "settings", label: "Settings", icon: "settings-outline", activeIcon: "settings" },
 ];
 

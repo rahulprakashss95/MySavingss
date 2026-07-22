@@ -21,6 +21,8 @@ export type CollectionName =
   | "savings"
   | "expenses"
   | "expenseTypes"
+  // The family leaderboard: one best-score row per (member, game).
+  | "gameScores"
   // The family roster. Not a domain record type, but cached the same way so
   // lists/overviews can resolve a record's owner name from its `ownerId`
   // without a per-screen fetch.
@@ -40,6 +42,7 @@ export const COLLECTION_NAMES: CollectionName[] = [
   "savings",
   "expenses",
   "expenseTypes",
+  "gameScores",
   "members",
 ];
 

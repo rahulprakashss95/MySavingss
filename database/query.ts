@@ -65,6 +65,7 @@ import type {
   ExpenseTypeModel,
 } from "../src/models/ExpenseModel";
 import type { AccountInput, AccountModel } from "../src/models/AccountModel";
+import type { GameKey, GameScoreModel } from "../src/models/GameModel";
 import type { LoginUserModel, UserRole } from "../src/models/LoginUserModel";
 import type { FamilyInput, FamilyModel } from "../src/models/FamilyModel";
 import { normalizeFamilyCode } from "../src/models/FamilyModel";
@@ -99,6 +100,7 @@ const LEDGER_EARNINGS = "ledger_earnings";
 const LEDGER_SAVINGS = "ledger_savings";
 const EXPENSES = "expenses";
 const EXPENSE_TYPES = "expense_types";
+const GAME_SCORES = "game_scores";
 
 /** The Storage bucket holding every attachment, across all modules. */
 const ATTACHMENT_BUCKET = "documents";
@@ -1158,3 +1160,48 @@ export const updateExpense = (refId: string, input: ExpenseInput) =>
   saveScoped(EXPENSES, input, refId);
 
 export const deleteExpense = (id: string) => deleteRecord(EXPENSES, id);
+
+/* ------------------------------------------------------------------ *
+ * Game scores (the family leaderboard)
+ *
+ * Read like any scoped collection. Written only through `submitGameScore`, which
+ * folds a finished game into the player's single row rather than inserting a new
+ * one — the leaderboard is best-per-member, not a history.
+ * ------------------------------------------------------------------ */
+
+export const getGameScores = () => listScoped<GameScoreModel>(GAME_SCORES);
+
+/** A finished game's outcome, as the game screen reports it. */
+export type GameResult = { gameKey: GameKey; score: number; bestTile: number };
+
+/**
+ * Folds a just-finished game into the signed-in member's leaderboard row for
+ * that game. There is exactly one row per (member, game): its id is derived from
+ * the two (`{userId}-{gameKey}`), so this always upserts the same row. `score`
+ * and `bestTile` only ever climb — a worse game never lowers your best — while
+ * `gamesPlayed` and `lastPlayedAt` update every time. Returns the stored row so
+ * the cache updates in place with no refetch.
+ */
+export const submitGameScore = async (
+  result: GameResult
+): Promise<GameScoreModel> => {
+  const { userId } = requireScope();
+  const id = `${userId}-${result.gameKey}`;
+
+  const existingRow = await findRow(GAME_SCORES, id);
+  const previous = existingRow
+    ? toRecord<GameScoreModel>(GAME_SCORES, existingRow)
+    : null;
+
+  const merged = {
+    gameKey: result.gameKey,
+    score: Math.max(previous?.score ?? 0, result.score),
+    bestTile: Math.max(previous?.bestTile ?? 0, result.bestTile),
+    gamesPlayed: (previous?.gamesPlayed ?? 0) + 1,
+    lastPlayedAt: moment().format(DATE_FORMAT),
+    // A leaderboard row is meant for the whole family to see.
+    visibility: "public" as Visibility,
+  };
+
+  return saveScoped(GAME_SCORES, merged, id) as Promise<GameScoreModel>;
+};

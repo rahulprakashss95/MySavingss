@@ -12,6 +12,7 @@ import {
   getEarningTypes,
   getExpenses,
   getExpenseTypes,
+  getGameScores,
   getGovernmentDocuments,
   getLedgerClients,
   getLoginUsers,
@@ -61,6 +62,7 @@ const REGISTRY: Record<
     fetch: getExpenseTypes,
     errorTitle: "Unable to load expense types",
   },
+  gameScores: { fetch: getGameScores, errorTitle: "Unable to load leaderboard" },
   members: { fetch: getLoginUsers, errorTitle: "Unable to load members" },
 };
 

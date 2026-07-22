@@ -1,8 +1,12 @@
 {
   "compilerOptions": {},
   "extends": "expo/tsconfig.base",
-  // `supabase/functions` is Deno, not React Native: it resolves `jsr:` imports
-  // and relies on Deno globals, neither of which this compiler knows about. It
-  // is type-checked by `deno check` instead — see supabase/functions/README.md.
-  "exclude": ["node_modules", "supabase/functions"]
+  "exclude": [
+    "node_modules",
+    "supabase/functions"
+  ],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ]
 }

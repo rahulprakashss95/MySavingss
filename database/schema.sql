@@ -296,9 +296,44 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------- --
+-- Game scores — the family leaderboard
+--
+-- One row per (member, game): a member's *best* result at a game, upserted as
+-- they play. Always public — a leaderboard the whole family can see is the point
+-- — but writes are still owner-only under the shared domain RLS below, so a
+-- member can only ever set their own score. The id is deterministic
+-- (`{owner_id}-{game_key}`, minted in query.ts), which is what holds it to one
+-- row per member per game across upserts — no unique index needed.
+--
+-- Everything but the scope columns stays in jsonb (gameKey, score, bestTile,
+-- gamesPlayed, lastPlayedAt): the board is a handful of rows per family, loaded
+-- into the client cache and sorted in JS like every other collection, so there
+-- is nothing to gain from promoting `score` to a typed column — and jsonb keeps
+-- the score a real number rather than the string a `numeric` column round-trips
+-- to (see numberToApp in query.ts). `visibility` defaults public here, unlike
+-- the private-by-default domain tables.
+--
+-- An *in-progress* game is NOT here: a half-finished board is device-local
+-- (AsyncStorage, keyed by user id), and only a finished best score reaches the
+-- cloud. Like `accounts`, this is `create ... if not exists` — never dropped, so
+-- re-running the schema keeps everyone's high scores.
+-- ---------------------------------------------------------------- --
+
+create table if not exists game_scores (
+  id         text primary key,
+  family_id  text not null references families (id) on delete cascade,
+  owner_id   text not null,
+  visibility text not null default 'public'
+             check (visibility in ('private', 'public')),
+  -- gameKey, score, bestTile, gamesPlayed, lastPlayedAt
+  data       jsonb not null default '{}'::jsonb
+);
+create index if not exists game_scores_family_id_idx on game_scores (family_id);
+
+-- ---------------------------------------------------------------- --
 -- RLS for every domain table
 --
--- Identical rules for all eleven, whether or not they have promoted columns.
+-- Identical rules for all of them, whether or not they have promoted columns.
 -- ---------------------------------------------------------------- --
 
 do $$
@@ -308,7 +343,7 @@ begin
   foreach t in array array[
     'banks', 'accounts', 'government_documents', 'bank_documents',
     'ornaments', 'properties', 'vehicles', 'ledger_clients', 'ledger_earnings',
-    'ledger_savings', 'expenses', 'earning_types', 'expense_types'
+    'ledger_savings', 'expenses', 'earning_types', 'expense_types', 'game_scores'
   ]
   loop
     execute format('alter table %I enable row level security;', t);

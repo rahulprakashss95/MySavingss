@@ -1,15 +1,24 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useMemo } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import { useMemo } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import FeatureTile from "../components/FeatureTile";
+import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import { hasFeature } from "../models/common";
 import { ThemeColors } from "../utils/Color";
 
 const AssetScreen = () => {
   const router = useRouter();
   const { colors } = useTheme();
+  const { user } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
+
+  // Each tile gates on its own feature key — a member granted only Accounts
+  // sees Accounts and the Overview, and nothing else.
+  const show = (feature: Parameters<typeof hasFeature>[1]) =>
+    hasFeature(user, feature);
+  const holdings = show("ornaments") || show("properties") || show("vehicles");
 
   return (
     <ScrollView
@@ -17,46 +26,74 @@ const AssetScreen = () => {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.lede}>
-        What the family owns — jewellery by metal, property with its payments,
-        and vehicles with their papers.
-      </Text>
+      {/* <Text style={styles.lede}>
+        What the family owns — jewellery, property and vehicles, plus the bank
+        balances and deposits that make up net worth.
+      </Text> */}
 
-      <Text style={styles.sectionTitle}>Records</Text>
+      {show("accounts") && (
+        <>
+          <Text style={styles.sectionTitle}>Banking</Text>
+          <FeatureTile
+            wide
+            title="Accounts & Deposits"
+            subtitle="Balances, fixed & recurring deposits, and cash"
+            accent={colors.positive}
+            renderIcon={(color) => (
+              <Ionicons name="card-outline" size={24} color={color} />
+            )}
+            onPress={() => router.push("/assets/accounts")}
+          />
+        </>
+      )}
+
+      {holdings && (
+        <Text
+          style={[styles.sectionTitle, show("accounts") && styles.sectionSpacing]}
+        >
+          Holdings
+        </Text>
+      )}
 
       <View style={styles.grid}>
-        <FeatureTile
-          title="Ornaments"
-          subtitle="Gold, silver & stones"
-          accent={colors.accentAmber}
-          renderIcon={(color) => (
-            <Ionicons name="ribbon-outline" size={24} color={color} />
-          )}
-          onPress={() => router.push("/assets/ornaments")}
-        />
-        <FeatureTile
-          title="Properties"
-          subtitle="Land & homes"
-          accent={colors.accentBlue}
-          renderIcon={(color) => (
-            <Ionicons name="home-outline" size={24} color={color} />
-          )}
-          onPress={() => router.push("/assets/properties")}
-        />
+        {show("ornaments") && (
+          <FeatureTile
+            title="Ornaments"
+            subtitle="Gold, silver & stones"
+            accent={colors.accentAmber}
+            renderIcon={(color) => (
+              <Ionicons name="ribbon-outline" size={24} color={color} />
+            )}
+            onPress={() => router.push("/assets/ornaments")}
+          />
+        )}
+        {show("properties") && (
+          <FeatureTile
+            title="Properties"
+            subtitle="Land & homes"
+            accent={colors.accentBlue}
+            renderIcon={(color) => (
+              <Ionicons name="home-outline" size={24} color={color} />
+            )}
+            onPress={() => router.push("/assets/properties")}
+          />
+        )}
       </View>
 
-      <View style={styles.tileSpacing}>
-        <FeatureTile
-          wide
-          title="Vehicles"
-          subtitle="Cars, bikes & insurance"
-          accent={colors.positive}
-          renderIcon={(color) => (
-            <Ionicons name="car-outline" size={24} color={color} />
-          )}
-          onPress={() => router.push("/assets/vehicles")}
-        />
-      </View>
+      {show("vehicles") && (
+        <View style={styles.tileSpacing}>
+          <FeatureTile
+            wide
+            title="Vehicles"
+            subtitle="Cars, bikes & insurance"
+            accent={colors.positive}
+            renderIcon={(color) => (
+              <Ionicons name="car-outline" size={24} color={color} />
+            )}
+            onPress={() => router.push("/assets/vehicles")}
+          />
+        </View>
+      )}
 
       <Text style={[styles.sectionTitle, styles.sectionSpacing]}>Insights</Text>
 

@@ -18,7 +18,7 @@ import {
 import Button from "../components/Button";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
-import { MODULE_KEYS } from "../models/common";
+import { ALL_FEATURE_KEYS } from "../models/common";
 import { normalizeFamilyCode } from "../models/FamilyModel";
 import { signInWithCredentials } from "../utils/auth";
 import { MIN_PASSWORD_LENGTH, validatePassword } from "../utils/passwordStrength";
@@ -101,7 +101,7 @@ const RegisterScreen = () => {
         name: adminName.trim() || undefined,
         role: "admin",
         // The founding admin gets every module.
-        moduleAccess: [...MODULE_KEYS],
+        moduleAccess: [...ALL_FEATURE_KEYS],
         password,
       });
 

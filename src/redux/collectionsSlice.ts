@@ -9,7 +9,7 @@ import { resetAll } from "./resetAll";
  */
 export type CollectionName =
   | "banks"
-  | "fixedDeposits"
+  | "accounts"
   | "ornaments"
   | "properties"
   | "vehicles"
@@ -17,13 +17,18 @@ export type CollectionName =
   | "governmentDocuments"
   | "ledgerClients"
   | "earnings"
+  | "earningTypes"
   | "savings"
   | "expenses"
-  | "expenseTypes";
+  | "expenseTypes"
+  // The family roster. Not a domain record type, but cached the same way so
+  // lists/overviews can resolve a record's owner name from its `ownerId`
+  // without a per-screen fetch.
+  | "members";
 
 export const COLLECTION_NAMES: CollectionName[] = [
   "banks",
-  "fixedDeposits",
+  "accounts",
   "ornaments",
   "properties",
   "vehicles",
@@ -31,9 +36,11 @@ export const COLLECTION_NAMES: CollectionName[] = [
   "governmentDocuments",
   "ledgerClients",
   "earnings",
+  "earningTypes",
   "savings",
   "expenses",
   "expenseTypes",
+  "members",
 ];
 
 /** Every cached record is keyed by its row id. */

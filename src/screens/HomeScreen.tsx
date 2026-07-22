@@ -21,7 +21,7 @@ import {
   WorthSegment,
   useDashboard,
 } from "../hooks/useDashboard";
-import { ModuleKey } from "../models/common";
+import { canSeeModule, ModuleKey } from "../models/common";
 import { ThemeColors, tint } from "../utils/Color";
 import { DATE_FORMAT } from "../utils/deposits";
 import { amountFormat } from "../utils/Utils";
@@ -53,7 +53,6 @@ type IconName = React.ComponentProps<typeof Ionicons>["name"];
 
 type ModuleMeta = { label: string; icon: IconName; accent: keyof ThemeColors };
 const MODULES: Record<ModuleKey, ModuleMeta> = {
-  deposits: { label: "Deposits", icon: "card-outline", accent: "accentBlue" },
   documents: {
     label: "Documents",
     icon: "document-text-outline",
@@ -61,15 +60,8 @@ const MODULES: Record<ModuleKey, ModuleMeta> = {
   },
   assets: { label: "Assets", icon: "cube-outline", accent: "accentAmber" },
   ledger: { label: "Ledger", icon: "book-outline", accent: "accentBlue" },
-  expenses: { label: "Expenses", icon: "receipt-outline", accent: "accentAmber" },
 };
-const MODULE_ORDER: ModuleKey[] = [
-  "deposits",
-  "documents",
-  "assets",
-  "ledger",
-  "expenses",
-];
+const MODULE_ORDER: ModuleKey[] = ["documents", "assets", "ledger"];
 
 const SEGMENT_ACCENT: Record<WorthSegment["key"], keyof ThemeColors> = {
   deposits: "accentBlue",
@@ -96,9 +88,7 @@ const HomeScreen = () => {
   const dashboard = useDashboard();
 
   const isAdmin = user?.role === "admin";
-  const modules = MODULE_ORDER.filter(
-    (key) => isAdmin || user?.moduleAccess?.includes(key)
-  );
+  const modules = MODULE_ORDER.filter((key) => canSeeModule(user, key));
   const hasAnything =
     !!dashboard.worth || !!dashboard.attention || !!dashboard.month;
 

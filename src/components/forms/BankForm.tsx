@@ -68,7 +68,12 @@ const BankForm = ({ initial, onSaved, onDeleted }: Props) => {
 
   const handleSave = () => {
     if (!name.trim()) {
-      showToast("error", "Incomplete form", "Enter the bank's name.", "bottom");
+      showToast(
+        "error",
+        "Incomplete form",
+        "Enter the institution's name.",
+        "bottom"
+      );
       return;
     }
 
@@ -91,8 +96,8 @@ const BankForm = ({ initial, onSaved, onDeleted }: Props) => {
 
   const handleDelete = () => {
     showConfirmationAlert(
-      "Delete bank",
-      "Fixed deposits already recorded against this bank are kept. Continue?"
+      "Delete institution",
+      "Accounts already recorded against this institution are kept. Continue?"
     ).then((confirmed) => {
       if (!confirmed) {
         return;
@@ -119,7 +124,7 @@ const BankForm = ({ initial, onSaved, onDeleted }: Props) => {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Bank</Text>
+          <Text style={styles.sectionTitle}>Institution</Text>
 
           <Text style={styles.label}>Name</Text>
           <TextInput
@@ -170,7 +175,7 @@ const BankForm = ({ initial, onSaved, onDeleted }: Props) => {
 
       {!readOnly && (
         <Button
-          title={isEdit ? "Save changes" : "Add bank"}
+          title={isEdit ? "Save changes" : "Add institution"}
           onPress={handleSave}
           buttonStyle={styles.primaryButton}
         />
@@ -182,7 +187,7 @@ const BankForm = ({ initial, onSaved, onDeleted }: Props) => {
           accessibilityRole="button"
           style={({ pressed }) => [styles.deleteButton, pressed && styles.pressed]}
         >
-          <Text style={styles.deleteText}>Delete bank</Text>
+          <Text style={styles.deleteText}>Delete institution</Text>
         </Pressable>
       )}
     </>

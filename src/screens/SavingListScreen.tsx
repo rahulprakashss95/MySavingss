@@ -37,7 +37,7 @@ const SavingListScreen = () => {
         <GroupedRow
           icon="wallet-outline"
           accent={colors.accentAmber}
-          title={item.clientName || "Saving"}
+          title={item.accountName || item.clientName || "Saving"}
           value={`₹ ${amountFormat(item.amount)}`}
           meta={item.date || undefined}
           description={item.comments}

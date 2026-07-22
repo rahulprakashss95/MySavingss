@@ -14,6 +14,7 @@ import {
   useAppDispatch,
   useCollectionState,
   useMetalRates,
+  useOwnerName,
 } from "../redux/hooks";
 import { metalRatesActions } from "../redux/metalRatesSlice";
 import MetalRatesModal from "../components/MetalRatesModal";
@@ -36,6 +37,10 @@ import {
 } from "../utils/assets";
 import { ThemeColors } from "../utils/Color";
 import { amountFormat, showToast } from "../utils/Utils";
+import { useAuth } from "../context/AuthContext";
+import { hasFeature } from "../models/common";
+import { AccountModel } from "../models/AccountModel";
+import { buildAccountTotals } from "../utils/deposits";
 
 const rupees = (value: number) => `₹ ${amountFormat(Math.round(value))}`;
 
@@ -44,28 +49,43 @@ const AssetOverviewScreen = () => {
   const [isSavingRates, setIsSavingRates] = useState(false);
 
   const { colors } = useTheme();
+  const { user } = useAuth();
   const dispatch = useAppDispatch();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  // Ornaments and properties come from the shared cache; metal rates from their
-  // own cached doc — none of them re-read on focus.
+  // Ornaments, properties and accounts come from the shared cache; metal rates
+  // from their own cached doc — none of them re-read on focus.
   const ornamentState = useCollectionState<OrnamentModel>("ornaments");
   const propertyState = useCollectionState<PropertyModel>("properties");
+  const accountState = useCollectionState<AccountModel>("accounts");
   const ratesState = useMetalRates();
 
   const ornaments = ornamentState.items;
   const properties = propertyState.items;
   const rates = ratesState.value ?? EMPTY_METAL_RATES;
 
+  // Deposits/balances count toward net worth only for members who hold the
+  // Accounts tile — the overview reflects the tiles you can see.
+  const showAccounts = hasFeature(user, "accounts");
+  const accountTotals = useMemo(
+    () => buildAccountTotals(accountState.items),
+    [accountState.items]
+  );
+
   const hasLoaded =
-    ornamentState.hasLoaded && propertyState.hasLoaded && ratesState.loaded;
+    ornamentState.hasLoaded &&
+    propertyState.hasLoaded &&
+    accountState.hasLoaded &&
+    ratesState.loaded;
   const isRefreshing =
     ornamentState.isRefreshing ||
     propertyState.isRefreshing ||
+    accountState.isRefreshing ||
     ratesState.isRefreshing;
   const onRefresh = () => {
     ornamentState.onRefresh();
     propertyState.onRefresh();
+    accountState.onRefresh();
     ratesState.onRefresh();
   };
 
@@ -73,13 +93,17 @@ const AssetOverviewScreen = () => {
     () => ornamentTotals(ornaments, rates),
     [ornaments, rates]
   );
+  const nameOf = useOwnerName();
   const holders = useMemo(
-    () => ornamentsByHolder(ornaments, rates),
-    [ornaments, rates]
+    () => ornamentsByHolder(ornaments, rates, nameOf),
+    [ornaments, rates, nameOf]
   );
   const portfolio = useMemo(() => propertyPortfolio(properties), [properties]);
 
-  const netValue = ornamentSummary.totalValue + portfolio.total;
+  const netValue =
+    ornamentSummary.totalValue +
+    portfolio.total +
+    (showAccounts ? accountTotals.balance : 0);
   const hasRates = !!rates.goldPerGram || !!rates.silverPerGram;
 
   const handleSaveRates = (next: MetalRates) => {
@@ -172,6 +196,7 @@ const AssetOverviewScreen = () => {
         <Text style={styles.heroCaption}>
           Ornaments {rupees(ornamentSummary.totalValue)} · Properties{" "}
           {rupees(portfolio.total)} at cost
+          {showAccounts ? ` · Accounts ${rupees(accountTotals.balance)}` : ""}
         </Text>
         {ornamentSummary.hasUnvalued && (
           <Text style={styles.heroWarning}>
@@ -241,9 +266,9 @@ const AssetOverviewScreen = () => {
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>By holder</Text>
           {holders.map((holder) => (
-            <View key={holder.personName} style={styles.holderRow}>
+            <View key={holder.name} style={styles.holderRow}>
               <Text style={styles.holderName} numberOfLines={1}>
-                {holder.personName}
+                {holder.name}
               </Text>
               <View style={styles.holderRight}>
                 <Text style={styles.holderValue}>{rupees(holder.value)}</Text>
@@ -289,6 +314,41 @@ const AssetOverviewScreen = () => {
           </>
         )}
       </View>
+
+      {showAccounts && (
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Accounts & Deposits</Text>
+          {accountTotals.accountCount === 0 ? (
+            <Text style={styles.emptyText}>No accounts recorded yet.</Text>
+          ) : (
+            <>
+              <View style={styles.statRow}>
+                <View style={styles.stat}>
+                  <Text style={styles.statLabel}>Total balance</Text>
+                  <Text style={styles.statValue}>
+                    {rupees(accountTotals.balance)}
+                  </Text>
+                </View>
+                <View style={styles.stat}>
+                  <Text style={styles.statLabel}>Deposit interest</Text>
+                  <Text style={styles.statValue}>
+                    {rupees(accountTotals.interest)}
+                  </Text>
+                </View>
+              </View>
+
+              {accountTotals.balanceBySection.map((row) => (
+                <View key={row.label} style={styles.holderRow}>
+                  <Text style={styles.holderName} numberOfLines={1}>
+                    {row.label}
+                  </Text>
+                  <Text style={styles.holderValue}>{rupees(row.value)}</Text>
+                </View>
+              ))}
+            </>
+          )}
+        </View>
+      )}
       </ScrollView>
     </View>
   );

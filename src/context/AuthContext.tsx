@@ -15,7 +15,7 @@ import {
 } from "../../database/query";
 import { store } from "../redux/store";
 import { resetAll } from "../redux/resetAll";
-import type { ModuleKey } from "../models/common";
+import type { Avatar, FeatureKey } from "../models/common";
 import type { UserRole } from "../models/LoginUserModel";
 
 const SESSION_STORAGE_KEY = "@homevault/session";
@@ -33,7 +33,10 @@ export type SessionUser = {
   /** Editable family handle. */
   familyCode: string;
   role: UserRole;
-  moduleAccess: ModuleKey[];
+  /** Leaf feature keys the member holds (see the access model in `common.ts`). */
+  moduleAccess: FeatureKey[];
+  /** The member's profile picture, if set. Absent shows initials. */
+  avatar?: Avatar;
 };
 
 type AuthContextValue = {

@@ -1,7 +1,32 @@
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
+import { Pressable, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import MenuButton from "../../../../src/components/MenuButton";
 import ProfileButton from "../../../../src/components/ProfileButton";
 import { useTheme } from "../../../../src/context/ThemeContext";
+
+/**
+ * The Accounts screen carries an extra header action — a shortcut into the
+ * institutions directory — alongside the usual profile button.
+ */
+function AccountsHeaderRight() {
+  const router = useRouter();
+  const { colors } = useTheme();
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+      <Pressable
+        onPress={() => router.push("/assets/accounts/institutions")}
+        accessibilityRole="button"
+        accessibilityLabel="Institutions"
+        hitSlop={8}
+        style={{ padding: 6 }}
+      >
+        <Ionicons name="business-outline" size={22} color={colors.text} />
+      </Pressable>
+      <ProfileButton />
+    </View>
+  );
+}
 
 export default function AssetsStack() {
   const { colors } = useTheme();
@@ -31,6 +56,23 @@ export default function AssetsStack() {
       />
       <Stack.Screen name="vehicles/index" options={{ title: "Vehicles" }} />
       <Stack.Screen name="vehicles/[id]" options={{ title: "Vehicle" }} />
+      <Stack.Screen
+        name="accounts/index"
+        options={{
+          title: "Accounts & Deposits",
+          headerRight: () => <AccountsHeaderRight />,
+        }}
+      />
+      {/* Title is set per-mode (Add/Edit Holding) inside the route. */}
+      <Stack.Screen name="accounts/[id]" />
+      <Stack.Screen
+        name="accounts/institutions/index"
+        options={{ title: "Institutions" }}
+      />
+      <Stack.Screen
+        name="accounts/institutions/[id]"
+        options={{ title: "Institution" }}
+      />
       <Stack.Screen name="overview" options={{ title: "Overview" }} />
     </Stack>
   );

@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useMemo } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import { useMemo } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import FeatureTile from "../components/FeatureTile";
 import { useTheme } from "../context/ThemeContext";
 import { ThemeColors } from "../utils/Color";
@@ -17,9 +17,9 @@ const DocumentScreen = () => {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.lede}>
+      {/* <Text style={styles.lede}>
         The family's identity and bank details in one place, grouped by person.
-      </Text>
+      </Text> */}
 
       <Text style={styles.sectionTitle}>Records</Text>
 

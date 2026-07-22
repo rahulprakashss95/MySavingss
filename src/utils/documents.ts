@@ -1,22 +1,25 @@
 import { SessionUser } from "../context/AuthContext";
 import { groupBy, Section } from "./grouping";
 
-type PersonOwned = { personId: string; personName: string };
+type OwnerOwned = { ownerId: string };
 
 const UNASSIGNED = "Unassigned";
 
 /**
- * One section per person, alphabetical — except the signed-in user, who is
- * hoisted to the top so their own documents are the first thing they see.
+ * One section per owning member, alphabetical — except the signed-in user, who
+ * is hoisted to the top so their own records are the first thing they see. The
+ * section title is the owner's name resolved from `ownerId` via `nameOf` (see
+ * `useOwnerName`); there is no stored person field to group on.
  */
-export const groupByPerson = <T extends PersonOwned>(
-  documents: T[],
-  user: SessionUser | null
+export const groupByOwner = <T extends OwnerOwned>(
+  items: T[],
+  user: SessionUser | null,
+  nameOf: (ownerId: string) => string
 ): Section<T>[] =>
   groupBy(
-    documents,
-    (document) => document.personId || "",
-    (document) => document.personName || UNASSIGNED
+    items,
+    (item) => item.ownerId || "",
+    (item) => nameOf(item.ownerId) || UNASSIGNED
   ).sort((a, b) => {
     if (user?.id) {
       if (a.key === user.id) return -1;

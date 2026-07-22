@@ -2,20 +2,24 @@ import moment from "moment";
 import { useMemo } from "react";
 
 import { useAuth } from "../context/AuthContext";
-import { BankModel } from "../models/BankModel";
 import {
   EMPTY_METAL_RATES,
   OrnamentModel,
   PaymentEntry,
   PropertyModel,
 } from "../models/AssetModel";
-import { ModuleKey } from "../models/common";
+import { FeatureKey, hasFeature } from "../models/common";
+import { AccountModel } from "../models/AccountModel";
+import { BankModel } from "../models/BankModel";
 import { ExpenseModel } from "../models/ExpenseModel";
-import { FixedDepositModel } from "../models/FixedDepositModel";
 import { EarningModel, SavingModel } from "../models/LedgerModel";
 import { useCollectionState, useMetalRates } from "../redux/hooks";
 import { ornamentTotals, propertyPortfolio } from "../utils/assets";
-import { buildTotals, mergeBankNames, parseMaturity } from "../utils/deposits";
+import {
+  accountInstitution,
+  buildAccountTotals,
+  parseMaturity,
+} from "../utils/deposits";
 import { monthKey, parseLedgerDate, sumAmount } from "../utils/ledger";
 
 /** A slice of the family's total worth, e.g. Deposits or Gold. */
@@ -79,19 +83,21 @@ const UPCOMING_DAYS = 60;
  */
 export const useDashboard = (): DashboardData => {
   const { user } = useAuth();
-  const isAdmin = user?.role === "admin";
-  const canSee = (module: ModuleKey) =>
-    isAdmin || !!user?.moduleAccess?.includes(module);
+  const has = (feature: FeatureKey) => hasFeature(user, feature);
 
+  // The dashboard's four worth/attention buckets now map onto feature tiles:
+  // "deposits" is the Accounts tile, "assets" any of ornaments/properties,
+  // "ledger" the earnings/savings tiles, "expenses" its own tile.
   const need = {
-    deposits: canSee("deposits"),
-    ledger: canSee("ledger"),
-    assets: canSee("assets"),
-    expenses: canSee("expenses"),
+    deposits: has("accounts"),
+    ledger: has("earnings") || has("savings"),
+    assets: has("ornaments") || has("properties"),
+    expenses: has("expenses"),
   };
 
   // Served from the shared store — fetched once per session, not on every focus.
-  const fds = useCollectionState<FixedDepositModel>("fixedDeposits");
+  const accounts = useCollectionState<AccountModel>("accounts");
+  // Feeds the FD maturity label ("FD at <bank>"); accounts store only a bankId.
   const banks = useCollectionState<BankModel>("banks");
   const savings = useCollectionState<SavingModel>("savings");
   const earnings = useCollectionState<EarningModel>("earnings");
@@ -102,7 +108,7 @@ export const useDashboard = (): DashboardData => {
 
   return useMemo(() => {
     const ready =
-      (!need.deposits || (fds.hasLoaded && banks.hasLoaded)) &&
+      (!need.deposits || (accounts.hasLoaded && banks.hasLoaded)) &&
       (!need.ledger || (savings.hasLoaded && earnings.hasLoaded)) &&
       (!need.assets ||
         (ornaments.hasLoaded && properties.hasLoaded && rates.loaded)) &&
@@ -111,7 +117,7 @@ export const useDashboard = (): DashboardData => {
     // ---- Worth -------------------------------------------------------------
     const ratesValue = rates.value ?? EMPTY_METAL_RATES;
     const depositsValue = need.deposits
-      ? buildTotals(mergeBankNames(fds.items, banks.items)).amount
+      ? buildAccountTotals(accounts.items).balance
       : 0;
     const savingsValue = need.ledger ? sumAmount(savings.items) : 0;
     const orn = need.assets ? ornamentTotals(ornaments.items, ratesValue) : null;
@@ -124,9 +130,9 @@ export const useDashboard = (): DashboardData => {
     if (need.deposits)
       segments.push({
         key: "deposits",
-        label: "Deposits",
+        label: "Accounts",
         value: depositsValue,
-        href: "/deposits/overview",
+        href: "/assets/accounts",
       });
     if (need.ledger)
       segments.push({
@@ -170,17 +176,23 @@ export const useDashboard = (): DashboardData => {
     const today = moment().startOf("day");
 
     const maturities: MaturityItem[] = need.deposits
-      ? fds.items
-          .map((deposit): MaturityItem | null => {
-            const maturity = parseMaturity(deposit.maturityDate);
+      ? accounts.items
+          .map((account): MaturityItem | null => {
+            const maturity = parseMaturity(account.maturityDate);
             if (!maturity) return null;
             const daysUntil = maturity.startOf("day").diff(today, "days");
             if (daysUntil > UPCOMING_DAYS) return null;
+            // FDs are identified by their institution, not a name; resolve the
+            // bank from the cache and fall back to any name/label we do have.
+            const institution = accountInstitution(account, banks.items);
             return {
-              id: deposit.id,
-              bankName: deposit.name || "Deposit",
-              amount: Number(deposit.amount) || 0,
-              date: deposit.maturityDate,
+              id: account.id,
+              bankName:
+                institution !== "—"
+                  ? institution
+                  : account.name || "your bank",
+              amount: Number(account.balance) || 0,
+              date: account.maturityDate,
               daysUntil,
             };
           })
@@ -257,8 +269,8 @@ export const useDashboard = (): DashboardData => {
     need.ledger,
     need.assets,
     need.expenses,
-    fds.items,
-    fds.hasLoaded,
+    accounts.items,
+    accounts.hasLoaded,
     banks.items,
     banks.hasLoaded,
     savings.items,

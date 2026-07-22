@@ -16,8 +16,9 @@ import { APP_VERSION } from "../appVersion";
 import { useAuth } from "../context/AuthContext";
 import { useDrawer } from "../context/DrawerContext";
 import { useTheme } from "../context/ThemeContext";
-import { ModuleKey } from "../models/common";
+import { canSeeModule, ModuleKey } from "../models/common";
 import { ThemeColors, tint } from "../utils/Color";
+import Avatar from "./Avatar";
 import { confirmSignOut } from "./HeaderActions";
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
@@ -38,16 +39,6 @@ type Node = Leaf | Group;
 const TREE: Node[] = [
   { label: "Home", icon: "home-outline", href: "/home" },
   {
-    label: "Deposits",
-    icon: "card-outline",
-    module: "deposits",
-    children: [
-      { label: "Fixed Deposits", icon: "cash-outline", href: "/deposits/fixed-deposits" },
-      { label: "Banks", icon: "business-outline", href: "/deposits/banks" },
-      { label: "Overview", icon: "pie-chart-outline", href: "/deposits/overview" },
-    ],
-  },
-  {
     label: "Documents",
     icon: "document-text-outline",
     module: "documents",
@@ -63,6 +54,8 @@ const TREE: Node[] = [
     children: [
       { label: "Ornaments", icon: "ribbon-outline", href: "/assets/ornaments" },
       { label: "Properties", icon: "home-outline", href: "/assets/properties" },
+      { label: "Vehicles", icon: "car-outline", href: "/assets/vehicles" },
+      { label: "Accounts", icon: "card-outline", href: "/assets/accounts" },
       { label: "Overview", icon: "stats-chart-outline", href: "/assets/overview" },
     ],
   },
@@ -72,19 +65,10 @@ const TREE: Node[] = [
     module: "ledger",
     children: [
       { label: "Earnings", icon: "trending-up-outline", href: "/ledger/earnings" },
+      { label: "Expenses", icon: "receipt-outline", href: "/ledger/expenses" },
       { label: "Savings", icon: "wallet-outline", href: "/ledger/savings" },
       { label: "Clients", icon: "people-outline", href: "/ledger/clients" },
       { label: "Overview", icon: "stats-chart-outline", href: "/ledger/overview" },
-    ],
-  },
-  {
-    label: "Expenses",
-    icon: "receipt-outline",
-    module: "expenses",
-    children: [
-      { label: "Expenses", icon: "receipt-outline", href: "/expenses/list" },
-      { label: "Types", icon: "pricetags-outline", href: "/expenses/types" },
-      { label: "Overview", icon: "stats-chart-outline", href: "/expenses/overview" },
     ],
   },
   { label: "Settings", icon: "settings-outline", href: "/settings" },
@@ -108,16 +92,14 @@ const SideDrawer = () => {
   const [mounted, setMounted] = useState(false);
 
   // A row is lit for its own route and anything pushed beneath it, so a deep
-  // screen (e.g. /deposits/banks/new) keeps "Banks" highlighted.
+  // screen (e.g. /assets/accounts/new) keeps "Accounts" highlighted.
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
   // Groups start expanded so their children are reachable in one tap.
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
-    Deposits: true,
     Documents: true,
     Assets: true,
     Ledger: true,
-    Expenses: true,
   });
 
   // Animation can't use the native driver on web, and translateX/opacity are
@@ -168,11 +150,9 @@ const SideDrawer = () => {
   }
 
   const displayName = user?.name || user?.username || "Guest";
-  const initial = displayName.trim().charAt(0).toUpperCase() || "?";
 
   const isAdmin = user?.role === "admin";
-  const canAccess = (module: ModuleKey) =>
-    isAdmin || !!user?.moduleAccess?.includes(module);
+  const canAccess = (module: ModuleKey) => canSeeModule(user, module);
   // Hide module groups the member can't open; admins see everything, plus a
   // "Family Admin" destination.
   const visibleTree = TREE.filter((node) =>
@@ -254,9 +234,7 @@ const SideDrawer = () => {
             pressed && styles.rowPressed,
           ]}
         >
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initial}</Text>
-          </View>
+          <Avatar user={user ?? { username: displayName }} size={48} fontSize={20} />
           <View style={styles.headerText}>
             <Text style={styles.name} numberOfLines={1}>
               {displayName}
@@ -385,19 +363,6 @@ const createStyles = (colors: ThemeColors) =>
     },
     headerActive: {
       backgroundColor: tint(colors.primary),
-    },
-    avatar: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: tint(colors.primary),
-    },
-    avatarText: {
-      fontSize: 20,
-      fontWeight: "700",
-      color: colors.primary,
     },
     headerText: {
       flex: 1,

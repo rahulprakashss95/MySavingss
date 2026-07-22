@@ -13,18 +13,13 @@ export const GOVERNMENT_DOCUMENT_TYPES = [
 export type GovernmentDocumentType = (typeof GOVERNMENT_DOCUMENT_TYPES)[number];
 
 /**
- * Documents belong to a person, not to whoever typed them in — the whole family
- * shares one vault, so every signed-in user sees every document, grouped by the
- * person it belongs to. `personName` is denormalised from `loginUsers` so the
- * list can render section headers without a second read.
+ * The whole family shares one vault: every signed-in member sees every public
+ * document, grouped by the member who owns it. Ownership is `ownerId` (from
+ * `Owned`) — a document is attributed to whoever created it, and the list
+ * resolves that member's name at render time (see `useOwnerName`), so there is
+ * no denormalised person field to keep in sync.
  */
-type PersonOwned = {
-  /** `loginUsers` doc id of the person this document belongs to. */
-  personId: string;
-  personName: string;
-};
-
-export type GovernmentDocumentModel = PersonOwned & Owned & Attachable & {
+export type GovernmentDocumentModel = Owned & Attachable & {
   id: string;
   /** One of GOVERNMENT_DOCUMENT_TYPES. Typed loosely so older rows still read. */
   documentType: string;
@@ -32,13 +27,13 @@ export type GovernmentDocumentModel = PersonOwned & Owned & Attachable & {
   description: string;
 };
 
-export type BankDocumentModel = PersonOwned & Owned & {
+export type BankDocumentModel = Owned & {
   id: string;
   bankName: string;
   /**
-   * The name as the bank has it, which routinely differs from the person's
+   * The name as the bank has it, which routinely differs from the owner's
    * display name — initials, a maiden name, or a joint holder. Optional:
-   * blank means "same as the person it belongs to".
+   * blank means "same as the member it belongs to".
    */
   accountHolderName: string;
   accountNumber: string;

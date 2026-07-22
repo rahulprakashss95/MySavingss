@@ -16,7 +16,6 @@ import AttachmentField, { useAttachments } from "../components/AttachmentField";
 import Button from "../components/Button";
 import DatePicker from "../components/DatePicker";
 import Loader from "../components/Loader";
-import PersonPicker from "../components/PersonPicker";
 import ReadOnlyBanner from "../components/ReadOnlyBanner";
 import ReadOnlyGuard from "../components/ReadOnlyGuard";
 import SearchableSelect from "../components/SearchableSelect";
@@ -40,8 +39,6 @@ const VehicleAddEditScreen = ({ initial }: Props) => {
   const vehicle = initial;
   const pageMode = vehicle ? "Edit" : "Add";
 
-  const [personId, setPersonId] = useState(vehicle?.personId ?? "");
-  const [personName, setPersonName] = useState(vehicle?.personName ?? "");
   const [vehicleType, setVehicleType] = useState(vehicle?.vehicleType ?? "");
   const [name, setName] = useState(vehicle?.name ?? "");
   const [number, setNumber] = useState(vehicle?.number ?? "");
@@ -65,14 +62,8 @@ const VehicleAddEditScreen = ({ initial }: Props) => {
   // Public records are viewable family-wide but editable only by their owner.
   const readOnly = pageMode === "Edit" && !canEdit(vehicle!, user?.id);
 
-  const selectPerson = (id: string, personLabel: string) => {
-    setPersonId(id);
-    setPersonName(personLabel);
-  };
-
   /** Returns an error message, or null when the form is good to submit. */
   const validationError = () => {
-    if (!personId) return "Choose who this vehicle belongs to.";
     if (!vehicleType) return "Choose a vehicle type.";
     if (!name.trim()) return "Enter the vehicle's name.";
     if (!number.trim()) return "Enter the registration number.";
@@ -93,8 +84,6 @@ const VehicleAddEditScreen = ({ initial }: Props) => {
       const files = await attachments.commit();
 
       const payload = {
-        personId,
-        personName,
         vehicleType,
         name: name.trim(),
         number: number.trim(),
@@ -159,13 +148,6 @@ const VehicleAddEditScreen = ({ initial }: Props) => {
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Vehicle</Text>
-
-        <PersonPicker
-          selectedId={personId}
-          selectedName={personName}
-          onSelect={selectPerson}
-          autoSelectSelf={pageMode === "Add"}
-        />
 
         <SearchableSelect
           label="Type"
@@ -234,6 +216,7 @@ const VehicleAddEditScreen = ({ initial }: Props) => {
           drafts={attachments.drafts}
           onChange={attachments.setDrafts}
           readOnly={readOnly}
+          module="vehicles"
         />
       </View>
 

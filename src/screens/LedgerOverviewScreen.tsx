@@ -11,7 +11,10 @@ import MonthlyEarningsChart from "../components/MonthlyEarningsChart";
 import ProgressBar from "../components/ProgressBar";
 import { OverviewSkeleton } from "../components/Skeleton";
 import { useTheme } from "../context/ThemeContext";
+import { useAuth } from "../context/AuthContext";
+import { hasFeature } from "../models/common";
 import { EarningModel, SavingModel } from "../models/LedgerModel";
+import { ExpenseModel } from "../models/ExpenseModel";
 import { ThemeColors } from "../utils/Color";
 import {
   Bucket,
@@ -26,33 +29,51 @@ const rupees = (value: number) => `₹ ${amountFormat(Math.round(value))}`;
 
 const LedgerOverviewScreen = () => {
   const { colors } = useTheme();
+  const { user } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  // Cached, so opening the ledger overview reuses what the earning/saving
-  // lists already loaded instead of re-reading both collections.
+  // Cached, so opening the ledger overview reuses what the earning/saving/
+  // expense lists already loaded instead of re-reading the collections.
   const earningState = useCollectionState<EarningModel>("earnings");
   const savingState = useCollectionState<SavingModel>("savings");
+  const expenseState = useCollectionState<ExpenseModel>("expenses");
   const earnings = earningState.items;
   const savings = savingState.items;
+  const expenses = expenseState.items;
 
-  const hasLoaded = earningState.hasLoaded && savingState.hasLoaded;
-  const isRefreshing = earningState.isRefreshing || savingState.isRefreshing;
+  // Expenses show only for members who hold the Expenses tile.
+  const showExpenses = hasFeature(user, "expenses");
+
+  const hasLoaded =
+    earningState.hasLoaded && savingState.hasLoaded && expenseState.hasLoaded;
+  const isRefreshing =
+    earningState.isRefreshing ||
+    savingState.isRefreshing ||
+    expenseState.isRefreshing;
   const onRefresh = () => {
     earningState.onRefresh();
     savingState.onRefresh();
+    expenseState.onRefresh();
   };
 
   const totalEarned = useMemo(() => sumAmount(earnings), [earnings]);
   const totalSaved = useMemo(() => sumAmount(savings), [savings]);
+  const totalSpent = useMemo(() => sumAmount(expenses), [expenses]);
   const rate = savingsRate(totalEarned, totalSaved);
 
   const byClient = useMemo(
     () => totalsBy(earnings, (entry) => entry.clientName),
     [earnings]
   );
-  const savingsByClient = useMemo(
-    () => totalsBy(savings, (entry) => entry.clientName),
+  // Savings now record a destination account; fall back to the legacy client
+  // label for rows written before the account link existed.
+  const savingsByAccount = useMemo(
+    () => totalsBy(savings, (entry) => entry.accountName || entry.clientName),
     [savings]
+  );
+  const expensesByType = useMemo(
+    () => totalsBy(expenses, (entry) => entry.typeName),
+    [expenses]
   );
   // Bounded to the last 12 active months, so the section never grows unbounded
   // the way a per-month list would — older months scroll horizontally.
@@ -84,7 +105,8 @@ const LedgerOverviewScreen = () => {
     );
   }
 
-  const isEmpty = earnings.length === 0 && savings.length === 0;
+  const isEmpty =
+    earnings.length === 0 && savings.length === 0 && expenses.length === 0;
 
   return (
     <ScrollView
@@ -110,6 +132,14 @@ const LedgerOverviewScreen = () => {
               {rupees(totalSaved)}
             </Text>
           </View>
+          {showExpenses && (
+            <View style={styles.stat}>
+              <Text style={styles.statLabel}>Spent</Text>
+              <Text style={[styles.statValue, styles.spent]}>
+                {rupees(totalSpent)}
+              </Text>
+            </View>
+          )}
           <View style={styles.stat}>
             <Text style={styles.statLabel}>Savings rate</Text>
             <Text style={styles.statValue}>{Math.round(rate * 100)}%</Text>
@@ -144,10 +174,17 @@ const LedgerOverviewScreen = () => {
         </View>
       )}
 
-      {savingsByClient.length > 0 && (
+      {savingsByAccount.length > 0 && (
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Savings by client</Text>
-          {renderBuckets(savingsByClient, colors.chartInterest)}
+          <Text style={styles.sectionTitle}>Savings by account</Text>
+          {renderBuckets(savingsByAccount, colors.chartInterest)}
+        </View>
+      )}
+
+      {showExpenses && expensesByType.length > 0 && (
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Expenses by type</Text>
+          {renderBuckets(expensesByType, colors.chartAmount)}
         </View>
       )}
     </ScrollView>
@@ -208,6 +245,9 @@ const createStyles = (colors: ThemeColors) =>
     },
     saved: {
       color: colors.positive,
+    },
+    spent: {
+      color: colors.accentAmber,
     },
     card: {
       backgroundColor: colors.card,

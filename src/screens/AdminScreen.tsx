@@ -23,11 +23,12 @@ import {
   updateLoginUser,
 } from "../../database/query";
 import Toast from "react-native-toast-message";
+import Avatar from "../components/Avatar";
 import Button from "../components/Button";
 import ModuleAccessPicker from "../components/ModuleAccessPicker";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
-import { MODULE_KEYS, ModuleKey } from "../models/common";
+import { ALL_FEATURE_KEYS, FeatureKey } from "../models/common";
 import { normalizeFamilyCode } from "../models/FamilyModel";
 import { displayNameOf, LoginUserModel, UserRole } from "../models/LoginUserModel";
 import { ThemeColors, tint } from "../utils/Color";
@@ -39,7 +40,7 @@ type MemberForm = {
   username: string;
   name: string;
   role: UserRole;
-  moduleAccess: ModuleKey[];
+  moduleAccess: FeatureKey[];
   password: string;
 };
 
@@ -291,11 +292,12 @@ const AdminScreen = () => {
       ) : (
         members.map((member) => (
           <View key={member.id} style={styles.memberRow}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {displayNameOf(member).charAt(0).toUpperCase()}
-              </Text>
-            </View>
+            <Avatar
+              user={member}
+              size={40}
+              fontSize={16}
+              style={styles.avatar}
+            />
             <View style={styles.memberInfo}>
               <View style={styles.memberNameRow}>
                 <Text style={styles.memberName} numberOfLines={1}>
@@ -313,13 +315,13 @@ const AdminScreen = () => {
               <Text style={styles.memberSub} numberOfLines={1}>
                 @{member.username}
                 {member.role === "admin"
-                  ? " · all modules"
+                  ? " · all access"
                   : ` · ${
                       member.moduleAccess.length
-                        ? `${member.moduleAccess.length} module${
+                        ? `${member.moduleAccess.length} tile${
                             member.moduleAccess.length > 1 ? "s" : ""
                           }`
-                        : "no modules"
+                        : "no access"
                     }`}
               </Text>
             </View>
@@ -445,7 +447,7 @@ const AdminScreen = () => {
               <ModuleAccessPicker
                 value={
                   form?.role === "admin"
-                    ? [...MODULE_KEYS]
+                    ? [...ALL_FEATURE_KEYS]
                     : form?.moduleAccess ?? []
                 }
                 onChange={(next) =>
@@ -563,15 +565,8 @@ const createStyles = (colors: ThemeColors) =>
       marginBottom: 10,
     },
     avatar: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: tint(colors.primary),
       marginRight: 12,
     },
-    avatarText: { fontSize: 16, fontWeight: "700", color: colors.primary },
     memberInfo: { flex: 1 },
     memberNameRow: { flexDirection: "row", alignItems: "center" },
     memberName: {

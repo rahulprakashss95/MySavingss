@@ -16,7 +16,6 @@ import {
 import Button from "../components/Button";
 import DualUnitInput from "../components/DualUnitInput";
 import Loader from "../components/Loader";
-import PersonPicker from "../components/PersonPicker";
 import SearchableSelect from "../components/SearchableSelect";
 import ProgressBar from "../components/ProgressBar";
 import ReadOnlyBanner from "../components/ReadOnlyBanner";
@@ -54,8 +53,6 @@ const PropertyAddEditScreen = ({ initial }: Props) => {
   const property: PropertyModel | null = initial;
   const pageMode = property ? "Edit" : "Add";
 
-  const [personId, setPersonId] = useState(property?.personId ?? "");
-  const [personName, setPersonName] = useState(property?.personName ?? "");
   const [propertyType, setPropertyType] = useState(property?.propertyType ?? "");
   const [name, setName] = useState(property?.name ?? "");
   const [cents, setCents] = useState(property?.cents ?? "");
@@ -85,14 +82,8 @@ const PropertyAddEditScreen = ({ initial }: Props) => {
   const showsArea = hasArea(propertyType);
   const totals = paymentTotals({ totalAmount, entries });
 
-  const selectPerson = (id: string, personLabel: string) => {
-    setPersonId(id);
-    setPersonName(personLabel);
-  };
-
   /** Returns an error message, or null when the form is good to submit. */
   const validationError = () => {
-    if (!personId) return "Choose who this property belongs to.";
     if (!propertyType) return "Choose a property type.";
     if (!name.trim()) return "Give the property a name.";
     if (paymentMode !== "full" && !isValidAmount(totalAmount)) {
@@ -105,8 +96,6 @@ const PropertyAddEditScreen = ({ initial }: Props) => {
   };
 
   const buildPayload = () => ({
-    personId,
-    personName,
     propertyType,
     name: name.trim(),
     // A car has no area. Clear it rather than keeping a stale figure from a
@@ -206,13 +195,6 @@ const PropertyAddEditScreen = ({ initial }: Props) => {
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Property</Text>
-
-        <PersonPicker
-          selectedId={personId}
-          selectedName={personName}
-          onSelect={selectPerson}
-          autoSelectSelf={pageMode === "Add"}
-        />
 
         <SearchableSelect
           label="Type"

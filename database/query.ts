@@ -50,6 +50,8 @@ import type {
 import type {
   EarningInput,
   EarningModel,
+  EarningTypeInput,
+  EarningTypeModel,
   LedgerClientInput,
   LedgerClientModel,
   SavingInput,
@@ -62,30 +64,37 @@ import type {
   ExpenseTypeInput,
   ExpenseTypeModel,
 } from "../src/models/ExpenseModel";
-import type { FixedDepositModel } from "../src/models/FixedDepositModel";
+import type { AccountInput, AccountModel } from "../src/models/AccountModel";
 import type { LoginUserModel, UserRole } from "../src/models/LoginUserModel";
 import type { FamilyInput, FamilyModel } from "../src/models/FamilyModel";
 import { normalizeFamilyCode } from "../src/models/FamilyModel";
 import type {
   Attachment,
-  ModuleKey,
+  Avatar,
+  FeatureKey,
   Owned,
   Visibility,
 } from "../src/models/common";
-import { DEFAULT_VISIBILITY, canView, canEdit } from "../src/models/common";
+import {
+  DEFAULT_VISIBILITY,
+  canView,
+  canEdit,
+  normalizeAccess,
+} from "../src/models/common";
 import supabase, { callAuth } from "./client";
 
 const FAMILIES = "families";
 const FAMILY_SETTINGS = "family_settings";
 const LOGIN_USERS = "login_users";
 const BANKS = "banks";
-const FIXED_DEPOSIT = "fixed_deposits";
+const ACCOUNTS = "accounts";
 const GOVERNMENT_DOCUMENTS = "government_documents";
 const BANK_DOCUMENTS = "bank_documents";
 const ORNAMENTS = "ornaments";
 const PROPERTIES = "properties";
 const VEHICLES = "vehicles";
 const LEDGER_CLIENTS = "ledger_clients";
+const EARNING_TYPES_TABLE = "earning_types";
 const LEDGER_EARNINGS = "ledger_earnings";
 const LEDGER_SAVINGS = "ledger_savings";
 const EXPENSES = "expenses";
@@ -93,6 +102,12 @@ const EXPENSE_TYPES = "expense_types";
 
 /** The Storage bucket holding every attachment, across all modules. */
 const ATTACHMENT_BUCKET = "documents";
+
+/**
+ * Profile pictures. Public, unlike `documents`: avatars render on nearly every
+ * screen, so a public URL avoids signing (and refreshing) a link per render.
+ */
+const AVATAR_BUCKET = "avatars";
 
 /**
  * How long a signed file URL stays good — short enough that a leaked link is
@@ -186,10 +201,13 @@ const PROMOTED: Record<string, Record<string, Promoted>> = {
     amount: { column: "amount", kind: "number" },
     date: { column: "entry_date", kind: "date" },
     clientId: { column: "client_id", kind: "text" },
+    accountId: { column: "account_id", kind: "text" },
   },
-  fixed_deposits: {
-    amount: { column: "amount", kind: "number" },
+  accounts: {
+    balance: { column: "balance", kind: "number" },
+    accountType: { column: "account_type", kind: "text" },
     bankId: { column: "bank_id", kind: "text" },
+    balanceAsOf: { column: "balance_as_of", kind: "date" },
     depositedDate: { column: "deposited_on", kind: "date" },
     maturityDate: { column: "matures_on", kind: "date" },
     interest: { column: "interest", kind: "number" },
@@ -672,7 +690,8 @@ const toLoginUser = (row: LoginUserRow): LoginUserModel =>
     familyId: row.family_id,
     username: row.username,
     role: (row.data.role ?? "member") as UserRole,
-    moduleAccess: (row.data.moduleAccess ?? []) as ModuleKey[],
+    // Upgrade any legacy coarse module keys to leaf feature keys at the boundary.
+    moduleAccess: normalizeAccess(row.data.moduleAccess as string[] | undefined),
   } as LoginUserModel);
 
 /**
@@ -812,6 +831,66 @@ export const changeOwnPassword = async (
   }
 };
 
+/* ------------------------------------------------------------------ *
+ * Profile picture
+ *
+ * Two calls, like attachments: upload the bytes, then record the path. The
+ * upload goes straight to the public `avatars` bucket (the client may write
+ * under its own uid folder — see the avatars policies in schema.sql), but the
+ * *path* has to be stored on the `login_users` row, which has no client write
+ * policy — so `setOwnAvatar` goes through the auth Edge Function's self-only
+ * `update-avatar` action, the same route `changeOwnPassword`'s cousins take.
+ * ------------------------------------------------------------------ */
+
+/** The public URL for an avatar path. Derived, not stored — the bucket is
+ * public, so this needs no signing and never expires. */
+export const avatarUrl = (path: string): string =>
+  supabase.storage.from(AVATAR_BUCKET).getPublicUrl(path).data.publicUrl;
+
+/**
+ * Uploads a picked image as the signed-in member's avatar and returns its path.
+ * Named `{userId}/{id}.{ext}`: the uid folder is the boundary the avatars
+ * policies key off, and a fresh id per upload means a new URL each time, so a
+ * changed picture is never masked by a cached copy of the old one at the same
+ * URL. The caller stores the path with `setOwnAvatar` and clears the old object
+ * with `removeAvatarObject`.
+ */
+export const uploadOwnAvatar = async (file: StagedFile): Promise<Avatar> => {
+  const { userId } = requireScope();
+  const path = `${userId}/${newId()}.${fileExtension(file.name, file.mime)}`;
+
+  const { error } = await supabase.storage
+    .from(AVATAR_BUCKET)
+    .upload(path, await readFileBytes(file.uri), { contentType: file.mime });
+
+  if (error) {
+    throw new Error(`Couldn't upload your picture: ${error.message}`);
+  }
+  return { path };
+};
+
+/**
+ * Records (or clears, with null) the signed-in member's avatar on their own
+ * `login_users` row. Server-side and self-only: `login_users` has no client
+ * update policy, so this cannot be a plain table write from the device.
+ */
+export const setOwnAvatar = async (avatar: Avatar | null): Promise<void> => {
+  const { userId } = requireScope();
+  await callAuth("update-avatar", { userId, avatar });
+};
+
+/**
+ * Best-effort removal of a superseded avatar object. Swallowed like
+ * `deleteAttachments`: the row already points at the new picture (or none), so
+ * a leftover object is a harmless orphan, not something the user can act on.
+ */
+export const removeAvatarObject = async (path: string): Promise<void> => {
+  const { error } = await supabase.storage.from(AVATAR_BUCKET).remove([path]);
+  if (error) {
+    console.log("Couldn't remove old avatar object", error.message);
+  }
+};
+
 /** Ends the Supabase session. The app's own session lives in `AuthContext`. */
 export const signOut = async () => {
   await supabase.auth.signOut();
@@ -856,7 +935,7 @@ export type CreateUserInput = {
   username: string;
   name?: string;
   role: UserRole;
-  moduleAccess: ModuleKey[];
+  moduleAccess: FeatureKey[];
   password: string;
 };
 
@@ -924,26 +1003,14 @@ export const updateBank = (refId: string, input: BankInput) =>
 
 export const deleteBank = (id: string) => deleteRecord(BANKS, id);
 
-export const getFixedDeposit = () => listScoped<FixedDepositModel>(FIXED_DEPOSIT);
+export const getAccounts = () => listScoped<AccountModel>(ACCOUNTS);
 
-export type FixedDepositInput = {
-  bankId: string;
-  depositorName: string;
-  amount: string;
-  interest: string;
-  interestPercentage: string;
-  depositedDate: string;
-  maturityDate: string;
-  visibility?: Visibility;
-};
+export const addAccount = (input: AccountInput) => saveScoped(ACCOUNTS, input);
 
-export const addFixedDeposit = (input: FixedDepositInput) =>
-  saveScoped(FIXED_DEPOSIT, input);
+export const updateAccount = (refId: string, input: AccountInput) =>
+  saveScoped(ACCOUNTS, input, refId);
 
-export const updateFixedDeposit = (refId: string, input: FixedDepositInput) =>
-  saveScoped(FIXED_DEPOSIT, input, refId);
-
-export const deleteFixedDeposit = (id: string) => deleteRecord(FIXED_DEPOSIT, id);
+export const deleteAccount = (id: string) => deleteRecord(ACCOUNTS, id);
 
 export const getGovernmentDocuments = () =>
   listScoped<GovernmentDocumentModel>(GOVERNMENT_DOCUMENTS);
@@ -1035,6 +1102,18 @@ export const updateLedgerClient = (refId: string, input: LedgerClientInput) =>
 
 export const deleteLedgerClient = (id: string) =>
   deleteRecord(LEDGER_CLIENTS, id);
+
+export const getEarningTypes = () =>
+  listScoped<EarningTypeModel>(EARNING_TYPES_TABLE);
+
+export const addEarningType = (input: EarningTypeInput) =>
+  saveScoped(EARNING_TYPES_TABLE, input);
+
+export const updateEarningType = (refId: string, input: EarningTypeInput) =>
+  saveScoped(EARNING_TYPES_TABLE, input, refId);
+
+export const deleteEarningType = (id: string) =>
+  deleteRecord(EARNING_TYPES_TABLE, id);
 
 export const getEarnings = () => listScoped<EarningModel>(LEDGER_EARNINGS);
 

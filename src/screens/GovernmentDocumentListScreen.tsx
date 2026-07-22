@@ -1,12 +1,12 @@
 import React, { useMemo } from "react";
 import AttachmentSection from "../components/AttachmentSection";
 import GroupedList from "../components/GroupedList";
-import { useCollectionState } from "../redux/hooks";
+import { useCollectionState, useOwnerName } from "../redux/hooks";
 import GroupedRow from "../components/GroupedRow";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { GovernmentDocumentModel } from "../models/DocumentModel";
-import { groupByPerson, groupDigits } from "../utils/documents";
+import { groupByOwner, groupDigits } from "../utils/documents";
 import { useRouter } from "expo-router";
 
 const GovernmentDocumentListScreen = () => {
@@ -15,8 +15,12 @@ const GovernmentDocumentListScreen = () => {
   const { user } = useAuth();
   const { items, ...list } =
     useCollectionState<GovernmentDocumentModel>("governmentDocuments");
+  const nameOf = useOwnerName();
 
-  const sections = useMemo(() => groupByPerson(items, user), [items, user]);
+  const sections = useMemo(
+    () => groupByOwner(items, user, nameOf),
+    [items, user, nameOf]
+  );
 
   const navigateAddEdit = (data: GovernmentDocumentModel | null) => {
     router.push(

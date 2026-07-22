@@ -360,6 +360,53 @@ const actions: Record<
     return json({ ok: true });
   },
 
+  /**
+   * A member setting (or clearing, with a null avatar) their OWN profile
+   * picture. Self-only — unlike `update-member` this needs no admin, because it
+   * touches nothing but the caller's own picture. It exists as an Edge Function
+   * purely because `login_users` has no client write policy; the image bytes
+   * were already uploaded straight to the public `avatars` bucket by the client.
+   */
+  "update-avatar": async ({ userId, avatar }, request) => {
+    if (typeof userId !== "string") return fail("userId is required");
+
+    const caller = await callerOf(request);
+    if (!caller) return fail("Not signed in.", 401);
+    if (caller.userId !== userId) {
+      return fail("You can only change your own picture.", 403);
+    }
+
+    const { data: target, error: findError } = await db
+      .from("login_users")
+      .select("*")
+      .eq("id", userId)
+      .maybeSingle();
+    if (findError) return fail(findError.message, 500);
+    if (!target) return fail("User not found.", 404);
+
+    let nextAvatar: { path: string } | null = null;
+    if (avatar && typeof avatar === "object") {
+      const path = (avatar as { path?: unknown }).path;
+      // Avatars live under the member's own uid folder; reject anything else so
+      // a member can't point their row at someone else's object.
+      if (typeof path !== "string" || !path.startsWith(`${userId}/`)) {
+        return fail("Invalid avatar path.", 400);
+      }
+      nextAvatar = { path };
+    }
+
+    const data = { ...target.data };
+    if (nextAvatar) data.avatar = nextAvatar;
+    else delete data.avatar;
+
+    const { error } = await db
+      .from("login_users")
+      .update({ data })
+      .eq("id", userId);
+    if (error) return fail(error.message, 500);
+    return json({ ok: true });
+  },
+
   "delete-member": async ({ userId }, request) => {
     if (typeof userId !== "string") return fail("userId is required");
     const { data: target, error: findError } = await db

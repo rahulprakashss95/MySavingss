@@ -1,11 +1,11 @@
 import React, { useMemo } from "react";
 import GroupedList from "../components/GroupedList";
-import { useCollectionState } from "../redux/hooks";
+import { useCollectionState, useOwnerName } from "../redux/hooks";
 import GroupedRow from "../components/GroupedRow";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { BankDocumentModel } from "../models/DocumentModel";
-import { groupByPerson, groupDigits } from "../utils/documents";
+import { groupByOwner, groupDigits } from "../utils/documents";
 import { useRouter } from "expo-router";
 
 const BankDocumentListScreen = () => {
@@ -14,8 +14,12 @@ const BankDocumentListScreen = () => {
   const { user } = useAuth();
   const { items, ...list } =
     useCollectionState<BankDocumentModel>("bankDocuments");
+  const nameOf = useOwnerName();
 
-  const sections = useMemo(() => groupByPerson(items, user), [items, user]);
+  const sections = useMemo(
+    () => groupByOwner(items, user, nameOf),
+    [items, user, nameOf]
+  );
 
   const navigateAddEdit = (data: BankDocumentModel | null) => {
     router.push(

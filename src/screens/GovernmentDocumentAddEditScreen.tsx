@@ -15,7 +15,6 @@ import {
 import AttachmentField, { useAttachments } from "../components/AttachmentField";
 import Button from "../components/Button";
 import Loader from "../components/Loader";
-import PersonPicker from "../components/PersonPicker";
 import SearchableSelect from "../components/SearchableSelect";
 import ReadOnlyBanner from "../components/ReadOnlyBanner";
 import ReadOnlyGuard from "../components/ReadOnlyGuard";
@@ -42,8 +41,6 @@ const GovernmentDocumentAddEditScreen = ({ initial }: Props) => {
   const document = initial;
   const pageMode = document ? "Edit" : "Add";
 
-  const [personId, setPersonId] = useState(document?.personId ?? "");
-  const [personName, setPersonName] = useState(document?.personName ?? "");
   const [documentType, setDocumentType] = useState(document?.documentType ?? "");
   const [documentNumber, setDocumentNumber] = useState(
     document?.documentNumber ?? ""
@@ -63,14 +60,8 @@ const GovernmentDocumentAddEditScreen = ({ initial }: Props) => {
   // Public records are viewable family-wide but editable only by their owner.
   const readOnly = pageMode === "Edit" && !canEdit(document!, user?.id);
 
-  const selectPerson = (id: string, name: string) => {
-    setPersonId(id);
-    setPersonName(name);
-  };
-
   /** Returns an error message, or null when the form is good to submit. */
   const validationError = () => {
-    if (!personId) return "Choose who this document belongs to.";
     if (!documentType) return "Choose a document type.";
     if (!documentNumber.trim()) return "Enter the document number.";
     return null;
@@ -90,8 +81,6 @@ const GovernmentDocumentAddEditScreen = ({ initial }: Props) => {
       const files = await attachments.commit();
 
       const payload = {
-        personId,
-        personName,
         documentType,
         documentNumber: documentNumber.trim(),
         description: description.trim(),
@@ -155,13 +144,6 @@ const GovernmentDocumentAddEditScreen = ({ initial }: Props) => {
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Document</Text>
 
-        <PersonPicker
-          selectedId={personId}
-          selectedName={personName}
-          onSelect={selectPerson}
-          autoSelectSelf={pageMode === "Add"}
-        />
-
         <SearchableSelect
           label="Type"
           placeholder="Select a document type"
@@ -191,6 +173,7 @@ const GovernmentDocumentAddEditScreen = ({ initial }: Props) => {
           drafts={attachments.drafts}
           onChange={attachments.setDrafts}
           readOnly={readOnly}
+          module="governmentDocuments"
         />
       </View>
 

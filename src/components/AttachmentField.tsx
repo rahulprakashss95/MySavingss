@@ -18,9 +18,11 @@ import {
 } from "../../database/query";
 import { useTheme } from "../context/ThemeContext";
 import {
-  ATTACHMENT_MAX_BYTES,
   ATTACHMENT_MAX_PER_RECORD,
   Attachment,
+  DEFAULT_UPLOAD_MAX_BYTES,
+  UPLOAD_MAX_BYTES,
+  UploadModule,
   formatFileSize,
   isImageAttachment,
 } from "../models/common";
@@ -118,6 +120,11 @@ type Props = {
   readOnly?: boolean;
   /** Section heading. Defaults to "Attachments". */
   label?: string;
+  /**
+   * Which module this field belongs to, used to pick the size cap from
+   * `UPLOAD_MAX_BYTES`. Omit to fall back to `DEFAULT_UPLOAD_MAX_BYTES`.
+   */
+  module?: UploadModule;
 };
 
 /**
@@ -125,7 +132,7 @@ type Props = {
  * tap-to-view preview. Deliberately generic — it knows nothing about government
  * documents — so ornaments, properties, deposits and banks can reuse it as-is.
  */
-const AttachmentField = ({ drafts, onChange, readOnly, label }: Props) => {
+const AttachmentField = ({ drafts, onChange, readOnly, label, module }: Props) => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -135,6 +142,7 @@ const AttachmentField = ({ drafts, onChange, readOnly, label }: Props) => {
   const files = useMemo(() => drafts.map(draftToFile), [drafts]);
   const previewUrls = useAttachmentUrls(files);
 
+  const maxBytes = module ? UPLOAD_MAX_BYTES[module] : DEFAULT_UPLOAD_MAX_BYTES;
   const atLimit = drafts.length >= ATTACHMENT_MAX_PER_RECORD;
 
   const add = (file: StagedFile) => {
@@ -147,12 +155,12 @@ const AttachmentField = ({ drafts, onChange, readOnly, label }: Props) => {
       );
       return;
     }
-    if (file.size > ATTACHMENT_MAX_BYTES) {
+    if (file.size > maxBytes) {
       showToast(
         "error",
         "File too large",
         `${file.name} is ${formatFileSize(file.size)}. The limit is ${formatFileSize(
-          ATTACHMENT_MAX_BYTES
+          maxBytes
         )}.`,
         "bottom"
       );

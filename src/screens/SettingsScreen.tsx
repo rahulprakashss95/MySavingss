@@ -1,7 +1,16 @@
 import React, { useMemo } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import Card from "../components/Card";
+import { usePasscode } from "../context/PasscodeContext";
 import { ThemeMode, useTheme } from "../context/ThemeContext";
 import { ThemeColors } from "../utils/Color";
 
@@ -33,13 +42,46 @@ const THEME_OPTIONS: {
 
 const SettingsScreen = () => {
   const { mode, setMode, colors } = useTheme();
+  const { isEnabled: passcodeEnabled } = usePasscode();
+  const router = useRouter();
   const styles = useMemo(() => createStyles(colors), [colors]);
+
+  // Both turning it on and off route through the passcode screen: on collects a
+  // new code, off confirms the current one before clearing it.
+  const handleTogglePasscode = (next: boolean) => {
+    router.push(
+      next ? "/settings/passcode" : "/settings/passcode?mode=disable"
+    );
+  };
 
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
     >
+      <Text style={styles.sectionTitle}>Security</Text>
+      <Card customStyle={styles.card}>
+        <View style={styles.row}>
+          <Ionicons
+            name="lock-closed-outline"
+            size={22}
+            color={passcodeEnabled ? colors.primary : colors.textMuted}
+          />
+          <View style={styles.rowText}>
+            <Text style={styles.rowLabel}>App passcode</Text>
+            <Text style={styles.rowDescription}>
+              Require a 4-digit passcode when the app opens
+            </Text>
+          </View>
+          <Switch
+            value={passcodeEnabled}
+            onValueChange={handleTogglePasscode}
+            trackColor={{ false: colors.border, true: colors.primary }}
+            thumbColor={colors.card}
+          />
+        </View>
+      </Card>
+
       <Text style={styles.sectionTitle}>Appearance</Text>
       <Card customStyle={styles.card}>
         {THEME_OPTIONS.map((option, index) => {

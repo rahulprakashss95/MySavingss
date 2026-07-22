@@ -28,54 +28,60 @@ const initialsOf = (name: string) => {
   return (words[0][0] + words[1][0]).toUpperCase();
 };
 
-const BankScreen = () => {
+/**
+ * The directory of banks / finance companies / institutions money sits with.
+ * Add, edit and remove them here; the account form's institution picker draws
+ * from the same list (and can add to it inline).
+ */
+const InstitutionListScreen = () => {
   const router = useRouter();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  // Served from the store: fetched once and kept in sync as banks are
+  // Served from the store: fetched once and kept in sync as institutions are
   // added/edited/deleted, so returning here doesn't re-read the database.
   const banks = useCollectionState<BankModel>("banks");
   const { hasLoaded, isRefreshing, onRefresh } = banks;
 
-  const bankList = useMemo(
+  const list = useMemo(
     () => [...banks.items].sort((a, b) => a.name.localeCompare(b.name)),
     [banks.items]
   );
 
-  const openBank = (bank: BankModel | null) =>
-    router.push(bank ? `/deposits/banks/${bank.id}` : "/deposits/banks/new");
+  const open = (bank: BankModel | null) =>
+    router.push(
+      bank
+        ? `/assets/accounts/institutions/${bank.id}`
+        : "/assets/accounts/institutions/new"
+    );
 
   const renderHeader = () => {
-    if (!bankList.length) {
+    if (!list.length) {
       return null;
     }
     return (
       <Text style={styles.summary}>
-        {bankList.length} {bankList.length === 1 ? "bank" : "banks"}
+        {list.length} {list.length === 1 ? "institution" : "institutions"}
       </Text>
     );
   };
 
-  // Only reached once the first fetch has resolved — see the skeleton guard below.
-  const renderEmpty = () => {
-    return (
-      <View style={styles.empty}>
-        <Ionicons name="business-outline" size={44} color={colors.textMuted} />
-        <Text style={styles.emptyTitle}>No banks yet</Text>
-        <Text style={styles.emptyBody}>
-          Banks you add will appear here and in the deposit form.
-        </Text>
-      </View>
-    );
-  };
+  const renderEmpty = () => (
+    <View style={styles.empty}>
+      <Ionicons name="business-outline" size={44} color={colors.textMuted} />
+      <Text style={styles.emptyTitle}>No institutions yet</Text>
+      <Text style={styles.emptyBody}>
+        Banks, finance companies and other institutions you add appear here and
+        in the account form.
+      </Text>
+    </View>
+  );
 
-  const renderBank = ({ item }: { item: BankModel }) => {
+  const renderItem = ({ item }: { item: BankModel }) => {
     const numbers = bankMobileNumbers(item.mobile);
-
     return (
       <Pressable
-        onPress={() => openBank(item)}
+        onPress={() => open(item)}
         accessibilityRole="button"
         style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
       >
@@ -108,18 +114,12 @@ const BankScreen = () => {
             )}
           </View>
 
-          <Ionicons
-            name="chevron-forward"
-            size={18}
-            color={colors.textMuted}
-          />
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
         </View>
       </Pressable>
     );
   };
 
-  // Only the first fetch gets a skeleton; pull-to-refresh keeps the list on
-  // screen rather than flashing placeholders over data we already have.
   if (!hasLoaded) {
     return (
       <View style={styles.container}>
@@ -134,7 +134,7 @@ const BankScreen = () => {
     <View style={styles.container}>
       <FlatList
         contentContainerStyle={styles.listContent}
-        data={bankList}
+        data={list}
         keyExtractor={(item, index) => item.id ?? String(index)}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmpty}
@@ -145,11 +145,11 @@ const BankScreen = () => {
             tintColor={colors.textMuted}
           />
         }
-        renderItem={renderBank}
+        renderItem={renderItem}
       />
       <FloatingButton
-        accessibilityLabel="Add bank"
-        onPress={() => openBank(null)}
+        accessibilityLabel="Add institution"
+        onPress={() => open(null)}
       />
     </View>
   );
@@ -248,4 +248,4 @@ const createStyles = (colors: ThemeColors) =>
     },
   });
 
-export default BankScreen;
+export default InstitutionListScreen;

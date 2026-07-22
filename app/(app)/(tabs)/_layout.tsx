@@ -2,7 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Tabs } from "expo-router/js-tabs";
 import { useAuth } from "../../../src/context/AuthContext";
 import { useTheme } from "../../../src/context/ThemeContext";
-import type { ModuleKey } from "../../../src/models/common";
+import { canSeeModule, type ModuleKey } from "../../../src/models/common";
 
 type TabDef = {
   /** Route folder under (tabs). */
@@ -15,14 +15,14 @@ type TabDef = {
   module?: ModuleKey;
 };
 
-// Mirrors the iOS NativeTabs list — same modules, order, and glyphs.
+// Mirrors the iOS NativeTabs list — same modules, order, and glyphs. Deposits
+// now live inside Assets and Expenses inside Ledger, so both are gone as tabs.
 const TABS: TabDef[] = [
   { name: "home", label: "Home", icon: "home-outline", activeIcon: "home" },
-  { name: "deposits", label: "Deposits", icon: "card-outline", activeIcon: "card", module: "deposits" },
-  { name: "documents", label: "Documents", icon: "document-text-outline", activeIcon: "document-text", module: "documents" },
-  { name: "assets", label: "Assets", icon: "cube-outline", activeIcon: "cube", module: "assets" },
   { name: "ledger", label: "Ledger", icon: "book-outline", activeIcon: "book", module: "ledger" },
-  { name: "expenses", label: "Expenses", icon: "receipt-outline", activeIcon: "receipt", module: "expenses" },
+  { name: "assets", label: "Assets", icon: "cube-outline", activeIcon: "cube", module: "assets" },
+  { name: "documents", label: "Documents", icon: "document-text-outline", activeIcon: "document-text", module: "documents" },
+  { name: "settings", label: "Settings", icon: "settings-outline", activeIcon: "settings" },
 ];
 
 /**
@@ -39,9 +39,8 @@ const TABS: TabDef[] = [
 export default function TabsLayout() {
   const { colors } = useTheme();
   const { user } = useAuth();
-  const isAdmin = user?.role === "admin";
-  const canSee = (module?: ModuleKey) =>
-    !module || isAdmin || !!user?.moduleAccess?.includes(module);
+  // A tab shows when the member holds any tile inside its module (admins: all).
+  const canSee = (module?: ModuleKey) => !module || canSeeModule(user, module);
 
   return (
     <Tabs

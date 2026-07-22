@@ -32,6 +32,7 @@ export const toSession = (
   familyCode: family.code,
   role: stored.role ?? "member",
   moduleAccess: stored.moduleAccess ?? [],
+  avatar: stored.avatar,
 });
 
 /**

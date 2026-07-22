@@ -267,27 +267,33 @@ export const ornamentTotals = (
   };
 };
 
-export type HolderTotal = { personName: string; grams: number; value: number };
+export type HolderTotal = { name: string; grams: number; value: number };
 
-/** Who holds what, by value — the second question after "how much do we have". */
+/**
+ * Who holds what, by value — the second question after "how much do we have".
+ * Grouped by the owning member (`ownerId`), whose name is resolved via `nameOf`
+ * (see `useOwnerName`); records with no resolvable owner fall under "Unassigned".
+ */
 export const ornamentsByHolder = (
   ornaments: OrnamentModel[],
-  rates: MetalRates
+  rates: MetalRates,
+  nameOf: (ownerId: string) => string
 ): HolderTotal[] => {
-  const byPerson = new Map<string, HolderTotal>();
+  const byOwner = new Map<string, HolderTotal>();
 
   ornaments.forEach((ornament) => {
-    const personName = ornament.personName || "Unassigned";
+    const key = ornament.ownerId || "";
+    const name = nameOf(key) || "Unassigned";
     const grams = Number(ornament.grams) || 0;
     const value = grams * ratePerGram(ornament, rates);
 
-    const existing = byPerson.get(personName) ?? { personName, grams: 0, value: 0 };
+    const existing = byOwner.get(key) ?? { name, grams: 0, value: 0 };
     existing.grams += grams;
     existing.value += value;
-    byPerson.set(personName, existing);
+    byOwner.set(key, existing);
   });
 
-  return [...byPerson.values()].sort((a, b) => b.value - a.value || b.grams - a.grams);
+  return [...byOwner.values()].sort((a, b) => b.value - a.value || b.grams - a.grams);
 };
 
 export type PropertyPortfolio = {

@@ -1,28 +1,20 @@
 import { useRouter } from "expo-router";
 import React from "react";
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
 import { useAuth } from "../context/AuthContext";
-import { useTheme } from "../context/ThemeContext";
-import { displayNameOf } from "../models/LoginUserModel";
-import { tint } from "../utils/Color";
+import Avatar from "./Avatar";
 
 /**
- * Header avatar that opens the signed-in member's profile.
- *
- * Initials rather than a photo: accounts have no picture — an admin creates
- * members from a username, and there is nowhere to upload one. The same letter
- * the drawer header and the admin roster already show.
+ * Header avatar that opens the signed-in member's profile. Shows the member's
+ * profile picture, or their initial when they haven't set one — see `Avatar`.
  */
 const ProfileButton = () => {
   const router = useRouter();
-  const { colors } = useTheme();
   const { user } = useAuth();
 
   if (!user) {
     return null;
   }
-
-  const initial = displayNameOf(user).trim().charAt(0).toUpperCase() || "?";
 
   return (
     <Pressable
@@ -30,30 +22,17 @@ const ProfileButton = () => {
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel="Open your profile"
-      style={({ pressed }) => [
-        styles.avatar,
-        { backgroundColor: tint(colors.primary) },
-        pressed && styles.pressed,
-      ]}
+      style={({ pressed }) => [styles.button, pressed && styles.pressed]}
     >
-      <Text style={[styles.initial, { color: colors.primary }]}>{initial}</Text>
+      <Avatar user={user} size={32} fontSize={14} />
     </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
-  avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
+  button: {
     // Mirrors MenuButton's inset on the other side, so the two sit level.
     marginRight: 12,
-  },
-  initial: {
-    fontSize: 14,
-    fontWeight: "700",
   },
   pressed: {
     opacity: 0.6,

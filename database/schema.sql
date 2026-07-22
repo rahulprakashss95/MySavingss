@@ -122,14 +122,17 @@ create or replace function is_family_admin(target_family text) returns boolean
 $$;
 
 -- ---------------------------------------------------------------- --
--- The four measured tables
+-- The measured tables
 --
 -- DROPPED AND RECREATED: promoting a jsonb field to a typed column changes the
--- row shape, and these tables are new enough to have nothing worth keeping. If
--- you have rows here you care about, export them before running this.
+-- row shape, and these three (expenses, ledger_earnings, ledger_savings) are new
+-- enough to have nothing worth keeping. If you have rows here you care about,
+-- export them before running this. The fourth measured table, `accounts`
+-- (defined further down), is the exception — it holds hand-maintained balances
+-- and is `create ... if not exists`, never dropped.
 --
--- `owner_id`, `type_id`, `client_id` and `bank_id` are deliberately NOT foreign
--- keys — see the note under the small tables below.
+-- `owner_id`, `type_id`, `client_id`, `account_id` and `bank_id` are
+-- deliberately NOT foreign keys — see the note under the small tables below.
 -- ---------------------------------------------------------------- --
 
 drop table if exists expenses cascade;
@@ -180,35 +183,75 @@ create table ledger_savings (
   amount     numeric not null,
   entry_date date,
   client_id  text,
-  -- clientName, comments
+  -- `accounts` row id: where this saving went. `data.accountName` denormalised
+  -- alongside it. Replaces the (now unused) client link for savings.
+  account_id text,
+  -- clientName, accountName, comments
   data       jsonb not null default '{}'::jsonb
 );
 create index ledger_savings_family_id_idx on ledger_savings (family_id);
 create index ledger_savings_family_date_idx
   on ledger_savings (family_id, entry_date desc);
 
-drop table if exists fixed_deposits cascade;
-create table fixed_deposits (
+-- ---------------------------------------------------------------- --
+-- Accounts — the balance layer of net worth
+--
+-- One table for every place money sits: a Fixed/Recurring Deposit, a plain bank
+-- balance, money with a financier, or cash — distinguished by `account_type`.
+-- This replaces the old `fixed_deposits` table; an FD is now just
+-- `account_type = 'Fixed Deposit'`.
+--
+-- Unlike the other measured tables this is `create ... if not exists` and is
+-- NOT dropped on re-run: it holds balances the user maintains by hand (and the
+-- migrated FDs), which there is no way to reconstruct. `balance` is that
+-- snapshot — the number overviews sum. The deposit-only columns
+-- (deposited_on / matures_on / interest*) are null for a savings account.
+-- ---------------------------------------------------------------- --
+
+create table if not exists accounts (
   id                  text primary key,
   family_id           text not null references families (id) on delete cascade,
   owner_id            text not null,
   visibility          text not null default 'private'
                       check (visibility in ('private', 'public')),
-  amount              numeric not null,
-  -- `banks` row id
+  -- one of ACCOUNT_TYPES in AccountModel.ts
+  account_type        text,
+  -- the current balance, the figure net worth sums
+  balance             numeric not null,
+  balance_as_of       date,
+  -- `banks` row id when it sits with a directory bank; else null
   bank_id             text,
+  -- deposit-only, null otherwise
   deposited_on        date,
   matures_on          date,
-  -- optional: the form allows these to be left blank
   interest            numeric,
   interest_percentage numeric,
-  -- depositorName
+  -- name, institution, principal
   data                jsonb not null default '{}'::jsonb
 );
-create index fixed_deposits_family_id_idx on fixed_deposits (family_id);
-create index fixed_deposits_family_matures_idx
-  on fixed_deposits (family_id, matures_on);
-create index fixed_deposits_family_bank_idx on fixed_deposits (family_id, bank_id);
+create index if not exists accounts_family_id_idx on accounts (family_id);
+create index if not exists accounts_family_matures_idx
+  on accounts (family_id, matures_on);
+create index if not exists accounts_family_bank_idx on accounts (family_id, bank_id);
+
+-- One-time migration: fold any legacy fixed_deposits rows into accounts as the
+-- Fixed Deposit type, then retire the table. Guarded so re-runs (after the drop)
+-- are a no-op, and `on conflict do nothing` so a second run can't double-insert.
+do $$
+begin
+  if to_regclass('public.fixed_deposits') is not null then
+    insert into accounts (id, family_id, owner_id, visibility, account_type,
+      balance, bank_id, deposited_on, matures_on, interest, interest_percentage,
+      data)
+    select id, family_id, owner_id, visibility, 'Fixed Deposit',
+      amount, bank_id, deposited_on, matures_on, interest, interest_percentage,
+      data
+    from fixed_deposits
+    on conflict (id) do nothing;
+  end if;
+end $$;
+
+drop table if exists fixed_deposits cascade;
 
 -- ---------------------------------------------------------------- --
 -- The small jsonb-only tables
@@ -231,7 +274,8 @@ declare
 begin
   foreach t in array array[
     'banks', 'government_documents', 'bank_documents',
-    'ornaments', 'properties', 'vehicles', 'ledger_clients', 'expense_types'
+    'ornaments', 'properties', 'vehicles', 'ledger_clients',
+    'earning_types', 'expense_types'
   ]
   loop
     execute format($fmt$
@@ -262,9 +306,9 @@ declare
   t text;
 begin
   foreach t in array array[
-    'banks', 'fixed_deposits', 'government_documents', 'bank_documents',
+    'banks', 'accounts', 'government_documents', 'bank_documents',
     'ornaments', 'properties', 'vehicles', 'ledger_clients', 'ledger_earnings',
-    'ledger_savings', 'expenses', 'expense_types'
+    'ledger_savings', 'expenses', 'earning_types', 'expense_types'
   ]
   loop
     execute format('alter table %I enable row level security;', t);
@@ -369,12 +413,30 @@ create policy family_settings_all on family_settings for all to authenticated
 -- can only mint for paths the policies below already let it read.
 --
 -- The limits are enforced here rather than only in the picker, because the
--- picker is client code and this is not. 10 MB fits a phone photo of an ID or a
--- multi-page PDF scan with room to spare.
+-- picker is client code and this is not. 2 MB is the per-module cap the client
+-- applies (see `UPLOAD_MAX_BYTES` in src/models/common.ts); this is the shared
+-- backstop for every `documents`-bucket module, so it must be at least the
+-- largest value there.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
-  'documents', 'documents', false, 10485760,
+  'documents', 'documents', false, 2097152,
   array['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'application/pdf']
+)
+on conflict (id) do update set
+  public             = excluded.public,
+  file_size_limit    = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+-- Profile pictures. A separate, PUBLIC bucket: avatars show in every header, the
+-- drawer and the admin roster, so a private bucket would mean minting and
+-- refreshing a signed URL on nearly every render. The trade-off is that anyone
+-- holding an object URL can view it — acceptable for a face photo, not for the
+-- IDs in `documents`. Images only (no PDF), capped at 2 MB to match
+-- `UPLOAD_MAX_BYTES.profilePicture`.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'avatars', 'avatars', true, 2097152,
+  array['image/jpeg', 'image/png', 'image/webp', 'image/heic']
 )
 on conflict (id) do update set
   public             = excluded.public,
@@ -430,5 +492,43 @@ create policy documents_delete on storage.objects for delete to authenticated
   using (
     bucket_id = 'documents'
     and (storage.foldername(name))[1] = jwt_family_id()
+    and owner = auth.uid()
+  );
+
+-- Avatars. Paths are `{user_id}/{id}.{ext}`, so the first folder segment is the
+-- owning member's auth.uid() — a member may only write files under their own
+-- folder, which is what stops one member replacing another's picture. The
+-- bucket is public, so reads go through the public object route and need no
+-- select policy of their own; these three govern writes only.
+--
+-- Note the difference from `documents`: the boundary here is the *user*, not the
+-- family, because a picture belongs to one member and every member edits only
+-- their own.
+drop policy if exists avatars_insert on storage.objects;
+create policy avatars_insert on storage.objects for insert to authenticated
+  with check (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = jwt_user_id()
+    and owner = auth.uid()
+  );
+
+drop policy if exists avatars_update on storage.objects;
+create policy avatars_update on storage.objects for update to authenticated
+  using (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = jwt_user_id()
+    and owner = auth.uid()
+  )
+  with check (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = jwt_user_id()
+    and owner = auth.uid()
+  );
+
+drop policy if exists avatars_delete on storage.objects;
+create policy avatars_delete on storage.objects for delete to authenticated
+  using (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = jwt_user_id()
     and owner = auth.uid()
   );

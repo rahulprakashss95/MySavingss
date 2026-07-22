@@ -15,7 +15,6 @@ import {
 } from "../../database/query";
 import Button from "../components/Button";
 import DatePicker from "../components/DatePicker";
-import LedgerClientPicker from "../components/LedgerClientPicker";
 import Loader from "../components/Loader";
 import ReadOnlyBanner from "../components/ReadOnlyBanner";
 import ReadOnlyGuard from "../components/ReadOnlyGuard";
@@ -41,8 +40,6 @@ const SavingAddEditScreen = ({ initial }: Props) => {
   const saving: SavingModel | null = initial;
   const pageMode = saving ? "Edit" : "Add";
 
-  const [clientId, setClientId] = useState(saving?.clientId ?? "");
-  const [clientName, setClientName] = useState(saving?.clientName ?? "");
   const [amount, setAmount] = useState(saving?.amount ?? "");
   const [date, setDate] = useState(saving?.date ?? moment().format(DATE_FORMAT));
   const [comments, setComments] = useState(saving?.comments ?? "");
@@ -59,14 +56,8 @@ const SavingAddEditScreen = ({ initial }: Props) => {
   // Public records are viewable family-wide but editable only by their owner.
   const readOnly = pageMode === "Edit" && !canEdit(saving!, user?.id);
 
-  const selectClient = (id: string, label: string) => {
-    setClientId(id);
-    setClientName(label);
-  };
-
   /** Returns an error message, or null when the form is good to submit. */
   const validationError = () => {
-    if (!clientId) return "Choose a client. Add one first if the list is empty.";
     if (!isValidAmount(amount)) return "Enter an amount.";
     if (!date) return "Pick a date.";
     return null;
@@ -81,8 +72,12 @@ const SavingAddEditScreen = ({ initial }: Props) => {
 
     setIsLoading(true);
     const payload = {
-      clientId,
-      clientName,
+      // Savings are a plain flow now — no client or account link. The fields
+      // stay on the shape for older rows, written blank.
+      accountId: "",
+      accountName: "",
+      clientId: "",
+      clientName: "",
       amount: amount.trim(),
       date,
       comments: comments.trim(),
@@ -136,12 +131,6 @@ const SavingAddEditScreen = ({ initial }: Props) => {
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Saving</Text>
-
-        <LedgerClientPicker
-          selectedId={clientId}
-          selectedName={clientName}
-          onSelect={selectClient}
-        />
 
         <Text style={styles.label}>Amount</Text>
         <View style={[styles.affixRow, styles.inputSpacing]}>

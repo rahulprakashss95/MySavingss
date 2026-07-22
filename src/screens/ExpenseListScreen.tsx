@@ -16,7 +16,7 @@ const ExpenseListScreen = () => {
   const sections = useMemo(() => groupByMonth(items), [items]);
 
   const navigateAddEdit = (data: ExpenseModel | null) => {
-    router.push(data ? `/expenses/list/${data.id}` : "/expenses/list/new");
+    router.push(data ? `/ledger/expenses/${data.id}` : "/ledger/expenses/new");
   };
 
   return (

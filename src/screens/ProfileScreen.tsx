@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
+import * as ImagePicker from "expo-image-picker";
 import React, { useMemo, useState } from "react";
 import {
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,13 +12,22 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { changeOwnPassword } from "../../database/query";
+import {
+  changeOwnPassword,
+  removeAvatarObject,
+  setOwnAvatar,
+  uploadOwnAvatar,
+  type StagedFile,
+} from "../../database/query";
+import Avatar from "../components/Avatar";
 import Button from "../components/Button";
+import ImageCropper from "../components/ImageCropper";
 import Card from "../components/Card";
 import { confirmSignOut } from "../components/HeaderActions";
 import Loader from "../components/Loader";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import { formatFileSize, UPLOAD_MAX_BYTES } from "../models/common";
 import { displayNameOf, isAdminRole } from "../models/LoginUserModel";
 import { ThemeColors, tint } from "../utils/Color";
 import { MIN_PASSWORD_LENGTH, validatePassword } from "../utils/passwordStrength";
@@ -32,9 +43,13 @@ import { showToast } from "../utils/Utils";
  */
 const ProfileScreen = () => {
   const { colors } = useTheme();
-  const { user, signOut } = useAuth();
+  const { user, signOut, updateSession } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [changingPassword, setChangingPassword] = useState(false);
+  const [pickingPhoto, setPickingPhoto] = useState(false);
+  const [savingPhoto, setSavingPhoto] = useState(false);
+  // Set on web only: the picked image waiting to be cropped before upload.
+  const [cropUri, setCropUri] = useState<string | null>(null);
 
   if (!user) {
     return null;
@@ -42,6 +57,122 @@ const ProfileScreen = () => {
 
   const name = displayNameOf(user);
   const isAdmin = isAdminRole(user.role);
+
+  /**
+   * Uploads a picked image as the new avatar, records it on the account, then
+   * drops the previous object. Order matters: the row must point at the new
+   * picture before the old one is deleted, so a failure never leaves the account
+   * naming a file that's already gone.
+   */
+  const applyPhoto = async (file: StagedFile) => {
+    if (file.size > UPLOAD_MAX_BYTES.profilePicture) {
+      showToast(
+        "error",
+        "Picture too large",
+        `That image is ${formatFileSize(file.size)}. The limit is ${formatFileSize(
+          UPLOAD_MAX_BYTES.profilePicture
+        )}.`,
+        "bottom"
+      );
+      return;
+    }
+    setSavingPhoto(true);
+    try {
+      const previous = user.avatar?.path;
+      const next = await uploadOwnAvatar(file);
+      await setOwnAvatar(next);
+      await updateSession({ avatar: next });
+      if (previous) {
+        await removeAvatarObject(previous);
+      }
+      showToast("success", "Picture updated", "", "bottom");
+    } catch (error) {
+      showToast("error", "Couldn't update picture", String(error), "bottom");
+    } finally {
+      setSavingPhoto(false);
+    }
+  };
+
+  /**
+   * Routes a picked image to the right cropper. On web the picker has no editor
+   * of its own, so we open our in-app cropper and upload its output; on iOS and
+   * Android `allowsEditing` already cropped, so it uploads straight away.
+   */
+  const handlePicked = (asset: ImagePicker.ImagePickerAsset) => {
+    if (Platform.OS === "web") {
+      setCropUri(asset.uri);
+      return;
+    }
+    applyPhoto({
+      uri: asset.uri,
+      name: asset.fileName || `avatar-${Date.now()}.jpg`,
+      mime: asset.mimeType || "image/jpeg",
+      size: asset.fileSize ?? 0,
+    });
+  };
+
+  const chooseFromGallery = async () => {
+    setPickingPhoto(false);
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      // A square crop keeps the circular avatar from cutting a photo off oddly.
+      // Ignored on web (no OS editor) — our cropper handles that case.
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (result.canceled || !result.assets?.length) {
+      return;
+    }
+    handlePicked(result.assets[0]);
+  };
+
+  const takePhoto = async () => {
+    setPickingPhoto(false);
+    // Web needs no permission prompt and has no camera to launch into — the
+    // gallery/file chooser covers it there (this option is hidden on web).
+    if (Platform.OS !== "web") {
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permission.granted) {
+        showToast(
+          "error",
+          "Camera unavailable",
+          "Allow camera access in Settings to take a picture.",
+          "bottom"
+        );
+        return;
+      }
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (result.canceled || !result.assets?.length) {
+      return;
+    }
+    handlePicked(result.assets[0]);
+  };
+
+  const removePhoto = async () => {
+    setPickingPhoto(false);
+    if (!user.avatar) {
+      return;
+    }
+    setSavingPhoto(true);
+    try {
+      const previous = user.avatar.path;
+      await setOwnAvatar(null);
+      await updateSession({ avatar: undefined });
+      await removeAvatarObject(previous);
+      showToast("success", "Picture removed", "", "bottom");
+    } catch (error) {
+      showToast("error", "Couldn't remove picture", String(error), "bottom");
+    } finally {
+      setSavingPhoto(false);
+    }
+  };
 
   const copyFamilyId = async () => {
     if (!user.familyCode) {
@@ -52,11 +183,21 @@ const ProfileScreen = () => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <View style={styles.screen}>
+      <Loader loading={savingPhoto} />
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.identity}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{name.charAt(0).toUpperCase()}</Text>
-        </View>
+        <Pressable
+          onPress={() => setPickingPhoto(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Change your profile picture"
+          style={({ pressed }) => [styles.avatarWrap, pressed && styles.rowPressed]}
+        >
+          <Avatar user={user} size={72} fontSize={30} />
+          <View style={styles.avatarBadge}>
+            <Ionicons name="camera" size={13} color={colors.card} />
+          </View>
+        </Pressable>
         <Text style={styles.name}>{name}</Text>
         <View style={styles.identityMeta}>
           <Text style={styles.username}>@{user.username}</Text>
@@ -150,7 +291,105 @@ const ProfileScreen = () => {
         visible={changingPassword}
         onClose={() => setChangingPassword(false)}
       />
-    </ScrollView>
+
+      <PhotoSheet
+        visible={pickingPhoto}
+        hasPhoto={!!user.avatar}
+        onClose={() => setPickingPhoto(false)}
+        onTakePhoto={takePhoto}
+        onChooseFromGallery={chooseFromGallery}
+        onRemove={removePhoto}
+      />
+
+      <ImageCropper
+        visible={!!cropUri}
+        uri={cropUri}
+        onCancel={() => setCropUri(null)}
+        onCropped={(file) => {
+          setCropUri(null);
+          applyPhoto(file);
+        }}
+      />
+      </ScrollView>
+    </View>
+  );
+};
+
+/* ------------------------------------------------------------------ *
+ * Profile picture source chooser
+ * ------------------------------------------------------------------ */
+
+const PhotoSheet = ({
+  visible,
+  hasPhoto,
+  onClose,
+  onTakePhoto,
+  onChooseFromGallery,
+  onRemove,
+}: {
+  visible: boolean;
+  hasPhoto: boolean;
+  onClose: () => void;
+  onTakePhoto: () => void;
+  onChooseFromGallery: () => void;
+  onRemove: () => void;
+}) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
+  const options: {
+    icon: keyof typeof Ionicons.glyphMap;
+    label: string;
+    onPress: () => void;
+    destructive?: boolean;
+  }[] = [
+    // Web has no camera to launch into; the file chooser covers it there.
+    ...(Platform.OS === "web"
+      ? []
+      : [{ icon: "camera-outline" as const, label: "Take photo", onPress: onTakePhoto }]),
+    { icon: "images-outline", label: "Choose from gallery", onPress: onChooseFromGallery },
+    ...(hasPhoto
+      ? [
+          {
+            icon: "trash-outline" as const,
+            label: "Remove photo",
+            onPress: onRemove,
+            destructive: true,
+          },
+        ]
+      : []),
+  ];
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.sheetBackdrop}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <View style={styles.sheet}>
+          {options.map((option) => (
+            <Pressable
+              key={option.label}
+              style={styles.sheetRow}
+              onPress={option.onPress}
+              accessibilityRole="button"
+            >
+              <Ionicons
+                name={option.icon}
+                size={20}
+                color={option.destructive ? colors.negative : colors.primary}
+              />
+              <Text
+                style={[
+                  styles.sheetText,
+                  option.destructive && { color: colors.negative },
+                ]}
+              >
+                {option.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+    </Modal>
   );
 };
 
@@ -280,6 +519,10 @@ const ChangePasswordModal = ({
 
 const createStyles = (colors: ThemeColors) =>
   StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
     container: {
       flex: 1,
       backgroundColor: colors.background,
@@ -292,18 +535,23 @@ const createStyles = (colors: ThemeColors) =>
       alignItems: "center",
       paddingVertical: 20,
     },
-    avatar: {
-      width: 72,
-      height: 72,
-      borderRadius: 36,
+    avatarWrap: {
+      // Anchors the camera badge to the avatar's corner.
+      position: "relative",
+    },
+    avatarBadge: {
+      position: "absolute",
+      right: -2,
+      bottom: -2,
+      width: 26,
+      height: 26,
+      borderRadius: 13,
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: tint(colors.primary),
-    },
-    avatarText: {
-      fontSize: 30,
-      fontWeight: "700",
-      color: colors.primary,
+      backgroundColor: colors.primary,
+      // Sits the badge on the page background rather than flush against the photo.
+      borderWidth: 2,
+      borderColor: colors.background,
     },
     name: {
       fontSize: 20,
@@ -428,6 +676,29 @@ const createStyles = (colors: ThemeColors) =>
     modalButton: {
       width: "100%",
       marginTop: 24,
+    },
+    sheetBackdrop: {
+      flex: 1,
+      backgroundColor: colors.overlay,
+      justifyContent: "flex-end",
+    },
+    sheet: {
+      backgroundColor: colors.card,
+      borderTopLeftRadius: 18,
+      borderTopRightRadius: 18,
+      padding: 12,
+      paddingBottom: 28,
+    },
+    sheetRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 14,
+      paddingVertical: 16,
+      paddingHorizontal: 12,
+    },
+    sheetText: {
+      fontSize: 16,
+      color: colors.text,
     },
   });
 

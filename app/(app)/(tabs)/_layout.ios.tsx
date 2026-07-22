@@ -1,7 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 import { useAuth } from "../../../src/context/AuthContext";
-import type { ModuleKey } from "../../../src/models/common";
+import { canSeeModule, type ModuleKey } from "../../../src/models/common";
 
 type TabDef = {
   /** Route folder under (tabs). */
@@ -13,14 +13,14 @@ type TabDef = {
   module?: ModuleKey;
 };
 
-// Mirrors the old BottomTabBar TABS list — same modules, order, and glyphs.
+// Mirrors the base _layout TABS list — same modules, order, and glyphs.
+// Deposits now live inside Assets and Expenses inside Ledger.
 const TABS: TabDef[] = [
   { name: "home", label: "Home", icon: "home" },
-  { name: "deposits", label: "Deposits", icon: "card", module: "deposits" },
-  { name: "documents", label: "Documents", icon: "document-text", module: "documents" },
-  { name: "assets", label: "Assets", icon: "cube", module: "assets" },
   { name: "ledger", label: "Ledger", icon: "book", module: "ledger" },
-  { name: "expenses", label: "Expenses", icon: "receipt", module: "expenses" },
+  { name: "assets", label: "Assets", icon: "cube", module: "assets" },
+  { name: "documents", label: "Documents", icon: "document-text", module: "documents" },
+  { name: "settings", label: "Settings", icon: "settings" },
 ];
 
 /**
@@ -33,9 +33,8 @@ const TABS: TabDef[] = [
  */
 export default function TabsLayout() {
   const { user } = useAuth();
-  const isAdmin = user?.role === "admin";
-  const canSee = (module?: ModuleKey) =>
-    !module || isAdmin || !!user?.moduleAccess?.includes(module);
+  // A tab shows when the member holds any tile inside its module (admins: all).
+  const canSee = (module?: ModuleKey) => !module || canSeeModule(user, module);
 
   return (
     <NativeTabs>

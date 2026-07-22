@@ -3,7 +3,7 @@ import MenuButton from "../../../../src/components/MenuButton";
 import ProfileButton from "../../../../src/components/ProfileButton";
 import { useTheme } from "../../../../src/context/ThemeContext";
 
-export default function DepositsStack() {
+export default function SettingsStack() {
   const { colors } = useTheme();
   return (
     <Stack
@@ -16,19 +16,9 @@ export default function DepositsStack() {
     >
       <Stack.Screen
         name="index"
-        options={{ title: "Deposits", headerLeft: () => <MenuButton /> }}
+        options={{ title: "Settings", headerLeft: () => <MenuButton /> }}
       />
-      <Stack.Screen name="banks/index" options={{ title: "Banks" }} />
-      <Stack.Screen name="banks/[id]" options={{ title: "Bank" }} />
-      <Stack.Screen
-        name="fixed-deposits/index"
-        options={{ title: "Fixed Deposits" }}
-      />
-      <Stack.Screen
-        name="fixed-deposits/[id]"
-        options={{ title: "Fixed Deposit" }}
-      />
-      <Stack.Screen name="overview" options={{ title: "Overview" }} />
+      <Stack.Screen name="passcode" options={{ title: "App passcode" }} />
     </Stack>
   );
 }

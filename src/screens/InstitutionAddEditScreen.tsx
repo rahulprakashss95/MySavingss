@@ -8,12 +8,13 @@ import { useCollectionState } from "../redux/hooks";
 import { ThemeColors } from "../utils/Color";
 
 /**
- * Add/edit a bank. The route carries just the id (`new` = create); the record
- * itself is read from the RTK cache — which `useCollectionState` hydrates on
- * mount, so this works on a cold deep link, not only when reached from the list.
- * The fields, save, and delete all live in the shared BankForm.
+ * Add/edit an institution (a `banks` row). The route carries just the id
+ * (`new` = create); the record itself is read from the RTK cache — which
+ * `useCollectionState` hydrates on mount, so this works on a cold deep link,
+ * not only when reached from the list. Fields, save and delete live in the
+ * shared BankForm.
  */
-const BankAddEditScreen = () => {
+const InstitutionAddEditScreen = () => {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
@@ -66,4 +67,4 @@ const createStyles = (colors: ThemeColors) =>
     },
   });
 
-export default BankAddEditScreen;
+export default InstitutionAddEditScreen;

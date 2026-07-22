@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import {
   TypedUseSelectorHook,
   useDispatch,
@@ -8,17 +8,20 @@ import {
   getBankDocuments,
   getBanks,
   getEarnings,
+  getAccounts,
+  getEarningTypes,
   getExpenses,
   getExpenseTypes,
-  getFixedDeposit,
   getGovernmentDocuments,
   getLedgerClients,
+  getLoginUsers,
   getMetalRates,
   getOrnaments,
   getProperties,
   getSavings,
   getVehicles,
 } from "../../database/query";
+import { displayNameOf, LoginUserModel } from "../models/LoginUserModel";
 import { showToast } from "../utils/Utils";
 import {
   CollectionName,
@@ -37,7 +40,7 @@ const REGISTRY: Record<
   { fetch: () => Promise<Identified[]>; errorTitle: string }
 > = {
   banks: { fetch: getBanks, errorTitle: "Unable to load banks" },
-  fixedDeposits: { fetch: getFixedDeposit, errorTitle: "Unable to load deposits" },
+  accounts: { fetch: getAccounts, errorTitle: "Unable to load accounts" },
   ornaments: { fetch: getOrnaments, errorTitle: "Unable to load ornaments" },
   properties: { fetch: getProperties, errorTitle: "Unable to load properties" },
   vehicles: { fetch: getVehicles, errorTitle: "Unable to load vehicles" },
@@ -48,12 +51,17 @@ const REGISTRY: Record<
   },
   ledgerClients: { fetch: getLedgerClients, errorTitle: "Unable to load clients" },
   earnings: { fetch: getEarnings, errorTitle: "Unable to load earnings" },
+  earningTypes: {
+    fetch: getEarningTypes,
+    errorTitle: "Unable to load earning types",
+  },
   savings: { fetch: getSavings, errorTitle: "Unable to load savings" },
   expenses: { fetch: getExpenses, errorTitle: "Unable to load expenses" },
   expenseTypes: {
     fetch: getExpenseTypes,
     errorTitle: "Unable to load expense types",
   },
+  members: { fetch: getLoginUsers, errorTitle: "Unable to load members" },
 };
 
 /**
@@ -109,6 +117,22 @@ export const useCollectionState = <T extends Identified>(
     isRefreshing: state.loaded && state.loading,
     onRefresh: () => dispatch(fetchCollection(name, { force: true })),
   };
+};
+
+/**
+ * Resolves a record's `ownerId` to the owning member's display name, reading
+ * from the cached family roster (fetched once per session like any collection).
+ * This replaced the per-record "Belongs to" field: a record is attributed to
+ * whoever created it, so the owner label is derived, never stored — renaming a
+ * member updates every one of their records with no data migration. Unknown or
+ * empty ids resolve to "" so callers can supply their own fallback.
+ */
+export const useOwnerName = (): ((ownerId: string | undefined) => string) => {
+  const { items } = useCollectionState<LoginUserModel>("members");
+  return useMemo(() => {
+    const byId = new Map(items.map((member) => [member.id, displayNameOf(member)]));
+    return (ownerId) => (ownerId && byId.get(ownerId)) || "";
+  }, [items]);
 };
 
 /**

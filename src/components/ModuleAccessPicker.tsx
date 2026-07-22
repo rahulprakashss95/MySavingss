@@ -2,55 +2,100 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../context/ThemeContext";
-import { MODULE_KEYS, MODULE_LABELS, ModuleKey } from "../models/common";
-import { ThemeColors, tint } from "../utils/Color";
+import { FeatureKey, MODULES } from "../models/common";
+import { ThemeColors } from "../utils/Color";
 
 type Props = {
-  value: ModuleKey[];
-  onChange: (next: ModuleKey[]) => void;
+  /** The leaf feature keys currently granted. */
+  value: FeatureKey[];
+  onChange: (next: FeatureKey[]) => void;
   disabled?: boolean;
 };
 
-/** Multi-select chips for which modules a member can open. */
+/**
+ * Two-level access picker: a checkbox per module (ticks/unticks all its tiles)
+ * with the individual tiles beneath it. Access is stored as the leaf feature
+ * keys the tiles map to — see the access model in `common.ts`.
+ */
 const ModuleAccessPicker = ({ value, onChange, disabled }: Props) => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const selected = useMemo(() => new Set(value), [value]);
 
-  const toggle = (key: ModuleKey) => {
-    if (disabled) return;
+  const setFeatures = (keys: FeatureKey[], on: boolean) => {
+    const next = new Set(selected);
+    keys.forEach((key) => (on ? next.add(key) : next.delete(key)));
+    // Keep a stable, deduped order.
     onChange(
-      value.includes(key)
-        ? value.filter((k) => k !== key)
-        : [...value, key]
+      MODULES.flatMap((m) => m.features.map((f) => f.key)).filter((k) =>
+        next.has(k)
+      )
     );
   };
 
   return (
-    <View style={styles.row}>
-      {MODULE_KEYS.map((key) => {
-        const active = value.includes(key);
+    <View>
+      {MODULES.map((module) => {
+        const features = module.features.map((f) => f.key);
+        const onCount = features.filter((f) => selected.has(f)).length;
+        const allOn = onCount === features.length;
+        const someOn = onCount > 0 && !allOn;
+
         return (
-          <Pressable
-            key={key}
-            onPress={() => toggle(key)}
-            accessibilityRole="checkbox"
-            accessibilityState={{ checked: active, disabled }}
-            style={[
-              styles.chip,
-              active && styles.chipActive,
-              disabled && styles.chipDisabled,
-            ]}
-          >
-            <Ionicons
-              name={active ? "checkmark-circle" : "ellipse-outline"}
-              size={16}
-              color={active ? colors.primary : colors.textMuted}
-              style={styles.chipIcon}
-            />
-            <Text style={[styles.chipText, active && styles.chipTextActive]}>
-              {MODULE_LABELS[key]}
-            </Text>
-          </Pressable>
+          <View key={module.key} style={styles.group}>
+            <Pressable
+              onPress={() => !disabled && setFeatures(features, !allOn)}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: allOn, disabled }}
+              style={[styles.moduleRow, disabled && styles.disabled]}
+            >
+              <Ionicons
+                name={
+                  allOn
+                    ? "checkbox"
+                    : someOn
+                    ? "remove-circle"
+                    : "square-outline"
+                }
+                size={20}
+                color={onCount > 0 ? colors.primary : colors.textMuted}
+                style={styles.icon}
+              />
+              <Text style={styles.moduleLabel}>{module.label}</Text>
+            </Pressable>
+
+            <View style={styles.tiles}>
+              {module.features.map((feature) => {
+                const active = selected.has(feature.key);
+                return (
+                  <Pressable
+                    key={feature.key}
+                    onPress={() =>
+                      !disabled && setFeatures([feature.key], !active)
+                    }
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: active, disabled }}
+                    style={[styles.tileRow, disabled && styles.disabled]}
+                  >
+                    <Ionicons
+                      name={active ? "checkmark-circle" : "ellipse-outline"}
+                      size={18}
+                      color={active ? colors.primary : colors.textMuted}
+                      style={styles.icon}
+                    />
+                    <Text
+                      style={[
+                        styles.tileLabel,
+                        active && styles.tileLabelActive,
+                      ]}
+                    >
+                      {feature.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
         );
       })}
     </View>
@@ -59,38 +104,49 @@ const ModuleAccessPicker = ({ value, onChange, disabled }: Props) => {
 
 const createStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-    row: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 8,
-    },
-    chip: {
-      flexDirection: "row",
-      alignItems: "center",
+    group: {
       borderWidth: 1,
       borderColor: colors.border,
+      borderRadius: 12,
       backgroundColor: colors.inputBackground,
-      borderRadius: 20,
-      paddingVertical: 8,
-      paddingHorizontal: 12,
+      padding: 12,
+      marginBottom: 10,
     },
-    chipActive: {
-      borderColor: colors.primary,
-      backgroundColor: tint(colors.primary),
+    moduleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingBottom: 8,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
     },
-    chipDisabled: {
-      opacity: 0.5,
-    },
-    chipIcon: {
-      marginRight: 6,
-    },
-    chipText: {
-      fontSize: 13,
+    moduleLabel: {
+      fontSize: 15,
+      fontWeight: "700",
       color: colors.text,
     },
-    chipTextActive: {
+    tiles: {
+      paddingTop: 6,
+      paddingLeft: 6,
+    },
+    tileRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 8,
+      borderRadius: 8,
+    },
+    tileLabel: {
+      fontSize: 14,
+      color: colors.text,
+    },
+    tileLabelActive: {
       color: colors.primary,
       fontWeight: "600",
+    },
+    icon: {
+      marginRight: 10,
+    },
+    disabled: {
+      opacity: 0.5,
     },
   });
 

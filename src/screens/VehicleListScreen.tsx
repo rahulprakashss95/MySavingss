@@ -6,8 +6,8 @@ import GroupedRow from "../components/GroupedRow";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { VehicleModel } from "../models/AssetModel";
-import { useCollectionState } from "../redux/hooks";
-import { groupByPerson } from "../utils/documents";
+import { useCollectionState, useOwnerName } from "../redux/hooks";
+import { groupByOwner } from "../utils/documents";
 import { useRouter } from "expo-router";
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
@@ -39,9 +39,13 @@ const VehicleListScreen = () => {
   const { colors } = useTheme();
   const { user } = useAuth();
   const { items, ...list } = useCollectionState<VehicleModel>("vehicles");
+  const nameOf = useOwnerName();
 
-  // Grouped by holder, so one person's vehicles stay together.
-  const sections = useMemo(() => groupByPerson(items, user), [items, user]);
+  // Grouped by owning member, so one person's vehicles stay together.
+  const sections = useMemo(
+    () => groupByOwner(items, user, nameOf),
+    [items, user, nameOf]
+  );
 
   const navigateAddEdit = (data: VehicleModel | null) => {
     router.push(data ? `/assets/vehicles/${data.id}` : "/assets/vehicles/new");

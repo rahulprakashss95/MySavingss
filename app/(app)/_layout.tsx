@@ -29,7 +29,6 @@ export default function AppLayout() {
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="profile" options={{ title: "Profile" }} />
-      <Stack.Screen name="settings" options={{ title: "Settings" }} />
       <Stack.Screen name="admin" options={{ title: "Family Admin" }} />
     </Stack>
   );

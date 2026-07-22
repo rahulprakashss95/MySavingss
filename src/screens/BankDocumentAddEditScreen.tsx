@@ -14,7 +14,6 @@ import {
 } from "../../database/query";
 import Button from "../components/Button";
 import Loader from "../components/Loader";
-import PersonPicker from "../components/PersonPicker";
 import ReadOnlyBanner from "../components/ReadOnlyBanner";
 import ReadOnlyGuard from "../components/ReadOnlyGuard";
 import VisibilityToggle from "../components/VisibilityToggle";
@@ -37,8 +36,6 @@ const BankDocumentAddEditScreen = ({ initial }: Props) => {
   const document = initial;
   const pageMode = document ? "Edit" : "Add";
 
-  const [personId, setPersonId] = useState(document?.personId ?? "");
-  const [personName, setPersonName] = useState(document?.personName ?? "");
   const [accountHolderName, setAccountHolderName] = useState(
     document?.accountHolderName ?? ""
   );
@@ -61,21 +58,8 @@ const BankDocumentAddEditScreen = ({ initial }: Props) => {
   // Public records are viewable family-wide but editable only by their owner.
   const readOnly = pageMode === "Edit" && !canEdit(document!, user?.id);
 
-  const selectPerson = (id: string, name: string) => {
-    setPersonId(id);
-    setPersonName(name);
-    // Seed the holder with the person's name — usually right, always editable.
-    // Only while adding, and never over a name the user has already typed.
-    if (pageMode === "Add") {
-      setAccountHolderName((current) =>
-        !current || current === personName ? name : current
-      );
-    }
-  };
-
   /** Returns an error message, or null when the form is good to submit. */
   const validationError = () => {
-    if (!personId) return "Choose who this account belongs to.";
     if (!bankName.trim()) return "Enter the bank name.";
     if (!accountNumber.trim()) return "Enter the account number.";
     return null;
@@ -90,8 +74,6 @@ const BankDocumentAddEditScreen = ({ initial }: Props) => {
 
     setIsLoading(true);
     const payload = {
-      personId,
-      personName,
       accountHolderName: accountHolderName.trim(),
       bankName: bankName.trim(),
       accountNumber: accountNumber.trim(),
@@ -149,13 +131,6 @@ const BankDocumentAddEditScreen = ({ initial }: Props) => {
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Account</Text>
-
-        <PersonPicker
-          selectedId={personId}
-          selectedName={personName}
-          onSelect={selectPerson}
-          autoSelectSelf={pageMode === "Add"}
-        />
 
         <Text style={styles.label}>Account holder name</Text>
         <TextInput

@@ -31,7 +31,9 @@ const ExpenseTypeListScreen = () => {
   );
 
   const navigateAddEdit = (data: ExpenseTypeModel | null) => {
-    router.push(data ? `/expenses/types/${data.id}` : "/expenses/types/new");
+    router.push(
+      data ? `/ledger/expense-types/${data.id}` : "/ledger/expense-types/new"
+    );
   };
 
   return (

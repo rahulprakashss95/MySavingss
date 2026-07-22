@@ -14,8 +14,13 @@ import { Provider as StoreProvider } from "react-redux";
 import { store } from "../src/redux/store";
 import { AuthProvider, useAuth } from "../src/context/AuthContext";
 import { DrawerProvider } from "../src/context/DrawerContext";
+import {
+  PasscodeProvider,
+  usePasscode,
+} from "../src/context/PasscodeContext";
 import { ThemeProvider, useTheme } from "../src/context/ThemeContext";
 import SideDrawer from "../src/components/SideDrawer";
+import PasscodeLockScreen from "../src/components/PasscodeLockScreen";
 import { installWebStyles } from "../src/utils/webStyles";
 
 // Remove the browser's default focus outline from web inputs, app-wide.
@@ -42,9 +47,11 @@ export default function RootLayout() {
         <StoreProvider store={store}>
           <ThemeProvider>
             <AuthProvider>
-              <DrawerProvider>
-                <RootNavigator />
-              </DrawerProvider>
+              <PasscodeProvider>
+                <DrawerProvider>
+                  <RootNavigator />
+                </DrawerProvider>
+              </PasscodeProvider>
             </AuthProvider>
           </ThemeProvider>
         </StoreProvider>
@@ -54,13 +61,24 @@ export default function RootLayout() {
 }
 
 function RootNavigator() {
-  const { isRestoring: authRestoring } = useAuth();
+  const { user, isRestoring: authRestoring } = useAuth();
   const { colors, isDark, isRestoring: themeRestoring } = useTheme();
+  const {
+    isEnabled: passcodeEnabled,
+    isLocked,
+    isRestoring: passcodeRestoring,
+  } = usePasscode();
 
-  // Once both the session and theme are known, drop the splash. The navigator
-  // below stays mounted throughout — `index` holds on a blank frame until auth
-  // resolves, so no route flickers and there's no unmounted-navigator crash.
-  const ready = !authRestoring && !themeRestoring;
+  // Once the session, theme and passcode state are known, drop the splash. The
+  // navigator below stays mounted throughout — `index` holds on a blank frame
+  // until auth resolves, so no route flickers and there's no unmounted-navigator
+  // crash. Waiting on the passcode too means the lock is decided before the
+  // splash lifts, so signed-in content never flashes behind it.
+  const ready = !authRestoring && !themeRestoring && !passcodeRestoring;
+
+  // Gate the whole app at launch, but only for a signed-in user — a logged-out
+  // launch falls through to the login screen with no passcode.
+  const showLock = !!user && passcodeEnabled && isLocked;
   useEffect(() => {
     if (ready) {
       SplashScreen.hideAsync().catch(() => {});
@@ -83,6 +101,8 @@ function RootNavigator() {
       {/* Overlays the whole app (absolute-fill); mounts only while open. */}
       <SideDrawer />
       <Toast />
+      {/* Launch lock: covers everything above until the passcode is entered. */}
+      {showLock && <PasscodeLockScreen />}
     </View>
   );
 }

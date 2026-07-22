@@ -18,10 +18,18 @@ export type LedgerClientModel = UserOwned & {
   description: string;
 };
 
-/** Add to this list as new kinds of income turn up. */
-export const EARNING_TYPES = ["Salary", "Incentive"] as const;
+/**
+ * A user-defined income kind (e.g. "Salary", "Freelance"), managed from the
+ * Ledger Setup tile. Mirrors `ExpenseTypeModel`. Earnings store the *name* (not
+ * an id — see `EarningModel`), so these supply the option names for the earning
+ * form's Type dropdown.
+ */
+export type EarningTypeModel = UserOwned & {
+  id: string;
+  name: string;
+};
 
-export type EarningType = (typeof EARNING_TYPES)[number];
+export type EarningTypeInput = Creatable<EarningTypeModel>;
 
 type LedgerEntry = UserOwned & {
   id: string;
@@ -36,11 +44,23 @@ type LedgerEntry = UserOwned & {
 };
 
 export type EarningModel = LedgerEntry & {
-  /** One of EARNING_TYPES. Typed loosely so older rows still read. */
+  /** The earning type's name, from `earning_types`. Free text so older rows read. */
   type: string;
 };
 
-export type SavingModel = LedgerEntry;
+/**
+ * A saving is a monthly flow — "I set aside this much" — that also records
+ * *where* it went via `accountId`, pointing at an `accounts` row (see
+ * `AccountModel`). The account holds the running balance; this holds the
+ * history of how it got there. `clientId` is retained from `LedgerEntry` for
+ * older rows but is unused by savings going forward.
+ */
+export type SavingModel = LedgerEntry & {
+  /** `accounts` row id — the destination this saving went into. */
+  accountId: string;
+  /** Denormalised so lists don't need a join. */
+  accountName: string;
+};
 
 export type LedgerClientInput = Creatable<LedgerClientModel>;
 export type EarningInput = Creatable<EarningModel>;

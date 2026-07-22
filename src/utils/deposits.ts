@@ -1,6 +1,11 @@
 import moment from "moment";
 import { BankModel } from "../models/BankModel";
-import { FixedDepositModel } from "../models/FixedDepositModel";
+import {
+  AccountModel,
+  ACCOUNT_SECTIONS,
+  accountSection,
+  isMaturingAccount,
+} from "../models/AccountModel";
 
 export const DATE_FORMAT = "DD-MMM-YYYY";
 
@@ -18,38 +23,33 @@ export const parseMaturity = (maturityDate: string) => {
 };
 
 /**
- * Attach each deposit's bank name from the bank list, without mutating input.
- *
- * A deposit stores `bankId`, not the bank's name — so renaming a bank updates
- * every deposit at once, with no stored copies to go stale. The join happens
- * here rather than in Postgres because the bank list is already cached for the
- * picker, which makes it free; and rather than denormalising a `bankName` onto
- * the deposit, which is what would go stale on a rename.
- *
- * A bank that no longer exists reads as "Unknown" — deleting a bank leaves its
- * deposits intact by design (see the `owner_id` note in `database/schema.sql`).
+ * Where an account sits, for display: its directory bank name when it has a
+ * `bankId`, else the free-text `institution` (a financier, or a bank not in the
+ * directory), else a dash. Resolving the bank name here rather than storing it
+ * means renaming a bank updates every account at once, and a deleted bank reads
+ * as its institution or "—" rather than a stale name.
  */
-export const mergeBankNames = (
-  deposits: FixedDepositModel[],
+export const accountInstitution = (
+  account: AccountModel,
   banks: BankModel[]
-): FixedDepositModel[] => {
-  const byId = new Map((banks ?? []).map((bank) => [bank.id, bank]));
-  return deposits.map((deposit) => ({
-    ...deposit,
-    name: byId.get(deposit.bankId)?.name ?? "Unknown",
-  }));
+): string => {
+  const bank = (banks ?? []).find((b) => b.id === account.bankId);
+  return bank?.name || account.institution || "—";
 };
 
 /**
- * Soonest maturity first; deposits with no maturity date sort to the end.
- * Partitioning first avoids comparing against unparseable dates.
+ * Soonest maturity first; items with no maturity date sort to the end.
+ * Partitioning first avoids comparing against unparseable dates. Generic so it
+ * serves both the account list and any maturity-ordered view.
  */
-export const sortByMaturity = (deposits: FixedDepositModel[]) => {
-  const dated: FixedDepositModel[] = [];
-  const undated: FixedDepositModel[] = [];
+export const sortByMaturity = <T extends { maturityDate: string }>(
+  items: T[]
+): T[] => {
+  const dated: T[] = [];
+  const undated: T[] = [];
 
-  for (const deposit of deposits) {
-    (parseMaturity(deposit.maturityDate) ? dated : undated).push(deposit);
+  for (const item of items) {
+    (parseMaturity(item.maturityDate) ? dated : undated).push(item);
   }
 
   dated.sort(
@@ -61,50 +61,112 @@ export const sortByMaturity = (deposits: FixedDepositModel[]) => {
   return [...dated, ...undated];
 };
 
-export type BankTotal = { label: string; value: number };
+/* ------------------------------------------------------------------ *
+ * Recurring Deposits
+ *
+ * An RD is a fixed monthly instalment paid over a set number of months. We
+ * track it as a schedule of instalments the user marks paid one by one; the
+ * balance net worth counts is the total paid so far.
+ * ------------------------------------------------------------------ */
 
-export type DepositTotals = {
+export type RdInstalment = {
+  index: number;
+  /** Due date (start + index months), DATE_FORMAT, or "" if no start set. */
+  due: string;
   amount: number;
-  interest: number;
-  depositCount: number;
-  bankCount: number;
-  largestDeposit: number;
-  amountByBank: BankTotal[];
-  interestByBank: BankTotal[];
+  paid: boolean;
 };
 
-/** Roll a list of deposits (already merged with bank names) up into totals. */
-export const buildTotals = (deposits: FixedDepositModel[]): DepositTotals => {
-  const byBank: Record<string, { amount: number; interest: number }> = {};
-  let amount = 0;
+/** The per-month instalment amount (`principal` doubles as this for RDs). */
+export const rdMonthly = (account: AccountModel): number =>
+  Number(account.principal) || 0;
+
+/** Tenure in months, clamped to a non-negative integer. */
+export const rdMonthCount = (account: AccountModel): number =>
+  Math.max(0, Math.floor(Number(account.months) || 0));
+
+/** How many instalments are marked paid. */
+export const rdPaidCount = (account: AccountModel): number =>
+  (account.payments ?? []).filter(Boolean).length;
+
+/** Total paid so far — the figure net worth counts for an RD. */
+export const rdPaidTotal = (account: AccountModel): number =>
+  rdPaidCount(account) * rdMonthly(account);
+
+/** The full instalment schedule, one row per month. */
+export const rdSchedule = (account: AccountModel): RdInstalment[] => {
+  const count = rdMonthCount(account);
+  const amount = rdMonthly(account);
+  const start = moment(account.startDate, DATE_FORMAT, true);
+  const paid = account.payments ?? [];
+  return Array.from({ length: count }, (_, index) => ({
+    index,
+    due: start.isValid()
+      ? start.clone().add(index, "months").format(DATE_FORMAT)
+      : "",
+    amount,
+    paid: !!paid[index],
+  }));
+};
+
+/**
+ * A fresh `payments` array with instalment `index` set to `paid`, sized to the
+ * current tenure (padding/truncating any stale array). Callers persist this
+ * alongside a recomputed balance.
+ */
+export const rdWithPayment = (
+  account: AccountModel,
+  index: number,
+  paid: boolean
+): boolean[] => {
+  const count = rdMonthCount(account);
+  const existing = account.payments ?? [];
+  const next = Array.from({ length: count }, (_, i) => !!existing[i]);
+  if (index >= 0 && index < count) {
+    next[index] = paid;
+  }
+  return next;
+};
+
+export type LabelledTotal = { label: string; value: number };
+
+export type AccountTotals = {
+  /** Sum of every account balance — the net-worth cash/deposits figure. */
+  balance: number;
+  /** Interest across the deposit-like accounts (Fixed/Recurring). */
+  interest: number;
+  accountCount: number;
+  largest: number;
+  /** Balance grouped by section (Balances/Deposits/Cash) for the overview. */
+  balanceBySection: LabelledTotal[];
+};
+
+/** Roll a list of accounts up into the totals the Assets overview shows. */
+export const buildAccountTotals = (accounts: AccountModel[]): AccountTotals => {
+  const bySection: Record<string, number> = {};
+  let balance = 0;
   let interest = 0;
-  let largestDeposit = 0;
+  let largest = 0;
 
-  for (const deposit of deposits) {
-    const bank = deposit.name || "Unknown";
-    const depositAmount = Number(deposit.amount) || 0;
-    const depositInterest = Number(deposit.interest) || 0;
-
-    amount += depositAmount;
-    interest += depositInterest;
-    largestDeposit = Math.max(largestDeposit, depositAmount);
-
-    if (!byBank[bank]) {
-      byBank[bank] = { amount: 0, interest: 0 };
+  for (const account of accounts) {
+    const value = Number(account.balance) || 0;
+    balance += value;
+    largest = Math.max(largest, value);
+    if (isMaturingAccount(account.accountType)) {
+      interest += Number(account.interest) || 0;
     }
-    byBank[bank].amount += depositAmount;
-    byBank[bank].interest += depositInterest;
+    const section = accountSection(account.accountType);
+    bySection[section] = (bySection[section] ?? 0) + value;
   }
 
-  const banks = Object.entries(byBank);
-
   return {
-    amount,
+    balance,
     interest,
-    depositCount: deposits.length,
-    bankCount: banks.length,
-    largestDeposit,
-    amountByBank: banks.map(([label, v]) => ({ label, value: v.amount })),
-    interestByBank: banks.map(([label, v]) => ({ label, value: v.interest })),
+    accountCount: accounts.length,
+    largest,
+    // Fixed section order, empty sections dropped.
+    balanceBySection: ACCOUNT_SECTIONS.filter(
+      (section) => bySection[section] !== undefined
+    ).map((section) => ({ label: section, value: bySection[section] })),
   };
 };

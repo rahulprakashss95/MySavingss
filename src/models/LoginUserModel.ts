@@ -1,4 +1,4 @@
-import type { ModuleKey } from "./common";
+import type { Avatar, FeatureKey } from "./common";
 
 /**
  * A family member's account. This is the whole stored shape — credentials are
@@ -16,8 +16,15 @@ export type LoginUserModel = {
   name?: string;
   /** Admins manage users and family settings; members only use their modules. */
   role: UserRole;
-  /** Which modules this member may open. Admins implicitly see all. */
-  moduleAccess: ModuleKey[];
+  /**
+   * Which tiles this member may open, as leaf `FeatureKey`s (see the access
+   * model in `common.ts`). Admins implicitly see all. The field keeps its old
+   * name for storage compatibility; `normalizeAccess` upgrades any legacy
+   * coarse module keys still on older rows.
+   */
+  moduleAccess: FeatureKey[];
+  /** The member's profile picture, if they've set one. Absent shows initials. */
+  avatar?: Avatar;
 };
 
 export type UserRole = "admin" | "member";

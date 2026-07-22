@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import GroupedList from "../components/GroupedList";
-import { useCollectionState } from "../redux/hooks";
+import { useCollectionState, useOwnerName } from "../redux/hooks";
 import GroupedRow from "../components/GroupedRow";
 import { useTheme } from "../context/ThemeContext";
 import { PROPERTY_TYPES, PropertyModel } from "../models/AssetModel";
@@ -31,18 +31,20 @@ const PropertyListScreen = () => {
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const { items, ...list } = useCollectionState<PropertyModel>("properties");
+  const nameOf = useOwnerName();
 
   const sections = useMemo(
     () =>
       groupBy(
         [...items].sort(
           (a, b) =>
-            byText(a.personName, b.personName) || byText(a.name, b.name)
+            byText(nameOf(a.ownerId), nameOf(b.ownerId)) ||
+            byText(a.name, b.name)
         ),
         (property) => property.propertyType || UNGROUPED,
         (property) => property.propertyType || UNGROUPED
       ).sort(byFixedOrder(PROPERTY_TYPES)),
-    [items]
+    [items, nameOf]
   );
 
   const navigateAddEdit = (data: PropertyModel | null) => {
@@ -88,7 +90,7 @@ const PropertyListScreen = () => {
           accent={colors.accentBlue}
           title={item.propertyType}
           value={item.name}
-          subtitle={item.personName}
+          subtitle={nameOf(item.ownerId) || undefined}
           meta={metaFor(item) || undefined}
           description={item.description}
           trailing={renderTrailing(item)}

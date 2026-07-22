@@ -15,7 +15,6 @@ import {
 import Button from "../components/Button";
 import DualUnitInput from "../components/DualUnitInput";
 import Loader from "../components/Loader";
-import PersonPicker from "../components/PersonPicker";
 import ReadOnlyBanner from "../components/ReadOnlyBanner";
 import ReadOnlyGuard from "../components/ReadOnlyGuard";
 import SearchableSelect from "../components/SearchableSelect";
@@ -46,8 +45,6 @@ const OrnamentAddEditScreen = ({ initial }: Props) => {
   const ornament = initial;
   const pageMode = ornament ? "Edit" : "Add";
 
-  const [personId, setPersonId] = useState(ornament?.personId ?? "");
-  const [personName, setPersonName] = useState(ornament?.personName ?? "");
   const [ornamentType, setOrnamentType] = useState(ornament?.ornamentType ?? "");
   const [karat, setKarat] = useState(ornament?.karat ?? DEFAULT_GOLD_KARAT);
   const [name, setName] = useState(ornament?.name ?? "");
@@ -71,14 +68,8 @@ const OrnamentAddEditScreen = ({ initial }: Props) => {
   // Only gold is karated. Silver and stones have no purity to record.
   const isGold = ornamentType === "Gold";
 
-  const selectPerson = (id: string, personLabel: string) => {
-    setPersonId(id);
-    setPersonName(personLabel);
-  };
-
   /** Returns an error message, or null when the form is good to submit. */
   const validationError = () => {
-    if (!personId) return "Choose who this ornament belongs to.";
     if (!ornamentType) return "Choose a metal.";
     if (!name.trim()) return "Enter the ornament's name.";
     if (!grams.trim() || Number(grams) <= 0) return "Enter the weight.";
@@ -94,8 +85,6 @@ const OrnamentAddEditScreen = ({ initial }: Props) => {
 
     setIsLoading(true);
     const payload = {
-      personId,
-      personName,
       ornamentType,
       // Don't leave a karat on a silver chain if the type was switched.
       karat: isGold ? karat : "",
@@ -155,13 +144,6 @@ const OrnamentAddEditScreen = ({ initial }: Props) => {
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Ornament</Text>
-
-        <PersonPicker
-          selectedId={personId}
-          selectedName={personName}
-          onSelect={selectPerson}
-          autoSelectSelf={pageMode === "Add"}
-        />
 
         <SearchableSelect
           label="Metal"

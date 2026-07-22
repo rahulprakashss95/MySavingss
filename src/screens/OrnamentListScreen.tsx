@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import GroupedList from "../components/GroupedList";
-import { useCollectionState } from "../redux/hooks";
+import { useCollectionState, useOwnerName } from "../redux/hooks";
 import GroupedRow from "../components/GroupedRow";
 import { useTheme } from "../context/ThemeContext";
 import { ORNAMENT_TYPES, OrnamentModel } from "../models/AssetModel";
@@ -39,20 +39,22 @@ const OrnamentListScreen = () => {
   const router = useRouter();
   const { colors } = useTheme();
   const { items, ...list } = useCollectionState<OrnamentModel>("ornaments");
+  const nameOf = useOwnerName();
 
-  // Grouped by metal in the order it's declared, then by holder within a group
-  // so one person's pieces stay together.
+  // Grouped by metal in the order it's declared, then by owning member within a
+  // group so one person's pieces stay together.
   const sections = useMemo(
     () =>
       groupBy(
         [...items].sort(
           (a, b) =>
-            byText(a.personName, b.personName) || byText(a.name, b.name)
+            byText(nameOf(a.ownerId), nameOf(b.ownerId)) ||
+            byText(a.name, b.name)
         ),
         (ornament) => ornament.ornamentType || UNGROUPED,
         (ornament) => ornament.ornamentType || UNGROUPED
       ).sort(byFixedOrder(ORNAMENT_TYPES)),
-    [items]
+    [items, nameOf]
   );
 
   const navigateAddEdit = (data: OrnamentModel | null) => {
@@ -76,7 +78,7 @@ const OrnamentListScreen = () => {
           accent={accentFor(item.ornamentType, colors)}
           title={item.name}
           value={weightSummary(item.grams) || "—"}
-          subtitle={item.personName}
+          subtitle={nameOf(item.ownerId) || undefined}
           meta={rowMeta(item) || undefined}
           description={item.description}
           onPress={() => navigateAddEdit(item)}

@@ -16,7 +16,7 @@ import {
 import Button from "../components/Button";
 import DatePicker from "../components/DatePicker";
 import LedgerClientPicker from "../components/LedgerClientPicker";
-import SearchableSelect from "../components/SearchableSelect";
+import EarningTypePicker from "../components/EarningTypePicker";
 import Loader from "../components/Loader";
 import ReadOnlyBanner from "../components/ReadOnlyBanner";
 import ReadOnlyGuard from "../components/ReadOnlyGuard";
@@ -25,7 +25,7 @@ import { useAuth } from "../context/AuthContext";
 import { commitDelete, commitSave, useAppDispatch } from "../redux/hooks";
 import { useTheme } from "../context/ThemeContext";
 import { canEdit, Visibility } from "../models/common";
-import { EARNING_TYPES, EarningModel } from "../models/LedgerModel";
+import { EarningModel } from "../models/LedgerModel";
 import { isValidAmount } from "../utils/amount";
 import { ThemeColors } from "../utils/Color";
 import { DATE_FORMAT } from "../utils/deposits";
@@ -152,14 +152,7 @@ const EarningAddEditScreen = ({ initial }: Props) => {
           onSelect={selectClient}
         />
 
-        <SearchableSelect
-          label="Type"
-          placeholder="Select a type"
-          selectedId={type}
-          selectedName={type}
-          options={EARNING_TYPES.map((option) => ({ id: option, name: option }))}
-          onSelect={(id) => setType(id)}
-        />
+        <EarningTypePicker selectedName={type} onSelect={setType} />
 
         <Text style={styles.label}>Amount</Text>
         <View style={[styles.affixRow, styles.inputSpacing]}>

@@ -43,14 +43,7 @@ export const LAND_PROPERTY_TYPES: readonly string[] = ["Home", "Land", "Farm Lan
 export type OrnamentType = (typeof ORNAMENT_TYPES)[number];
 export type PropertyType = (typeof PROPERTY_TYPES)[number];
 
-/** Whose asset this is. Mirrors how documents are owned. */
-type PersonOwned = {
-  /** `loginUsers` doc id of the holder. */
-  personId: string;
-  personName: string;
-};
-
-export type OrnamentModel = PersonOwned & Owned & {
+export type OrnamentModel = Owned & {
   id: string;
   /** One of ORNAMENT_TYPES. Typed loosely so older rows still read. */
   ornamentType: string;
@@ -83,7 +76,7 @@ export type PaymentEntry = {
   paid: boolean;
 };
 
-export type PropertyModel = PersonOwned & Owned & {
+export type PropertyModel = Owned & {
   id: string;
   /** One of PROPERTY_TYPES. */
   propertyType: string;
@@ -112,11 +105,11 @@ export type VehicleType = (typeof VEHICLE_TYPES)[number];
 
 /**
  * A family vehicle: its identity (name + registration number), insurance and any
- * scans (RC, policy, pollution certificate). Owned by a person like ornaments
- * and documents, so the list groups by holder. Insurance fields are optional —
+ * scans (RC, policy, pollution certificate). Attributed to whoever created it
+ * (`ownerId`), so the list groups by that member. Insurance fields are optional —
  * a vehicle is worth recording before its policy is to hand.
  */
-export type VehicleModel = PersonOwned & Owned & Attachable & {
+export type VehicleModel = Owned & Attachable & {
   id: string;
   /** One of VEHICLE_TYPES. Typed loosely so older rows still read. */
   vehicleType: string;

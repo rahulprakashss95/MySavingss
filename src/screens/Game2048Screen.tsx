@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+﻿import React, { useCallback, useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { ThemeColors, tint } from "../utils/Color";
 import { showToast } from "../utils/Utils";
-import { commitSave, useAppDispatch, useCollectionState } from "../redux/hooks";
+import { commitSave, useAppDispatch, useCollectionState } from "../query/hooks";
 import { submitGameScore } from "../../database/query";
 import { GameScoreModel } from "../models/GameModel";
 import Board from "../games/2048/Board";
@@ -92,7 +92,7 @@ const Game2048Screen = () => {
 
         {game.status === "won" && (
           <Overlay colors={colors}>
-            <Text style={styles.overlayTitle}>You made {game.target}! 🎉</Text>
+            <Text style={styles.overlayTitle}>You made {game.target}! ðŸŽ‰</Text>
             <View style={styles.overlayButtons}>
               <Pressable onPress={game.continuePlaying} style={styles.primaryButton}>
                 <Text style={styles.primaryButtonText}>Keep going</Text>

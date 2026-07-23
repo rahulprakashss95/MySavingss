@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+﻿import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { addBank, deleteBank, updateBank } from "../../../database/query";
@@ -10,7 +10,7 @@ import {
   toMobileList,
 } from "../../models/BankModel";
 import { canEdit, Visibility } from "../../models/common";
-import { commitDelete, commitSave, useAppDispatch } from "../../redux/hooks";
+import { commitDelete, commitSave, useAppDispatch } from "../../query/hooks";
 import { ThemeColors } from "../../utils/Color";
 import { showConfirmationAlert, showToast } from "../../utils/Utils";
 import Button from "../Button";

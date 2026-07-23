@@ -1,6 +1,6 @@
 {
   "name": "homevault",
-  "version": "1.2.2",
+  "version": "1.2.21",
   "homepage": "/HomeVault/",
   "main": "expo-router/entry",
   "scripts": {
@@ -28,6 +28,7 @@
     "@react-navigation/native-stack": "^6.9.26",
     "@reduxjs/toolkit": "^2.12.0",
     "@supabase/supabase-js": "^2.109.0",
+    "@tanstack/react-query": "^5.101.4",
     "@types/react": "~19.2.10",
     "axios": "^1.6.8",
     "expo": "^57.0.7",
@@ -63,7 +64,8 @@
     "react-native-webview": "13.16.1",
     "react-native-worklets": "0.10.0",
     "react-redux": "^9.3.0",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

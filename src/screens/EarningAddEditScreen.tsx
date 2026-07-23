@@ -1,4 +1,4 @@
-import moment from "moment";
+﻿import moment from "moment";
 import React, { useMemo, useState } from "react";
 import {
   Pressable,
@@ -22,7 +22,7 @@ import ReadOnlyBanner from "../components/ReadOnlyBanner";
 import ReadOnlyGuard from "../components/ReadOnlyGuard";
 import VisibilityToggle from "../components/VisibilityToggle";
 import { useAuth } from "../context/AuthContext";
-import { commitDelete, commitSave, useAppDispatch } from "../redux/hooks";
+import { commitDelete, commitSave, useAppDispatch } from "../query/hooks";
 import { useTheme } from "../context/ThemeContext";
 import { canEdit, Visibility } from "../models/common";
 import { EarningModel } from "../models/LedgerModel";
@@ -156,7 +156,7 @@ const EarningAddEditScreen = ({ initial }: Props) => {
 
         <Text style={styles.label}>Amount</Text>
         <View style={[styles.affixRow, styles.inputSpacing]}>
-          <Text style={styles.affix}>₹</Text>
+          <Text style={styles.affix}>â‚¹</Text>
           <TextInput
             style={styles.affixInput}
             onChangeText={setAmount}
@@ -182,7 +182,7 @@ const EarningAddEditScreen = ({ initial }: Props) => {
           style={[styles.input, styles.multiline]}
           onChangeText={setComments}
           value={comments}
-          placeholder="Anything worth remembering about this payment…"
+          placeholder="Anything worth remembering about this paymentâ€¦"
           placeholderTextColor={colors.placeholder}
           multiline
           numberOfLines={4}

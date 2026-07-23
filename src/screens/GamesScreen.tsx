@@ -1,16 +1,16 @@
-import React, { useMemo } from "react";
+﻿import React, { useMemo } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { ThemeColors, tint } from "../utils/Color";
-import { useCollectionState } from "../redux/hooks";
+import { useCollectionState } from "../query/hooks";
 import { GAMES, GameScoreModel } from "../models/GameModel";
 
 /**
  * The Games landing: a card per game in the `GAMES` registry. Open to every
- * signed-in member (no tile-gating — a game is a social, family-wide thing, not
+ * signed-in member (no tile-gating â€” a game is a social, family-wide thing, not
  * a vault module), so it needs no access checks. Each card shows the member's
  * own best and offers Play / Leaderboard.
  */

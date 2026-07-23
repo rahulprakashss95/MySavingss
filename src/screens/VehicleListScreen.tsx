@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+﻿import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
 import AttachmentSection from "../components/AttachmentSection";
 import GroupedList from "../components/GroupedList";
@@ -6,7 +6,7 @@ import GroupedRow from "../components/GroupedRow";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { VehicleModel } from "../models/AssetModel";
-import { useCollectionState, useOwnerName } from "../redux/hooks";
+import { useCollectionState, useOwnerName } from "../query/hooks";
 import { groupByOwner } from "../utils/documents";
 import { useRouter } from "expo-router";
 
@@ -25,14 +25,14 @@ const iconFor = (vehicleType: string): IconName => {
   }
 };
 
-/** "Car · Insured till 12-Jan-2027" — whichever half actually applies. */
+/** "Car Â· Insured till 12-Jan-2027" â€” whichever half actually applies. */
 const rowMeta = (vehicle: VehicleModel) =>
   [
     vehicle.vehicleType,
     vehicle.insuranceExpiry ? `Insured till ${vehicle.insuranceExpiry}` : "",
   ]
     .filter(Boolean)
-    .join(" · ");
+    .join(" Â· ");
 
 const VehicleListScreen = () => {
   const router = useRouter();
@@ -67,7 +67,7 @@ const VehicleListScreen = () => {
           icon={iconFor(item.vehicleType)}
           accent={colors.accentBlue}
           title={item.name}
-          value={item.number || "—"}
+          value={item.number || "â€”"}
           copyValue={item.number || undefined}
           valueLabel={item.number ? "Registration number" : undefined}
           meta={rowMeta(item) || undefined}

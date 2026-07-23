@@ -2,23 +2,21 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
   SafeAreaProvider,
   initialWindowMetrics,
 } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
-import { Provider as StoreProvider } from "react-redux";
+import { QueryClientProvider } from "@tanstack/react-query";
 
-import { store } from "../src/redux/store";
-import { AuthProvider, useAuth } from "../src/context/AuthContext";
-import { DrawerProvider } from "../src/context/DrawerContext";
-import {
-  PasscodeProvider,
-  usePasscode,
-} from "../src/context/PasscodeContext";
-import { ThemeProvider, useTheme } from "../src/context/ThemeContext";
+import { queryClient } from "../src/query/client";
+import { bootstrapApp } from "../src/context/bootstrap";
+import { useAuth } from "../src/context/AuthContext";
+import { usePasscode } from "../src/context/PasscodeContext";
+import { useTheme } from "../src/context/ThemeContext";
+import { DarkColors, LightColors } from "../src/utils/Color";
 import SideDrawer from "../src/components/SideDrawer";
 import PasscodeLockScreen from "../src/components/PasscodeLockScreen";
 import { installWebStyles } from "../src/utils/webStyles";
@@ -33,9 +31,12 @@ installWebStyles();
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 /**
- * Expo Router root layout. Replaces the old `App.tsx` provider stack. Tabs own
- * module navigation; the `SideDrawer` (opened from the header hamburger) is a
- * secondary way to jump to any sub-screen, Settings and Admin.
+ * Expo Router root layout. Client state lives in Zustand stores and server data
+ * in React Query — the only wrapper left is `QueryClientProvider`; the former
+ * Theme/Auth/Passcode/Drawer providers are gone. `bootstrapApp` rehydrates the
+ * persisted stores once on mount. Tabs own module navigation; the `SideDrawer`
+ * (opened from the header hamburger) is a secondary way to jump to any
+ * sub-screen, Settings and Admin.
  */
 export default function RootLayout() {
   return (
@@ -44,17 +45,9 @@ export default function RootLayout() {
     // swipe/press gestures silently no-op there.
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-        <StoreProvider store={store}>
-          <ThemeProvider>
-            <AuthProvider>
-              <PasscodeProvider>
-                <DrawerProvider>
-                  <RootNavigator />
-                </DrawerProvider>
-              </PasscodeProvider>
-            </AuthProvider>
-          </ThemeProvider>
-        </StoreProvider>
+        <QueryClientProvider client={queryClient}>
+          <RootNavigator />
+        </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
@@ -68,6 +61,22 @@ function RootNavigator() {
     isLocked,
     isRestoring: passcodeRestoring,
   } = usePasscode();
+
+  // Rehydrate all persisted stores exactly once on cold start.
+  useEffect(() => {
+    bootstrapApp();
+  }, []);
+
+  // On web, paint html/body to match the active theme. The static CSS in
+  // index.html only follows the OS scheme; this also covers a manual override
+  // (e.g. forcing light while the OS is dark), so no white/black bleeds past the
+  // app root in the installed PWA. Formerly lived in the ThemeProvider.
+  useEffect(() => {
+    if (Platform.OS !== "web" || typeof document === "undefined") return;
+    const background = (isDark ? DarkColors : LightColors).background;
+    document.documentElement.style.backgroundColor = background;
+    document.body.style.backgroundColor = background;
+  }, [isDark]);
 
   // Once the session, theme and passcode state are known, drop the splash. The
   // navigator below stays mounted throughout — `index` holds on a blank frame

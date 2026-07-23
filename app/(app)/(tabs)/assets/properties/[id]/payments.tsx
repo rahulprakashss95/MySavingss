@@ -1,8 +1,8 @@
-import { Redirect, useLocalSearchParams } from "expo-router";
+﻿import { Redirect, useLocalSearchParams } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 import { useTheme } from "../../../../../../src/context/ThemeContext";
 import { PropertyModel } from "../../../../../../src/models/AssetModel";
-import { useCollectionState } from "../../../../../../src/redux/hooks";
+import { useCollectionState } from "../../../../../../src/query/hooks";
 import PropertyPaymentsScreen from "../../../../../../src/screens/PropertyPaymentsScreen";
 
 /**

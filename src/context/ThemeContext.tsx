@@ -1,118 +1,83 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, {
-    createContext,
-    useCallback,
-    useContext,
-    useEffect,
-    useMemo,
-    useState,
-} from "react";
-import { Platform, useColorScheme } from "react-native";
+import { useColorScheme } from "react-native";
+import { create } from "zustand";
 import { DarkColors, LightColors, ThemeColors } from "../utils/Color";
 
 export type ThemeMode = "system" | "light" | "dark";
 
 const THEME_STORAGE_KEY = "@homevault/theme-mode";
 
-type ThemeContextValue = {
+const isThemeMode = (value: unknown): value is ThemeMode =>
+  value === "system" || value === "light" || value === "dark";
+
+type ThemeStore = {
   /** What the user picked. "system" follows the OS setting. */
+  mode: ThemeMode;
+  /** True until the stored theme preference has been read from storage. */
+  isRestoring: boolean;
+  setMode: (mode: ThemeMode) => void;
+  /** Rehydrate the persisted preference once at cold start. */
+  restore: () => Promise<void>;
+};
+
+/**
+ * Theme preference, persisted to AsyncStorage. Was a React context + provider;
+ * now a Zustand store. Only the raw `mode` lives here — the resolved palette
+ * depends on the live OS colour scheme, so it's computed in the `useTheme` hook
+ * below, which keeps the old return shape (`mode`, `setMode`, `colors`,
+ * `isDark`, `isRestoring`) so no call site changed.
+ */
+export const useThemeStore = create<ThemeStore>((set) => ({
+  mode: "system",
+  isRestoring: true,
+  setMode: (nextMode) => {
+    // Update immediately so the UI never waits on storage.
+    set({ mode: nextMode });
+    AsyncStorage.setItem(THEME_STORAGE_KEY, nextMode).catch((error) => {
+      console.log("Unable to persist theme preference", error);
+    });
+  },
+  restore: async () => {
+    try {
+      // The splash is held until this resolves, so never let a wedged storage
+      // read blank the screen forever — fall back to the default after 3s.
+      const storedMode = await Promise.race([
+        AsyncStorage.getItem(THEME_STORAGE_KEY),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000)),
+      ]);
+      if (isThemeMode(storedMode)) {
+        set({ mode: storedMode });
+      }
+    } catch (error) {
+      console.log("Unable to restore theme preference", error);
+    } finally {
+      set({ isRestoring: false });
+    }
+  },
+}));
+
+type ThemeValue = {
   mode: ThemeMode;
   setMode: (mode: ThemeMode) => void;
   /** The resolved palette for the currently active scheme. */
   colors: ThemeColors;
   isDark: boolean;
-  /** True until the stored theme preference has been read from storage. */
   isRestoring: boolean;
 };
 
-const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
-
-const isThemeMode = (value: unknown): value is ThemeMode =>
-  value === "system" || value === "light" || value === "dark";
-
-type Props = {
-  children: React.ReactNode;
-};
-
-export const ThemeProvider = ({ children }: Props) => {
+export const useTheme = (): ThemeValue => {
   const systemScheme = useColorScheme();
-  const [mode, setModeState] = useState<ThemeMode>("system");
-  const [isRestoring, setIsRestoring] = useState(true);
-
-  useEffect(() => {
-    let settled = false;
-    const finish = () => {
-      if (!settled) {
-        settled = true;
-        setIsRestoring(false);
-      }
-    };
-    // The whole app is held back until this resolves (see the null return
-    // below), so never let a wedged storage read blank the screen forever.
-    const timeout = setTimeout(() => {
-      console.warn("Theme restore timed out; using the default theme.");
-      finish();
-    }, 3000);
-
-    AsyncStorage.getItem(THEME_STORAGE_KEY)
-      .then((storedMode) => {
-        if (isThemeMode(storedMode)) {
-          setModeState(storedMode);
-        }
-      })
-      .catch((error) => {
-        console.log("Unable to restore theme preference", error);
-      })
-      .finally(() => {
-        clearTimeout(timeout);
-        finish();
-      });
-  }, []);
-
-  const setMode = useCallback((nextMode: ThemeMode) => {
-    // Update immediately so the UI never waits on storage.
-    setModeState(nextMode);
-    AsyncStorage.setItem(THEME_STORAGE_KEY, nextMode).catch((error) => {
-      console.log("Unable to persist theme preference", error);
-    });
-  }, []);
+  const mode = useThemeStore((state) => state.mode);
+  const setMode = useThemeStore((state) => state.setMode);
+  const isRestoring = useThemeStore((state) => state.isRestoring);
 
   const isDark = mode === "system" ? systemScheme === "dark" : mode === "dark";
 
-  // On web, paint html/body to match the active theme. The static CSS in
-  // index.html only follows the OS scheme; this also covers a manual override
-  // (e.g. forcing light while the OS is dark), so no white/black bleeds past
-  // the app root in the installed PWA.
-  useEffect(() => {
-    if (Platform.OS !== "web" || typeof document === "undefined") return;
-    const background = (isDark ? DarkColors : LightColors).background;
-    document.documentElement.style.backgroundColor = background;
-    document.body.style.backgroundColor = background;
-  }, [isDark]);
-
-  const value = useMemo<ThemeContextValue>(
-    () => ({
-      mode,
-      setMode,
-      colors: isDark ? DarkColors : LightColors,
-      isDark,
-      isRestoring,
-    }),
-    [mode, setMode, isDark, isRestoring]
-  );
-
-  // Note: we no longer return null while restoring. Expo Router requires the
-  // root layout to always render a navigator, so the app root keeps the splash
-  // screen up (see app/_layout.tsx) until this resolves instead of unmounting.
-  return (
-    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
-  );
-};
-
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error("useTheme must be used within a ThemeProvider");
-  }
-  return context;
+  return {
+    mode,
+    setMode,
+    isDark,
+    colors: isDark ? DarkColors : LightColors,
+    isRestoring,
+  };
 };

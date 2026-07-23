@@ -1,7 +1,7 @@
-import React, { useMemo } from "react";
+﻿import React, { useMemo } from "react";
 import AttachmentSection from "../components/AttachmentSection";
 import GroupedList from "../components/GroupedList";
-import { useCollectionState, useOwnerName } from "../redux/hooks";
+import { useCollectionState, useOwnerName } from "../query/hooks";
 import GroupedRow from "../components/GroupedRow";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";

@@ -1,6 +1,6 @@
-import React, { useMemo } from "react";
+﻿import React, { useMemo } from "react";
 import GroupedList from "../components/GroupedList";
-import { useCollectionState } from "../redux/hooks";
+import { useCollectionState } from "../query/hooks";
 import GroupedRow from "../components/GroupedRow";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -28,7 +28,7 @@ const EarningListScreen = () => {
       keyOf={(item) => item.id}
       // The count of entries matters less than the money, so each month's
       // heading carries its total instead.
-      countLabel={(section) => `₹ ${amountFormat(sumAmount(section.data))}`}
+      countLabel={(section) => `â‚¹ ${amountFormat(sumAmount(section.data))}`}
       noun="earning"
       addLabel="Add earning"
       onAdd={() => navigateAddEdit(null)}
@@ -40,7 +40,7 @@ const EarningListScreen = () => {
           icon="trending-up-outline"
           accent={colors.accentBlue}
           title={item.type}
-          value={`₹ ${amountFormat(item.amount)}`}
+          value={`â‚¹ ${amountFormat(item.amount)}`}
           subtitle={item.clientName}
           meta={item.date || undefined}
           description={item.comments}

@@ -1,4 +1,4 @@
-import moment from "moment";
+﻿import moment from "moment";
 import React, { useMemo, useState } from "react";
 import {
   Pressable,
@@ -21,7 +21,7 @@ import ReadOnlyGuard from "../components/ReadOnlyGuard";
 import VisibilityToggle from "../components/VisibilityToggle";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
-import { commitDelete, commitSave, useAppDispatch } from "../redux/hooks";
+import { commitDelete, commitSave, useAppDispatch } from "../query/hooks";
 import { canEdit, Visibility } from "../models/common";
 import { SavingModel } from "../models/LedgerModel";
 import { isValidAmount } from "../utils/amount";
@@ -72,7 +72,7 @@ const SavingAddEditScreen = ({ initial }: Props) => {
 
     setIsLoading(true);
     const payload = {
-      // Savings are a plain flow now — no client or account link. The fields
+      // Savings are a plain flow now â€” no client or account link. The fields
       // stay on the shape for older rows, written blank.
       accountId: "",
       accountName: "",
@@ -134,7 +134,7 @@ const SavingAddEditScreen = ({ initial }: Props) => {
 
         <Text style={styles.label}>Amount</Text>
         <View style={[styles.affixRow, styles.inputSpacing]}>
-          <Text style={styles.affix}>₹</Text>
+          <Text style={styles.affix}>â‚¹</Text>
           <TextInput
             style={styles.affixInput}
             onChangeText={setAmount}
@@ -160,7 +160,7 @@ const SavingAddEditScreen = ({ initial }: Props) => {
           style={[styles.input, styles.multiline]}
           onChangeText={setComments}
           value={comments}
-          placeholder="Where it went, why you set it aside…"
+          placeholder="Where it went, why you set it asideâ€¦"
           placeholderTextColor={colors.placeholder}
           multiline
           numberOfLines={4}

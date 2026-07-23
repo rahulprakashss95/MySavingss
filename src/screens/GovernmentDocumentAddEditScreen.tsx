@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+﻿import React, { useMemo, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -21,7 +21,7 @@ import ReadOnlyGuard from "../components/ReadOnlyGuard";
 import VisibilityToggle from "../components/VisibilityToggle";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
-import { commitDelete, commitSave, useAppDispatch } from "../redux/hooks";
+import { commitDelete, commitSave, useAppDispatch } from "../query/hooks";
 import { canEdit, Visibility } from "../models/common";
 import {
   GOVERNMENT_DOCUMENT_TYPES,
@@ -185,7 +185,7 @@ const GovernmentDocumentAddEditScreen = ({ initial }: Props) => {
           style={[styles.input, styles.multiline]}
           onChangeText={setDescription}
           value={description}
-          placeholder="Anything worth remembering — issue date, where it's kept…"
+          placeholder="Anything worth remembering â€” issue date, where it's keptâ€¦"
           placeholderTextColor={colors.placeholder}
           multiline
           numberOfLines={4}

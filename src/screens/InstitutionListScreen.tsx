@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+﻿import React, { useMemo } from "react";
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import FloatingButton from "../components/FAB";
 import { BankListSkeleton } from "../components/Skeleton";
 import { BankModel, bankMobileNumbers } from "../models/BankModel";
-import { useCollectionState } from "../redux/hooks";
+import { useCollectionState } from "../query/hooks";
 import { useTheme } from "../context/ThemeContext";
 import { useRouter } from "expo-router";
 import { ThemeColors, tint } from "../utils/Color";

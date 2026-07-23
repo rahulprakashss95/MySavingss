@@ -1,8 +1,8 @@
-import { Ionicons } from "@expo/vector-icons";
+﻿import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import GroupedList from "../components/GroupedList";
-import { useCollectionState, useOwnerName } from "../redux/hooks";
+import { useCollectionState, useOwnerName } from "../query/hooks";
 import GroupedRow from "../components/GroupedRow";
 import { useTheme } from "../context/ThemeContext";
 import { PROPERTY_TYPES, PropertyModel } from "../models/AssetModel";
@@ -22,7 +22,7 @@ const ICONS: Record<string, IconName> = {
   Bike: "bicycle-outline",
 };
 
-/** Area for land, nothing for vehicles — a car has no cents. */
+/** Area for land, nothing for vehicles â€” a car has no cents. */
 const metaFor = (property: PropertyModel) => areaSummary(property.cents ?? "");
 
 const PropertyListScreen = () => {
@@ -61,7 +61,7 @@ const PropertyListScreen = () => {
     return (
       <View style={styles.trailing}>
         <Text style={[styles.trailingValue, settled && styles.settled]}>
-          {settled ? "Settled" : `₹ ${amountFormat(totals.remaining)}`}
+          {settled ? "Settled" : `â‚¹ ${amountFormat(totals.remaining)}`}
         </Text>
         {!settled && <Text style={styles.trailingLabel}>left</Text>}
         {property.paymentMode === "installments" && totals.entryCount > 0 && (

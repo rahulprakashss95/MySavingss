@@ -1,9 +1,9 @@
-import React, { useMemo } from "react";
+﻿import React, { useMemo } from "react";
 import GroupedList from "../components/GroupedList";
 import GroupedRow from "../components/GroupedRow";
 import { useTheme } from "../context/ThemeContext";
 import { ExpenseTypeModel } from "../models/ExpenseModel";
-import { useCollectionState } from "../redux/hooks";
+import { useCollectionState } from "../query/hooks";
 import { byText } from "../utils/grouping";
 import { useRouter } from "expo-router";
 

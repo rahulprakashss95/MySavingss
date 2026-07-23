@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+﻿import React, { useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -16,7 +16,7 @@ import {
   useAppDispatch,
   useCollectionState,
   useOwnerName,
-} from "../redux/hooks";
+} from "../query/hooks";
 import {
   AccountModel,
   AccountType,
@@ -56,7 +56,7 @@ const AccountListScreen = () => {
 
   const [activeType, setActiveType] = useState<AccountType>("Account Balance");
 
-  // Both served from the store — fetched once, not on every focus. Banks feed
+  // Both served from the store â€” fetched once, not on every focus. Banks feed
   // the institution label; accounts already carry their own name and balance.
   const accounts = useCollectionState<AccountModel>("accounts");
   const banks = useCollectionState<BankModel>("banks");
@@ -96,7 +96,7 @@ const AccountListScreen = () => {
   };
 
   // Marking an RD instalment paid rewrites its payments array and the balance
-  // (paid so far), then upserts — the cache updates in place, no refetch.
+  // (paid so far), then upserts â€” the cache updates in place, no refetch.
   const handleToggleInstalment = (
     account: AccountModel,
     index: number,
@@ -146,7 +146,7 @@ const AccountListScreen = () => {
         <Text style={styles.summaryLabel}>
           {visible.length} {visible.length === 1 ? "entry" : "entries"}
         </Text>
-        <Text style={styles.summaryValue}>₹ {amountFormat(subtotal)}</Text>
+        <Text style={styles.summaryValue}>â‚¹ {amountFormat(subtotal)}</Text>
       </View>
     );
   };
@@ -222,7 +222,7 @@ const createStyles = (colors: ThemeColors) =>
       backgroundColor: colors.background,
     },
     // A horizontal ScrollView otherwise stretches to fill the column's height,
-    // pushing the list down — pin it to its content height.
+    // pushing the list down â€” pin it to its content height.
     tabScroll: {
       flexGrow: 0,
       flexShrink: 0,
@@ -265,7 +265,7 @@ const createStyles = (colors: ThemeColors) =>
       // sit at the top (default flex-start).
       flexGrow: 1,
       // Keep the cards in a centered column instead of stretching edge-to-edge
-      // on wide (web) screens — horizontally centered, still top-aligned.
+      // on wide (web) screens â€” horizontally centered, still top-aligned.
       width: "100%",
       maxWidth: 560,
       alignSelf: "center",

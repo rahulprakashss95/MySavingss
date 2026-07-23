@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+﻿import { Ionicons } from "@expo/vector-icons";
 import moment from "moment";
 import React, { useMemo, useState } from "react";
 import {
@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import { updateProperty } from "../../database/query";
-import { commitSave, useAppDispatch } from "../redux/hooks";
+import { commitSave, useAppDispatch } from "../query/hooks";
 import Button from "../components/Button";
 import DatePicker from "../components/DatePicker";
 import Loader from "../components/Loader";
@@ -34,7 +34,7 @@ type Props = {
 
 /**
  * Payment entries live inside the property document, so every change here
- * rewrites the whole property. State is held locally and pushed on each edit —
+ * rewrites the whole property. State is held locally and pushed on each edit â€”
  * the list is small, and it keeps the screen responsive.
  */
 const PropertyPaymentsScreen = ({ property }: Props) => {
@@ -153,10 +153,10 @@ const PropertyPaymentsScreen = ({ property }: Props) => {
 
       <View style={styles.entryText}>
         <Text style={[styles.entryAmount, entry.paid && styles.entryPaid]}>
-          ₹ {amountFormat(entry.amount)}
+          â‚¹ {amountFormat(entry.amount)}
         </Text>
         <Text style={styles.entryMeta}>
-          {entry.label ? `${entry.label} · ` : ""}
+          {entry.label ? `${entry.label} Â· ` : ""}
           {entry.date || "No date"}
         </Text>
       </View>
@@ -187,13 +187,13 @@ const PropertyPaymentsScreen = ({ property }: Props) => {
         {isLoan && !!property.lender && (
           <Text style={styles.lender}>
             {property.lender}
-            {property.interestRate ? ` · ${property.interestRate}% p.a.` : ""}
+            {property.interestRate ? ` Â· ${property.interestRate}% p.a.` : ""}
           </Text>
         )}
 
-        <Text style={styles.remaining}>₹ {amountFormat(totals.remaining)}</Text>
+        <Text style={styles.remaining}>â‚¹ {amountFormat(totals.remaining)}</Text>
         <Text style={styles.remainingLabel}>
-          remaining of ₹ {amountFormat(totals.total)}
+          remaining of â‚¹ {amountFormat(totals.total)}
         </Text>
 
         <View style={styles.progressWrap}>
@@ -202,7 +202,7 @@ const PropertyPaymentsScreen = ({ property }: Props) => {
 
         <View style={styles.totalsRow}>
           <Text style={styles.totalsPaid}>
-            ₹ {amountFormat(totals.paid)} paid
+            â‚¹ {amountFormat(totals.paid)} paid
           </Text>
           {!isLoan && totals.entryCount > 0 && (
             <Text style={styles.totalsCount}>
@@ -235,7 +235,7 @@ const PropertyPaymentsScreen = ({ property }: Props) => {
 
         <Text style={styles.label}>Amount</Text>
         <View style={[styles.affixRow, styles.inputSpacing]}>
-          <Text style={styles.affix}>₹</Text>
+          <Text style={styles.affix}>â‚¹</Text>
           <TextInput
             style={styles.affixInput}
             onChangeText={setAmount}

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -38,7 +38,7 @@ import {
   commitSave,
   useAppDispatch,
   useCollectionState,
-} from "../redux/hooks";
+} from "../query/hooks";
 import { canEdit, Visibility } from "../models/common";
 
 type Props = {
@@ -97,7 +97,7 @@ const AccountAddEditScreen = ({ initial, presetType }: Props) => {
   const isFD = accountType === "Fixed Deposit";
   const isRD = accountType === "Recurring Deposit";
   const isCash = accountType === "Cash";
-  // FD paid at maturity carries no periodic interest — it has a maturity amount.
+  // FD paid at maturity carries no periodic interest â€” it has a maturity amount.
   const isOnMaturity = isFD && interestFrequency === "On Maturity";
   const periodWord = interestFrequency === "Quarterly" ? "quarter" : "month";
   const periodicInterestLabel = isFD
@@ -326,7 +326,7 @@ const AccountAddEditScreen = ({ initial, presetType }: Props) => {
             <Text style={styles.sectionTitle}>Balance</Text>
             <Text style={styles.label}>Current balance</Text>
             <View style={styles.affixRow}>
-              <Text style={styles.affix}>₹</Text>
+              <Text style={styles.affix}>â‚¹</Text>
               <TextInput
                 style={styles.affixInput}
                 onChangeText={setBalance}
@@ -351,7 +351,7 @@ const AccountAddEditScreen = ({ initial, presetType }: Props) => {
 
               <Text style={styles.label}>Principal</Text>
               <View style={styles.affixRow}>
-                <Text style={styles.affix}>₹</Text>
+                <Text style={styles.affix}>â‚¹</Text>
                 <TextInput
                   style={styles.affixInput}
                   onChangeText={setPrincipal}
@@ -408,7 +408,7 @@ const AccountAddEditScreen = ({ initial, presetType }: Props) => {
                 <>
                   <Text style={styles.label}>Maturity amount</Text>
                   <View style={styles.affixRow}>
-                    <Text style={styles.affix}>₹</Text>
+                    <Text style={styles.affix}>â‚¹</Text>
                     <TextInput
                       style={styles.affixInput}
                       onChangeText={setMaturityAmount}
@@ -428,7 +428,7 @@ const AccountAddEditScreen = ({ initial, presetType }: Props) => {
                   <Text style={styles.label}>{periodicInterestLabel}</Text>
                   <View style={styles.calculateRow}>
                     <View style={[styles.affixRow, styles.calculateInput]}>
-                      <Text style={styles.affix}>₹</Text>
+                      <Text style={styles.affix}>â‚¹</Text>
                       <TextInput
                         style={styles.affixInput}
                         onChangeText={setInterestAmount}
@@ -479,7 +479,7 @@ const AccountAddEditScreen = ({ initial, presetType }: Props) => {
 
             <Text style={styles.label}>Amount per month</Text>
             <View style={styles.affixRow}>
-              <Text style={styles.affix}>₹</Text>
+              <Text style={styles.affix}>â‚¹</Text>
               <TextInput
                 style={styles.affixInput}
                 onChangeText={setPrincipal}

@@ -1,4 +1,4 @@
-import moment from "moment";
+﻿import moment from "moment";
 import React, { useMemo, useState } from "react";
 import {
   Pressable,
@@ -24,7 +24,7 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { canEdit, Visibility } from "../models/common";
 import { ExpenseModel } from "../models/ExpenseModel";
-import { commitDelete, commitSave, useAppDispatch } from "../redux/hooks";
+import { commitDelete, commitSave, useAppDispatch } from "../query/hooks";
 import { isValidAmount } from "../utils/amount";
 import { ThemeColors } from "../utils/Color";
 import { DATE_FORMAT } from "../utils/deposits";
@@ -148,7 +148,7 @@ const ExpenseAddEditScreen = ({ initial }: Props) => {
 
           <Text style={styles.label}>Amount</Text>
           <View style={[styles.affixRow, styles.inputSpacing]}>
-            <Text style={styles.affix}>₹</Text>
+            <Text style={styles.affix}>â‚¹</Text>
             <TextInput
               style={styles.affixInput}
               onChangeText={setAmount}
@@ -174,7 +174,7 @@ const ExpenseAddEditScreen = ({ initial }: Props) => {
             style={[styles.input, styles.multiline]}
             onChangeText={setComments}
             value={comments}
-            placeholder="What was this expense for…"
+            placeholder="What was this expense forâ€¦"
             placeholderTextColor={colors.placeholder}
             multiline
             numberOfLines={4}

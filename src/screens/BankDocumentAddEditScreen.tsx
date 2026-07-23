@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+﻿import React, { useMemo, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -19,7 +19,7 @@ import ReadOnlyGuard from "../components/ReadOnlyGuard";
 import VisibilityToggle from "../components/VisibilityToggle";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
-import { commitDelete, commitSave, useAppDispatch } from "../redux/hooks";
+import { commitDelete, commitSave, useAppDispatch } from "../query/hooks";
 import { canEdit, Visibility } from "../models/common";
 import { BankDocumentModel } from "../models/DocumentModel";
 import { ThemeColors } from "../utils/Color";
@@ -183,7 +183,7 @@ const BankDocumentAddEditScreen = ({ initial }: Props) => {
           style={[styles.input, styles.multiline]}
           onChangeText={setDescription}
           value={description}
-          placeholder="Branch, account type, or anything worth remembering…"
+          placeholder="Branch, account type, or anything worth rememberingâ€¦"
           placeholderTextColor={colors.placeholder}
           multiline
           numberOfLines={4}

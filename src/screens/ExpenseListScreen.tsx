@@ -1,9 +1,9 @@
-import React, { useMemo } from "react";
+﻿import React, { useMemo } from "react";
 import GroupedList from "../components/GroupedList";
 import GroupedRow from "../components/GroupedRow";
 import { useTheme } from "../context/ThemeContext";
 import { ExpenseModel } from "../models/ExpenseModel";
-import { useCollectionState } from "../redux/hooks";
+import { useCollectionState } from "../query/hooks";
 import { groupByMonth, sumAmount } from "../utils/ledger";
 import { amountFormat } from "../utils/Utils";
 import { useRouter } from "expo-router";
@@ -26,7 +26,7 @@ const ExpenseListScreen = () => {
       keyOf={(item) => item.id}
       // The money matters more than the count, so each month's heading carries
       // its total instead.
-      countLabel={(section) => `₹ ${amountFormat(sumAmount(section.data))}`}
+      countLabel={(section) => `â‚¹ ${amountFormat(sumAmount(section.data))}`}
       noun="expense"
       addLabel="Add expense"
       onAdd={() => navigateAddEdit(null)}
@@ -38,7 +38,7 @@ const ExpenseListScreen = () => {
           icon="receipt-outline"
           accent={colors.accentAmber}
           title={item.typeName}
-          value={`₹ ${amountFormat(item.amount)}`}
+          value={`â‚¹ ${amountFormat(item.amount)}`}
           meta={item.date || undefined}
           description={item.comments}
           onPress={() => navigateAddEdit(item)}

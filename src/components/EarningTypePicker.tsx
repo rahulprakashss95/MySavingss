@@ -1,11 +1,11 @@
-import React from "react";
+﻿import React from "react";
 import { EarningTypeModel } from "../models/LedgerModel";
-import { useCollectionState } from "../redux/hooks";
+import { useCollectionState } from "../query/hooks";
 import EarningTypeForm from "./forms/EarningTypeForm";
 import SearchableSelect from "./SearchableSelect";
 
 type Props = {
-  /** The chosen type — stored by name on the earning, so id === name here. */
+  /** The chosen type â€” stored by name on the earning, so id === name here. */
   selectedName: string;
   onSelect: (typeName: string) => void;
 };
@@ -13,7 +13,7 @@ type Props = {
 /**
  * A searchable earning-type dropdown, backed entirely by the family's own
  * `earning_types` (mirrors `ExpenseTypePicker`). "Add type" opens the type form
- * in a popup and selects the new name — no leaving the earning form.
+ * in a popup and selects the new name â€” no leaving the earning form.
  *
  * Earnings store the type *name*, not an id (see `EarningModel`), so options use
  * the name as their id throughout.
@@ -24,7 +24,7 @@ const EarningTypePicker = ({ selectedName, onSelect }: Props) => {
   return (
     <SearchableSelect
       label="Type"
-      placeholder={items.length ? "Select a type" : "No types yet — add one"}
+      placeholder={items.length ? "Select a type" : "No types yet â€” add one"}
       selectedId={selectedName}
       selectedName={selectedName}
       options={items.map((t) => ({ id: t.name, name: t.name }))}

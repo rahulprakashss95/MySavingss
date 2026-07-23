@@ -1,6 +1,6 @@
-import React, { useMemo } from "react";
+﻿import React, { useMemo } from "react";
 import GroupedList from "../components/GroupedList";
-import { useCollectionState } from "../redux/hooks";
+import { useCollectionState } from "../query/hooks";
 import GroupedRow from "../components/GroupedRow";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -26,7 +26,7 @@ const SavingListScreen = () => {
       {...list}
       sections={sections}
       keyOf={(item) => item.id}
-      countLabel={(section) => `₹ ${amountFormat(sumAmount(section.data))}`}
+      countLabel={(section) => `â‚¹ ${amountFormat(sumAmount(section.data))}`}
       noun="saving"
       addLabel="Add saving"
       onAdd={() => navigateAddEdit(null)}
@@ -38,7 +38,7 @@ const SavingListScreen = () => {
           icon="wallet-outline"
           accent={colors.accentAmber}
           title={item.accountName || item.clientName || "Saving"}
-          value={`₹ ${amountFormat(item.amount)}`}
+          value={`â‚¹ ${amountFormat(item.amount)}`}
           meta={item.date || undefined}
           description={item.comments}
           onPress={() => navigateAddEdit(item)}

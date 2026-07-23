@@ -1,15 +1,15 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+﻿import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 import BankForm from "../components/forms/BankForm";
 import { useTheme } from "../context/ThemeContext";
 import { BankModel } from "../models/BankModel";
-import { useCollectionState } from "../redux/hooks";
+import { useCollectionState } from "../query/hooks";
 import { ThemeColors } from "../utils/Color";
 
 /**
  * Add/edit an institution (a `banks` row). The route carries just the id
- * (`new` = create); the record itself is read from the RTK cache — which
+ * (`new` = create); the record itself is read from the RTK cache â€” which
  * `useCollectionState` hydrates on mount, so this works on a cold deep link,
  * not only when reached from the list. Fields, save and delete live in the
  * shared BankForm.

@@ -1,10 +1,10 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+﻿import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 import ExpenseTypeForm from "../components/forms/ExpenseTypeForm";
 import { useTheme } from "../context/ThemeContext";
 import { ExpenseTypeModel } from "../models/ExpenseModel";
-import { useCollectionState } from "../redux/hooks";
+import { useCollectionState } from "../query/hooks";
 import { ThemeColors } from "../utils/Color";
 
 /**

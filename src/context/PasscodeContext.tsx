@@ -1,22 +1,26 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Crypto from "expo-crypto";
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { useAuth } from "./AuthContext";
+import { create } from "zustand";
+import { useAuthStore } from "./AuthContext";
 
 const PASSCODE_STORAGE_KEY = "@homevault/passcode";
 
 /** What we keep on disk: never the passcode itself, only a salted digest. */
 type StoredPasscode = { salt: string; hash: string };
 
-type PasscodeContextValue = {
+const isStoredPasscode = (value: unknown): value is StoredPasscode =>
+  !!value &&
+  typeof (value as StoredPasscode).salt === "string" &&
+  typeof (value as StoredPasscode).hash === "string";
+
+const digest = (salt: string, code: string) =>
+  Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    `${salt}:${code}`
+  );
+
+type PasscodeStore = {
+  stored: StoredPasscode | null;
   /** True when a passcode has been set and the app should lock on launch. */
   isEnabled: boolean;
   /**
@@ -35,85 +39,30 @@ type PasscodeContextValue = {
   verify: (code: string) => Promise<boolean>;
   /** Clear the launch lock after a successful entry. */
   unlock: () => void;
+  /** Rehydrate the stored digest once at cold start. */
+  restore: () => Promise<void>;
+  /**
+   * Arm the launch lock if a restored session has a passcode enabled. Called
+   * once after auth + passcode have both rehydrated. Locking only a *restored*
+   * session is deliberate: a user who just typed their credentials has already
+   * authenticated, and toggling the passcode on later in Settings must not lock
+   * them out of the running app.
+   */
+  arm: () => void;
 };
 
-const PasscodeContext = createContext<PasscodeContextValue | undefined>(
-  undefined
-);
+/**
+ * The launch passcode. Was a React context + provider (which watched auth to
+ * decide arming); now a Zustand store. The arm step reads the auth store
+ * directly, and the `usePasscode` hook name and shape are unchanged.
+ */
+export const usePasscodeStore = create<PasscodeStore>((set, get) => ({
+  stored: null,
+  isEnabled: false,
+  isLocked: false,
+  isRestoring: true,
 
-const isStoredPasscode = (value: unknown): value is StoredPasscode =>
-  !!value &&
-  typeof (value as StoredPasscode).salt === "string" &&
-  typeof (value as StoredPasscode).hash === "string";
-
-const digest = (salt: string, code: string) =>
-  Crypto.digestStringAsync(
-    Crypto.CryptoDigestAlgorithm.SHA256,
-    `${salt}:${code}`
-  );
-
-type Props = {
-  children: React.ReactNode;
-};
-
-export const PasscodeProvider = ({ children }: Props) => {
-  // The lock only matters for a restored session, so we watch auth to decide
-  // whether to arm it at cold start.
-  const { user, isRestoring: authRestoring } = useAuth();
-
-  const [stored, setStored] = useState<StoredPasscode | null>(null);
-  const [isEnabled, setIsEnabled] = useState(false);
-  const [isLocked, setIsLocked] = useState(false);
-  const [isRestoring, setIsRestoring] = useState(true);
-
-  // Rehydrate the stored digest once on cold start.
-  useEffect(() => {
-    let settled = false;
-    const finish = () => {
-      if (!settled) {
-        settled = true;
-        setIsRestoring(false);
-      }
-    };
-    // The launch decision waits on this (splash stays up), so never let a
-    // wedged read hang the app — continue as "no passcode" after a grace period.
-    const timeout = setTimeout(() => {
-      console.warn("Passcode restore timed out; continuing without a passcode.");
-      finish();
-    }, 3000);
-
-    AsyncStorage.getItem(PASSCODE_STORAGE_KEY)
-      .then((raw) => {
-        if (!raw) return;
-        const parsed = JSON.parse(raw);
-        if (isStoredPasscode(parsed)) {
-          setStored(parsed);
-          setIsEnabled(true);
-        }
-      })
-      .catch((error) => {
-        console.log("Unable to restore passcode state", error);
-      })
-      .finally(() => {
-        clearTimeout(timeout);
-        finish();
-      });
-  }, []);
-
-  // Arm the launch lock exactly once, the first time both auth and the passcode
-  // state are known. Locking only a *restored* session is deliberate: a user who
-  // just typed their credentials has already authenticated, and toggling the
-  // passcode on later in Settings must not lock them out of the running app.
-  const armedRef = useRef(false);
-  useEffect(() => {
-    if (authRestoring || isRestoring || armedRef.current) return;
-    armedRef.current = true;
-    if (user && isEnabled) {
-      setIsLocked(true);
-    }
-  }, [authRestoring, isRestoring, user, isEnabled]);
-
-  const enablePasscode = useCallback(async (code: string) => {
+  enablePasscode: async (code) => {
     const salt = Crypto.randomUUID();
     const hash = await digest(salt, code);
     const next: StoredPasscode = { salt, hash };
@@ -123,68 +72,57 @@ export const PasscodeProvider = ({ children }: Props) => {
       console.log("Unable to persist passcode", error);
       throw error;
     }
-    setStored(next);
-    setIsEnabled(true);
     // Setting a passcode inside a running session never locks it — the lock is
     // for the next launch.
-    setIsLocked(false);
-  }, []);
+    set({ stored: next, isEnabled: true, isLocked: false });
+  },
 
-  const disablePasscode = useCallback(async () => {
+  disablePasscode: async () => {
     try {
       await AsyncStorage.removeItem(PASSCODE_STORAGE_KEY);
     } catch (error) {
       console.log("Unable to clear passcode", error);
       throw error;
     }
-    setStored(null);
-    setIsEnabled(false);
-    setIsLocked(false);
-  }, []);
+    set({ stored: null, isEnabled: false, isLocked: false });
+  },
 
-  const verify = useCallback(
-    async (code: string) => {
-      if (!stored) return false;
-      const hash = await digest(stored.salt, code);
-      return hash === stored.hash;
-    },
-    [stored]
-  );
+  verify: async (code) => {
+    const { stored } = get();
+    if (!stored) return false;
+    const hash = await digest(stored.salt, code);
+    return hash === stored.hash;
+  },
 
-  const unlock = useCallback(() => setIsLocked(false), []);
+  unlock: () => set({ isLocked: false }),
 
-  const value = useMemo<PasscodeContextValue>(
-    () => ({
-      isEnabled,
-      isLocked,
-      isRestoring,
-      enablePasscode,
-      disablePasscode,
-      verify,
-      unlock,
-    }),
-    [
-      isEnabled,
-      isLocked,
-      isRestoring,
-      enablePasscode,
-      disablePasscode,
-      verify,
-      unlock,
-    ]
-  );
+  restore: async () => {
+    try {
+      // The launch decision waits on this (splash stays up), so never let a
+      // wedged read hang the app — continue as "no passcode" after a grace period.
+      const raw = await Promise.race([
+        AsyncStorage.getItem(PASSCODE_STORAGE_KEY),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000)),
+      ]);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (isStoredPasscode(parsed)) {
+          set({ stored: parsed, isEnabled: true });
+        }
+      }
+    } catch (error) {
+      console.log("Unable to restore passcode state", error);
+    } finally {
+      set({ isRestoring: false });
+    }
+  },
 
-  return (
-    <PasscodeContext.Provider value={value}>
-      {children}
-    </PasscodeContext.Provider>
-  );
-};
+  arm: () => {
+    const { user } = useAuthStore.getState();
+    if (user && get().isEnabled) {
+      set({ isLocked: true });
+    }
+  },
+}));
 
-export const usePasscode = () => {
-  const context = useContext(PasscodeContext);
-  if (!context) {
-    throw new Error("usePasscode must be used within a PasscodeProvider");
-  }
-  return context;
-};
+export const usePasscode = () => usePasscodeStore();

@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+﻿import React, { useMemo } from "react";
 import {
   FlatList,
   RefreshControl,
@@ -11,11 +11,11 @@ import { useLocalSearchParams } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { ThemeColors, tint } from "../utils/Color";
-import { useCollectionState, useOwnerName } from "../redux/hooks";
+import { useCollectionState, useOwnerName } from "../query/hooks";
 import { GameScoreModel, gameByKey } from "../models/GameModel";
 
 /** A rank medal for the top three; a plain number after that. */
-const MEDALS = ["🥇", "🥈", "🥉"];
+const MEDALS = ["ðŸ¥‡", "ðŸ¥ˆ", "ðŸ¥‰"];
 
 const GameLeaderboardScreen = () => {
   const { colors } = useTheme();
@@ -75,7 +75,7 @@ const GameLeaderboardScreen = () => {
                 {isMe ? " (you)" : ""}
               </Text>
               <Text style={styles.meta}>
-                Best tile {item.bestTile.toLocaleString()} ·{" "}
+                Best tile {item.bestTile.toLocaleString()} Â·{" "}
                 {item.gamesPlayed} {item.gamesPlayed === 1 ? "game" : "games"}
               </Text>
             </View>

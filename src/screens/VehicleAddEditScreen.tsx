@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+﻿import React, { useMemo, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -22,7 +22,7 @@ import SearchableSelect from "../components/SearchableSelect";
 import VisibilityToggle from "../components/VisibilityToggle";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
-import { commitDelete, commitSave, useAppDispatch } from "../redux/hooks";
+import { commitDelete, commitSave, useAppDispatch } from "../query/hooks";
 import { canEdit, Visibility } from "../models/common";
 import { VEHICLE_TYPES, VehicleModel } from "../models/AssetModel";
 import { ThemeColors } from "../utils/Color";
@@ -228,7 +228,7 @@ const VehicleAddEditScreen = ({ initial }: Props) => {
           style={[styles.input, styles.multiline]}
           onChangeText={setDescription}
           value={description}
-          placeholder="Model year, colour, where the RC is kept…"
+          placeholder="Model year, colour, where the RC is keptâ€¦"
           placeholderTextColor={colors.placeholder}
           multiline
           numberOfLines={4}

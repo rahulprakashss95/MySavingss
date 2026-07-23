@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+﻿import React, { useMemo, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -21,7 +21,7 @@ import SearchableSelect from "../components/SearchableSelect";
 import VisibilityToggle from "../components/VisibilityToggle";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
-import { commitDelete, commitSave, useAppDispatch } from "../redux/hooks";
+import { commitDelete, commitSave, useAppDispatch } from "../query/hooks";
 import { canEdit, Visibility } from "../models/common";
 import {
   DEFAULT_GOLD_KARAT,
@@ -204,7 +204,7 @@ const OrnamentAddEditScreen = ({ initial }: Props) => {
           style={[styles.input, styles.multiline]}
           onChangeText={setDescription}
           value={description}
-          placeholder="Purity, where it's kept, who gifted it…"
+          placeholder="Purity, where it's kept, who gifted itâ€¦"
           placeholderTextColor={colors.placeholder}
           multiline
           numberOfLines={4}

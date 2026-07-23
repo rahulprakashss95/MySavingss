@@ -1,6 +1,6 @@
-import React, { useMemo } from "react";
+﻿import React, { useMemo } from "react";
 import GroupedList from "../components/GroupedList";
-import { useCollectionState, useOwnerName } from "../redux/hooks";
+import { useCollectionState, useOwnerName } from "../query/hooks";
 import GroupedRow from "../components/GroupedRow";
 import { useTheme } from "../context/ThemeContext";
 import { ORNAMENT_TYPES, OrnamentModel } from "../models/AssetModel";
@@ -31,9 +31,9 @@ const pieceCount = (count: string) => {
   return `${parsed} pieces`;
 };
 
-/** "22K · 3 pieces", or whichever half of that actually applies. */
+/** "22K Â· 3 pieces", or whichever half of that actually applies. */
 const rowMeta = (ornament: OrnamentModel) =>
-  [karatOf(ornament), pieceCount(ornament.count)].filter(Boolean).join(" · ");
+  [karatOf(ornament), pieceCount(ornament.count)].filter(Boolean).join(" Â· ");
 
 const OrnamentListScreen = () => {
   const router = useRouter();
@@ -77,7 +77,7 @@ const OrnamentListScreen = () => {
           icon="ribbon-outline"
           accent={accentFor(item.ornamentType, colors)}
           title={item.name}
-          value={weightSummary(item.grams) || "—"}
+          value={weightSummary(item.grams) || "â€”"}
           subtitle={nameOf(item.ownerId) || undefined}
           meta={rowMeta(item) || undefined}
           description={item.description}

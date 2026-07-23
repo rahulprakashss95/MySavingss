@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+﻿import React, { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import {
   addExpenseType,
@@ -9,7 +9,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { canEdit, Visibility } from "../../models/common";
 import { ExpenseTypeModel } from "../../models/ExpenseModel";
-import { commitDelete, commitSave, useAppDispatch } from "../../redux/hooks";
+import { commitDelete, commitSave, useAppDispatch } from "../../query/hooks";
 import { ThemeColors } from "../../utils/Color";
 import { showConfirmationAlert, showToast } from "../../utils/Utils";
 import Button from "../Button";

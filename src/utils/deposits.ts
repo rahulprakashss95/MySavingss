@@ -137,7 +137,7 @@ export type AccountTotals = {
   interest: number;
   accountCount: number;
   largest: number;
-  /** Balance grouped by section (Balances/Deposits/Cash) for the overview. */
+  /** Balance grouped by section (Balances/Deposits/Cash in Hand) for the overview. */
   balanceBySection: LabelledTotal[];
 };
 

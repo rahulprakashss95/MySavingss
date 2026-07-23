@@ -5,12 +5,15 @@ import GroupedRow from "../components/GroupedRow";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { LedgerClientModel } from "../models/LedgerModel";
+import { formatPhone } from "../utils/countryCodes";
 import { byText } from "../utils/grouping";
 import { useRouter } from "expo-router";
 
 /** Phone and email on one line, whichever of them exists. */
 const contactLine = (client: LedgerClientModel) =>
-  [client.phone, client.email].filter(Boolean).join(" · ");
+  [formatPhone(client.dialCode, client.phone), client.email]
+    .filter(Boolean)
+    .join(" · ");
 
 const LedgerClientListScreen = () => {
   const router = useRouter();

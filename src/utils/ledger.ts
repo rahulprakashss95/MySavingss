@@ -35,6 +35,49 @@ export const groupByMonth = <T extends Dated>(entries: T[]): Section<T>[] =>
 export const sumAmount = (entries: Amounted[]) =>
   entries.reduce((total, entry) => total + (Number(entry.amount) || 0), 0);
 
+export type MonthPoint = {
+  /** "YYYY-MM". */
+  key: string;
+  /** "Jul", for an axis. */
+  label: string;
+  total: number;
+  /** How many entries landed in the month — a total of ₹0 from no entries and
+   *  one from a refund are different things. */
+  count: number;
+};
+
+/**
+ * Totals per calendar month for the `count` months ending with the current one,
+ * oldest first. Quiet months come back as zeros rather than gaps, so the series
+ * is always `count` long and lines up with a fixed set of columns. One pass over
+ * the entries, unlike filtering the list once per month.
+ */
+export const monthlyTotals = <T extends Dated & Amounted>(
+  entries: T[],
+  count: number
+): MonthPoint[] => {
+  const totals = new Map<string, { total: number; count: number }>();
+  entries.forEach((entry) => {
+    const key = monthKey(entry.date);
+    const bucket = totals.get(key) ?? { total: 0, count: 0 };
+    bucket.total += Number(entry.amount) || 0;
+    bucket.count += 1;
+    totals.set(key, bucket);
+  });
+
+  return Array.from({ length: count }, (_, index) => {
+    const month = moment().subtract(count - 1 - index, "months");
+    const key = month.format("YYYY-MM");
+    const bucket = totals.get(key);
+    return {
+      key,
+      label: month.format("MMM"),
+      total: bucket?.total ?? 0,
+      count: bucket?.count ?? 0,
+    };
+  });
+};
+
 export type Bucket = { label: string; total: number; count: number };
 
 /** Totals grouped by any label, largest first — the shape every chart wants. */

@@ -20,6 +20,7 @@ import {
 import {
   AccountModel,
   AccountType,
+  accountTypeLabel,
   isMaturingAccount,
   normalizeAccountType,
 } from "../models/AccountModel";
@@ -41,11 +42,14 @@ import { useRouter } from "expo-router";
 
 /** The list tabs, in the order they appear. `type` is the stored account type. */
 const TABS: { type: AccountType; label: string }[] = [
-  { type: "Account Balance", label: "Account Balance" },
-  { type: "Cash", label: "Cash" },
-  { type: "Fixed Deposit", label: "Fixed Deposit" },
-  { type: "Recurring Deposit", label: "Recurring Deposit" },
-];
+  "Account Balance",
+  "Cash",
+  "Fixed Deposit",
+  "Recurring Deposit",
+].map((type) => ({
+  type: type as AccountType,
+  label: accountTypeLabel(type),
+}));
 
 const AccountListScreen = () => {
   const router = useRouter();

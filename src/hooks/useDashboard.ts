@@ -20,7 +20,12 @@ import {
   buildAccountTotals,
   parseMaturity,
 } from "../utils/deposits";
-import { monthKey, parseLedgerDate, sumAmount } from "../utils/ledger";
+import {
+  MonthPoint,
+  monthlyTotals,
+  parseLedgerDate,
+  sumAmount,
+} from "../utils/ledger";
 
 /** A slice of the family's total worth, e.g. Deposits or Gold. */
 export type WorthSegment = {
@@ -49,6 +54,27 @@ export type PaymentDueItem = {
   overdue: boolean;
 };
 
+/**
+ * One money flow — earnings or expenses — read as "this month against its own
+ * recent past". Every figure is in rupees.
+ */
+export type MonthFlow = {
+  /** The running month's total *so far*: it is compared against full months. */
+  total: number;
+  /** Last calendar month, complete. */
+  previous: number;
+  /**
+   * Mean of the `HISTORY_MONTHS` completed months before this one. The running
+   * month is excluded deliberately — including it compares a month against a
+   * window containing itself, so the bar moves all month and settles nowhere.
+   */
+  average: number;
+  /** Oldest first: the completed months, then the running one last. */
+  series: MonthPoint[];
+  /** Month-end total at the current rate, or null when projecting would mislead. */
+  pace: number | null;
+};
+
 export type DashboardData = {
   ready: boolean;
   /** null when the member has no worth-bearing module (deposits/ledger/assets). */
@@ -64,16 +90,97 @@ export type DashboardData = {
     maturities: MaturityItem[];
     paymentsDue: PaymentDueItem[];
   } | null;
-  /** null when the member has no expenses module. */
+  /** null when the member holds neither the earnings nor the expenses tile. */
   month: {
-    expenses: number;
-    earnings: number | null;
-    lastMonthExpenses: number;
-    sparkline: { label: string; value: number }[];
+    /** null without the expenses tile. */
+    expenses: MonthFlow | null;
+    /** null without the earnings tile. */
+    earnings: MonthFlow | null;
+    /** Earned so far this Indian financial year (Apr–Mar). null without earnings. */
+    fy: { label: string; earned: number } | null;
   } | null;
 };
 
 const UPCOMING_DAYS = 60;
+
+/** Completed months behind the running one that the average and chart cover. */
+const HISTORY_MONTHS = 6;
+
+/**
+ * A month's flow against the six before it. The series carries one extra column
+ * for the running month, so the average line is drawn across exactly the
+ * completed months it was computed from.
+ */
+const buildFlow = <T extends { date: string; amount: string }>(
+  entries: T[]
+): MonthFlow => {
+  // `monthlyTotals` always returns exactly the length asked for, so the running
+  // month sits at a known index and the ones before it need no lookup.
+  const series = monthlyTotals(entries, HISTORY_MONTHS + 1);
+  const completed = series.slice(0, HISTORY_MONTHS);
+  const running = series[HISTORY_MONTHS];
+
+  const dayOfMonth = moment().date();
+  const daysInMonth = moment().daysInMonth();
+  // A projection off a single lump — a salary credit on the 1st — would read as
+  // a month several times any real one, so it takes two entries to earn a pace.
+  // It also stays hidden in the first days (too little to extrapolate from) and
+  // the last (by then the total says it better).
+  const pace =
+    running.count >= 2 && dayOfMonth >= 5 && dayOfMonth <= daysInMonth - 3
+      ? (running.total / dayOfMonth) * daysInMonth
+      : null;
+
+  return {
+    total: running.total,
+    previous: series[HISTORY_MONTHS - 1].total,
+    average:
+      completed.reduce((sum, point) => sum + point.total, 0) / HISTORY_MONTHS,
+    series,
+    pace,
+  };
+};
+
+/** Indian financial year: April 1 to March 31. */
+const financialYear = () => {
+  const now = moment();
+  const startYear = now.month() >= 3 ? now.year() : now.year() - 1;
+  return {
+    start: moment({ year: startYear, month: 3, day: 1 }).startOf("day"),
+    label: `FY ${String(startYear).slice(2)}-${String(startYear + 1).slice(2)}`,
+  };
+};
+
+/**
+ * The month card's figures. Earnings alone are enough to build it: gating the
+ * whole card on the expenses tile used to hide every income figure from members
+ * who track what they make but not what they spend.
+ */
+const buildMonth = (
+  needExpenses: boolean,
+  needEarnings: boolean,
+  expenses: ExpenseModel[],
+  earnings: EarningModel[]
+): DashboardData["month"] => {
+  if (!needExpenses && !needEarnings) return null;
+  const fy = financialYear();
+
+  return {
+    expenses: needExpenses ? buildFlow(expenses) : null,
+    earnings: needEarnings ? buildFlow(earnings) : null,
+    fy: needEarnings
+      ? {
+          label: fy.label,
+          earned: sumAmount(
+            earnings.filter((entry) => {
+              const date = parseLedgerDate(entry.date);
+              return !!date && !date.isBefore(fy.start);
+            })
+          ),
+        }
+      : null,
+  };
+};
 
 /**
  * Aggregates the family's holdings, upcoming events and this month's spending
@@ -93,6 +200,9 @@ export const useDashboard = (): DashboardData => {
     ledger: has("earnings") || has("savings"),
     assets: has("ornaments") || has("properties"),
     expenses: has("expenses"),
+    // Separate from `ledger` (which also covers savings): the month card's
+    // earnings half needs the earnings tile specifically.
+    earnings: has("earnings"),
   };
 
   // Served from the shared store — fetched once per session, not on every focus.
@@ -130,7 +240,7 @@ export const useDashboard = (): DashboardData => {
     if (need.deposits)
       segments.push({
         key: "deposits",
-        label: "Accounts",
+        label: "Cash & Deposits",
         value: depositsValue,
         href: "/assets/accounts",
       });
@@ -233,34 +343,12 @@ export const useDashboard = (): DashboardData => {
       need.deposits || need.assets ? { maturities, paymentsDue } : null;
 
     // ---- This month --------------------------------------------------------
-    const thisKey = moment().format("YYYY-MM");
-    const lastKey = moment().subtract(1, "month").format("YYYY-MM");
-
-    const month = need.expenses
-      ? {
-          expenses: sumAmount(
-            expenses.items.filter((e) => monthKey(e.date) === thisKey)
-          ),
-          earnings: need.ledger
-            ? sumAmount(
-                earnings.items.filter((e) => monthKey(e.date) === thisKey)
-              )
-            : null,
-          lastMonthExpenses: sumAmount(
-            expenses.items.filter((e) => monthKey(e.date) === lastKey)
-          ),
-          sparkline: Array.from({ length: 6 }, (_, i) => {
-            const m = moment().subtract(5 - i, "months");
-            const key = m.format("YYYY-MM");
-            return {
-              label: m.format("MMM"),
-              value: sumAmount(
-                expenses.items.filter((e) => monthKey(e.date) === key)
-              ),
-            };
-          }),
-        }
-      : null;
+    const month = buildMonth(
+      need.expenses,
+      need.earnings,
+      expenses.items,
+      earnings.items
+    );
 
     return { ready, worth, attention, month };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -269,6 +357,7 @@ export const useDashboard = (): DashboardData => {
     need.ledger,
     need.assets,
     need.expenses,
+    need.earnings,
     accounts.items,
     accounts.hasLoaded,
     banks.items,

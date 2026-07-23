@@ -14,6 +14,7 @@ import {
   AccountModel,
   ACCOUNT_TYPES,
   AccountType,
+  accountTypeLabel,
   INTEREST_FREQUENCIES,
   InterestFrequency,
   isMaturingAccount,
@@ -278,7 +279,7 @@ const AccountAddEditScreen = ({ initial, presetType }: Props) => {
                   <Text
                     style={[styles.chipText, active && styles.chipTextActive]}
                   >
-                    {type}
+                    {accountTypeLabel(type)}
                   </Text>
                 </Pressable>
               );

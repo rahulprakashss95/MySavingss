@@ -3,6 +3,9 @@ import MenuButton from "../../../../src/components/MenuButton";
 import ProfileButton from "../../../../src/components/ProfileButton";
 import { useTheme } from "../../../../src/context/ThemeContext";
 
+/** Keeps `index` under deep links from other tabs — see the Settings stack. */
+export const unstable_settings = { anchor: "index" };
+
 export default function LedgerStack() {
   const { colors } = useTheme();
   return (

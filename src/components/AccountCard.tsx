@@ -3,7 +3,11 @@ import { useMemo, useState } from "react";
 import moment from "moment";
 import { Ionicons } from "@expo/vector-icons";
 import { amountFormat } from "../utils/Utils";
-import { AccountModel, isMaturingAccount } from "../models/AccountModel";
+import {
+  AccountModel,
+  accountTypeLabel,
+  isMaturingAccount,
+} from "../models/AccountModel";
 import { useTheme } from "../context/ThemeContext";
 import { ThemeColors, tint } from "../utils/Color";
 import {
@@ -94,7 +98,7 @@ const AccountCard = ({
         ? colors.positive
         : colors.accentBlue;
   } else if (isCash) {
-    pillLabel = "Cash";
+    pillLabel = accountTypeLabel("Cash");
   }
   const showPill = isFD || isRD || isCash;
 
@@ -102,7 +106,9 @@ const AccountCard = ({
   // institution (falling back to a legacy name, then the type).
   const name = (account.name ?? "").trim();
   const inst = institution && institution !== "—" ? institution : "";
-  const title = isCash ? name || "Cash" : inst || name || account.accountType;
+  const title = isCash
+    ? name || accountTypeLabel("Cash")
+    : inst || name || accountTypeLabel(account.accountType);
 
   // Don't repeat the institution in the subtitle when it's already the title.
   const subtitleParts = [

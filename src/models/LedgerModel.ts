@@ -13,8 +13,14 @@ type UserOwned = Owned;
 export type LedgerClientModel = UserOwned & {
   id: string;
   name: string;
+  /** Dialling code for `phone`, e.g. "+91". Blank on rows created before it
+   * existed; the form falls back to `DEFAULT_DIAL_CODE`. */
+  dialCode: string;
+  /** The national number only — the code lives in `dialCode`. */
   phone: string;
   email: string;
+  /** Free-form postal address; blank on rows created before it existed. */
+  address: string;
   description: string;
 };
 

@@ -82,6 +82,32 @@ const SettingsScreen = () => {
         </View>
       </Card>
 
+      <Text style={styles.sectionTitle}>Home</Text>
+      <Card customStyle={styles.card}>
+        <Pressable
+          onPress={() => router.push("/settings/dashboard")}
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
+        >
+          <Ionicons
+            name="reorder-three-outline"
+            size={22}
+            color={colors.textMuted}
+          />
+          <View style={styles.rowText}>
+            <Text style={styles.rowLabel}>Rearrange dashboard</Text>
+            <Text style={styles.rowDescription}>
+              Choose the order the Home sections appear in
+            </Text>
+          </View>
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color={colors.textMuted}
+          />
+        </Pressable>
+      </Card>
+
       <Text style={styles.sectionTitle}>Appearance</Text>
       <Card customStyle={styles.card}>
         {THEME_OPTIONS.map((option, index) => {

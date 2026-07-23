@@ -5,12 +5,10 @@
   "build": {
     "release": {
       "cache": {
-        "key": "release-v1",
-        "cacheDefaultBranch": true
+        "key": "release-v1"
       },
       "android": {
-        "buildType": "apk",
-        "resourceClass": "large"
+        "buildType": "apk"
       },
       "ios": {
         "simulator": false
@@ -20,12 +18,10 @@
       "developmentClient": false,
       "distribution": "internal",
       "cache": {
-        "key": "dev-v1",
-        "cacheDefaultBranch": true
+        "key": "dev-v1"
       },
       "android": {
-        "buildType": "apk",
-        "resourceClass": "large"
+        "buildType": "apk"
       },
       "ios": {
         "simulator": false
@@ -34,11 +30,7 @@
     "preview": {
       "distribution": "internal",
       "cache": {
-        "key": "preview-v1",
-        "cacheDefaultBranch": true
-      },
-      "android": {
-        "resourceClass": "large"
+        "key": "preview-v1"
       },
       "ios": {
         "simulator": false
@@ -46,11 +38,7 @@
     },
     "production": {
       "cache": {
-        "key": "prod-v1",
-        "cacheDefaultBranch": true
-      },
-      "android": {
-        "resourceClass": "large"
+        "key": "prod-v1"
       },
       "ios": {
         "simulator": false

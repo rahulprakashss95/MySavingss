@@ -1,6 +1,6 @@
 {
   "name": "homevault",
-  "version": "1.2.21",
+  "version": "1.2.23",
   "homepage": "/HomeVault/",
   "main": "expo-router/entry",
   "scripts": {

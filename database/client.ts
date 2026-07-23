@@ -24,6 +24,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AppState, Platform } from "react-native";
 // PostgREST builds request URLs with `new URL()`, which Hermes does not fully
 // implement. The polyfill must be imported before the client is created.
 import "react-native-url-polyfill/auto";
@@ -44,6 +45,68 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   );
 }
 
+/* ------------------------------------------------------------------ *
+ * 401 recovery
+ *
+ * supabase-js resolves the bearer token per request by calling `getSession()`,
+ * and when that comes back empty it falls back to the publishable key above.
+ * A `sb_publishable_*` key is not a JWT, so the API answers **401** instead of
+ * quietly degrading to the anon role — and it comes back empty more often than
+ * you'd hope on a cold start: the persisted access token has usually expired,
+ * and the refresh behind it can lose a race with the first screen's reads or
+ * land inside auth-js's 60s post-failure cooldown.
+ *
+ * One 401 used to be terminal. The query client runs with `retry: false` and
+ * `staleTime: Infinity`, so a collection that failed once stayed failed for the
+ * whole session — the "load the app, get nothing, relaunch and it's fine" bug.
+ *
+ * So every request gets exactly one second chance: on a 401 the session is
+ * refreshed and the call is replayed with the new token. Concurrent 401s share
+ * a single refresh rather than each firing their own. Requests to the auth
+ * endpoint are exempt — refreshing in response to a failed refresh would spin.
+ * ------------------------------------------------------------------ */
+
+let refreshInFlight: Promise<string | null> | null = null;
+
+/** Refreshes the session, collapsing concurrent callers onto one request. */
+const refreshOnce = (): Promise<string | null> => {
+  refreshInFlight ??= supabase.auth
+    .refreshSession()
+    .then(({ data }) => data.session?.access_token ?? null)
+    .catch(() => null)
+    .finally(() => {
+      refreshInFlight = null;
+    });
+  return refreshInFlight;
+};
+
+const urlOf = (input: RequestInfo | URL): string => {
+  if (typeof input === "string") {
+    return input;
+  }
+  return input instanceof URL ? input.href : input.url;
+};
+
+const retryingFetch: typeof fetch = async (input, init) => {
+  const response = await fetch(input, init);
+  if (response.status !== 401 || urlOf(input).includes("/auth/v1/")) {
+    return response;
+  }
+
+  const token = await refreshOnce();
+  if (!token) {
+    // Genuinely signed out (or offline). Hand back the 401 so the caller's
+    // error path runs, rather than masking it as something retryable.
+    return response;
+  }
+
+  // `init.headers` still carries the token that just failed — supabase-js built
+  // them before the call — so the replay has to carry the new one itself.
+  const headers = new Headers(init?.headers);
+  headers.set("Authorization", `Bearer ${token}`);
+  return fetch(input, { ...init, headers });
+};
+
 /**
  * HomeVault logs in by username within a family, with no email — Supabase Auth
  * still does the actual authenticating, via a synthetic address derived from
@@ -61,7 +124,25 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     autoRefreshToken: true,
     detectSessionInUrl: false,
   },
+  global: { fetch: retryingFetch },
 });
+
+/**
+ * `autoRefreshToken` drives a timer, and on native a timer stops being reliable
+ * the moment the app leaves the foreground — so a token that should have been
+ * renewed while backgrounded is instead stale on resume. Supabase's own React
+ * Native guidance is to gate the refresh loop on AppState; web needs none of
+ * this, since the tab either runs or is gone.
+ */
+if (Platform.OS !== "web") {
+  AppState.addEventListener("change", (state) => {
+    if (state === "active") {
+      supabase.auth.startAutoRefresh();
+    } else {
+      supabase.auth.stopAutoRefresh();
+    }
+  });
+}
 
 export default supabase;
 

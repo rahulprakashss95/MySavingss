@@ -11,9 +11,11 @@ import { canEdit, Visibility } from "../../models/common";
 import { LedgerClientModel } from "../../models/LedgerModel";
 import { commitDelete, commitSave, useAppDispatch } from "../../query/hooks";
 import { ThemeColors } from "../../utils/Color";
+import { DEFAULT_DIAL_CODE } from "../../utils/countryCodes";
 import { showConfirmationAlert, showToast } from "../../utils/Utils";
 import Button from "../Button";
 import Loader from "../Loader";
+import PhoneInput from "../PhoneInput";
 import ReadOnlyBanner from "../ReadOnlyBanner";
 import ReadOnlyGuard from "../ReadOnlyGuard";
 import VisibilityToggle from "../VisibilityToggle";
@@ -37,8 +39,12 @@ const LedgerClientForm = ({ initial, onSaved, onDeleted }: Props) => {
   const isEdit = !!client;
 
   const [name, setName] = useState(client?.name ?? "");
+  const [dialCode, setDialCode] = useState(
+    client?.dialCode || DEFAULT_DIAL_CODE
+  );
   const [phone, setPhone] = useState(client?.phone ?? "");
   const [email, setEmail] = useState(client?.email ?? "");
+  const [address, setAddress] = useState(client?.address ?? "");
   const [description, setDescription] = useState(client?.description ?? "");
   const [visibility, setVisibility] = useState<Visibility>(
     client?.visibility ?? "private"
@@ -62,8 +68,10 @@ const LedgerClientForm = ({ initial, onSaved, onDeleted }: Props) => {
     setIsLoading(true);
     const payload = {
       name: name.trim(),
+      dialCode,
       phone: phone.trim(),
       email: email.trim(),
+      address: address.trim(),
       description: description.trim(),
       visibility,
     };
@@ -122,19 +130,18 @@ const LedgerClientForm = ({ initial, onSaved, onDeleted }: Props) => {
             autoCapitalize="words"
           />
 
-          <Text style={styles.label}>Phone</Text>
-          <TextInput
-            style={[styles.input, styles.inputSpacing]}
-            onChangeText={setPhone}
-            value={phone}
-            placeholder="Phone number"
-            placeholderTextColor={colors.placeholder}
-            keyboardType="phone-pad"
-          />
+          <View style={styles.inputSpacing}>
+            <PhoneInput
+              dialCode={dialCode}
+              onChangeDialCode={setDialCode}
+              value={phone}
+              onChangeText={setPhone}
+            />
+          </View>
 
           <Text style={styles.label}>Email</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, styles.inputSpacing]}
             onChangeText={setEmail}
             value={email}
             placeholder="name@example.com"
@@ -142,6 +149,18 @@ const LedgerClientForm = ({ initial, onSaved, onDeleted }: Props) => {
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
+          />
+
+          <Text style={styles.label}>Address</Text>
+          <TextInput
+            style={[styles.input, styles.address]}
+            onChangeText={setAddress}
+            value={address}
+            placeholder="Street, city, PIN…"
+            placeholderTextColor={colors.placeholder}
+            multiline
+            numberOfLines={3}
+            textAlignVertical="top"
           />
         </View>
 
@@ -222,6 +241,10 @@ const createStyles = (colors: ThemeColors) =>
     },
     multiline: {
       minHeight: 96,
+    },
+    // Shorter than a description box: an address is a few lines, not a note.
+    address: {
+      minHeight: 72,
     },
     primaryButton: {
       width: "100%",

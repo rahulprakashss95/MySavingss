@@ -196,7 +196,9 @@ const AssetOverviewScreen = () => {
         <Text style={styles.heroCaption}>
           Ornaments {rupees(ornamentSummary.totalValue)} · Properties{" "}
           {rupees(portfolio.total)} at cost
-          {showAccounts ? ` · Accounts ${rupees(accountTotals.balance)}` : ""}
+          {showAccounts
+            ? ` · Cash & Deposits ${rupees(accountTotals.balance)}`
+            : ""}
         </Text>
         {ornamentSummary.hasUnvalued && (
           <Text style={styles.heroWarning}>
@@ -317,7 +319,7 @@ const AssetOverviewScreen = () => {
 
       {showAccounts && (
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Accounts & Deposits</Text>
+          <Text style={styles.sectionTitle}>Cash & Deposits</Text>
           {accountTotals.accountCount === 0 ? (
             <Text style={styles.emptyText}>No accounts recorded yet.</Text>
           ) : (

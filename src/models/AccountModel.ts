@@ -11,7 +11,7 @@ import type { Creatable, Owned } from "./common";
  * A bank, a finance company and any other institution are one category here:
  * each can hold both normal money and deposits, so the *money-kind* is what the
  * type distinguishes, not the institution. The list groups these types into
- * three sections — Balances, Deposits and Cash — via `accountSection`.
+ * three sections — Balances, Deposits and Cash in Hand — via `accountSection`.
  *
  * `balance` is the number net worth sums, maintained as a snapshot the user
  * edits (see the schema note). The deposit-only fields (`principal`, interest,
@@ -26,6 +26,23 @@ export const ACCOUNT_TYPES = [
 ] as const;
 
 export type AccountType = (typeof ACCOUNT_TYPES)[number];
+
+/**
+ * What each type is *called* in the UI, kept separate from the stored value so a
+ * wording change never means migrating rows. "Cash" stores as before but reads
+ * as "Cash in Hand" — the section it lives under is now "Cash & Deposits", and
+ * an umbrella sharing its name with one of its own tabs reads as a mistake.
+ */
+const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
+  "Account Balance": "Account Balance",
+  "Fixed Deposit": "Fixed Deposit",
+  "Recurring Deposit": "Recurring Deposit",
+  Cash: "Cash in Hand",
+};
+
+/** Display name for a stored type; unknown legacy types show as-is. */
+export const accountTypeLabel = (accountType: string): string =>
+  ACCOUNT_TYPE_LABELS[accountType as AccountType] ?? accountType;
 
 /** The deposit-like types: they mature and carry interest. */
 export const MATURING_ACCOUNT_TYPES: readonly string[] = [
@@ -51,7 +68,7 @@ export const INTEREST_FREQUENCIES = [
 export type InterestFrequency = (typeof INTEREST_FREQUENCIES)[number];
 
 /** The three groups the list and overview organise accounts into. */
-export const ACCOUNT_SECTIONS = ["Balances", "Deposits", "Cash"] as const;
+export const ACCOUNT_SECTIONS = ["Balances", "Deposits", "Cash in Hand"] as const;
 
 export type AccountSection = (typeof ACCOUNT_SECTIONS)[number];
 
@@ -63,7 +80,7 @@ export type AccountSection = (typeof ACCOUNT_SECTIONS)[number];
  */
 export const accountSection = (accountType: string): AccountSection => {
   if (isMaturingAccount(accountType)) return "Deposits";
-  if (accountType === "Cash") return "Cash";
+  if (accountType === "Cash") return "Cash in Hand";
   return "Balances";
 };
 

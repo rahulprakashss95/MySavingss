@@ -28,6 +28,9 @@ function AccountsHeaderRight() {
   );
 }
 
+/** Keeps `index` under deep links from other tabs — see the Settings stack. */
+export const unstable_settings = { anchor: "index" };
+
 export default function AssetsStack() {
   const { colors } = useTheme();
   return (
@@ -59,7 +62,7 @@ export default function AssetsStack() {
       <Stack.Screen
         name="accounts/index"
         options={{
-          title: "Accounts & Deposits",
+          title: "Cash & Deposits",
           headerRight: () => <AccountsHeaderRight />,
         }}
       />

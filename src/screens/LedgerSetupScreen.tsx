@@ -7,9 +7,9 @@ import LedgerClientListScreen from "./LedgerClientListScreen";
 import ExpenseTypeListScreen from "./ExpenseTypeListScreen";
 
 const SEGMENTS = [
-  { key: "earningTypes", label: "Earning Types" },
   { key: "clients", label: "Clients" },
   { key: "expenseTypes", label: "Expense Types" },
+  { key: "earningTypes", label: "Earning Types" },
 ] as const;
 
 type SegmentKey = (typeof SEGMENTS)[number]["key"];
@@ -23,7 +23,7 @@ type SegmentKey = (typeof SEGMENTS)[number]["key"];
 const LedgerSetupScreen = () => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const [segment, setSegment] = useState<SegmentKey>("earningTypes");
+  const [segment, setSegment] = useState<SegmentKey>(SEGMENTS[0].key);
 
   return (
     <View style={styles.container}>
@@ -56,9 +56,9 @@ const LedgerSetupScreen = () => {
 
       {/* Each list owns its own flex:1 container and FAB. */}
       <View style={styles.body}>
-        {segment === "earningTypes" && <EarningTypeListScreen />}
         {segment === "clients" && <LedgerClientListScreen />}
         {segment === "expenseTypes" && <ExpenseTypeListScreen />}
+        {segment === "earningTypes" && <EarningTypeListScreen />}
       </View>
     </View>
   );

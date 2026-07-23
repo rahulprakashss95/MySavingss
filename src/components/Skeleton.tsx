@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import { Animated, Easing, StyleSheet, View } from "react-native";
+import type { DashboardSection } from "../context/DashboardLayoutContext";
 import { useTheme } from "../context/ThemeContext";
 import { ThemeColors } from "../utils/Color";
 import { currentOS } from "../utils/Utils";
@@ -201,6 +202,107 @@ export const OverviewSkeleton = () => {
   );
 };
 
+/** Bar heights, as a share of the track — a plausible month, not a flat row. */
+const SPARK_SHAPE = [0.42, 0.66, 0.5, 0.8, 0.58, 0.72, 0.36];
+
+/**
+ * The Home dashboard while its figures are still arriving.
+ *
+ * `sections` is the member's own order, so the real cards land exactly where
+ * their placeholders were. Quick access is drawn as a placeholder too even
+ * though its shortcuts are local and ready immediately: a live row of coloured
+ * chips sitting among grey cards reads as a screen that half-failed rather than
+ * one that is loading.
+ */
+export const DashboardSkeleton = ({
+  sections,
+  quickCount = 4,
+}: {
+  sections: DashboardSection[];
+  /** Chips to draw, including the trailing Edit one. */
+  quickCount?: number;
+}) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
+  const block: Record<DashboardSection, React.ReactNode> = {
+    worth: (
+      <View style={styles.dashCard}>
+        <Skeleton width={90} height={12} />
+        <Skeleton width={190} height={30} radius={8} style={styles.mt10} />
+        <Skeleton height={8} radius={4} style={styles.mt16} />
+        <View style={styles.dashChipRow}>
+          {[0, 1, 2, 3].map((index) => (
+            <Skeleton key={index} width={104} height={30} radius={10} />
+          ))}
+        </View>
+      </View>
+    ),
+    attention: (
+      <View style={styles.dashCard}>
+        <Skeleton width={120} height={12} />
+        {[0, 1, 2].map((index) => (
+          <View key={index} style={styles.dashAttnRow}>
+            <Skeleton width={34} height={34} radius={10} />
+            <View style={styles.clientDetails}>
+              <Skeleton width={150} height={15} />
+              <Skeleton width={90} height={11} style={styles.mt6} />
+            </View>
+            <Skeleton width={70} height={14} />
+          </View>
+        ))}
+      </View>
+    ),
+    month: (
+      <View style={styles.dashCard}>
+        <View style={styles.rowBetween}>
+          <Skeleton width={90} height={12} />
+          <Skeleton width={110} height={12} />
+        </View>
+        <Skeleton width={190} height={30} radius={8} style={styles.mt10} />
+        <Skeleton width={60} height={11} style={styles.mt6} />
+        <View style={[styles.rowBetween, styles.mt14]}>
+          <Skeleton width={120} height={11} />
+          <Skeleton width={110} height={11} />
+        </View>
+        <View style={styles.dashSpark}>
+          {SPARK_SHAPE.map((share, index) => (
+            <View key={index} style={styles.dashSparkCol}>
+              <View style={styles.dashSparkTrack}>
+                <Skeleton height={Math.round(52 * share)} radius={6} />
+              </View>
+              <Skeleton width={22} height={9} style={styles.mt6} />
+            </View>
+          ))}
+        </View>
+      </View>
+    ),
+    quick: (
+      <View>
+        <View style={styles.dashQuickTitle}>
+          <Skeleton width={100} height={13} />
+        </View>
+        <View style={styles.dashQuickRow}>
+          {Array.from({ length: Math.max(quickCount, 1) }).map((_, index) => (
+            <View key={index} style={styles.dashQuickChip}>
+              <Skeleton width={52} height={52} radius={16} />
+              <Skeleton width={44} height={11} />
+            </View>
+          ))}
+        </View>
+      </View>
+    ),
+  };
+
+  return (
+    <View accessibilityLabel="Loading dashboard">
+      {sections.map((key) => (
+        <React.Fragment key={key}>{block[key]}</React.Fragment>
+      ))}
+    </View>
+  );
+};
+
 const createStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     summaryRow: {
@@ -285,6 +387,54 @@ const createStyles = (colors: ThemeColors) =>
     },
     barRow: {
       marginBottom: 14,
+    },
+    // Home dashboard. The geometry tracks HomeScreen's own cards and chips —
+    // padding, radii and spacing — so the swap to real data doesn't shift the
+    // page under the reader.
+    dashCard: {
+      backgroundColor: colors.card,
+      borderRadius: 16,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+      padding: 18,
+      marginTop: 16,
+    },
+    dashChipRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      marginTop: 14,
+      gap: 8,
+    },
+    dashAttnRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      paddingVertical: 8,
+      marginTop: 2,
+    },
+    dashSpark: {
+      flexDirection: "row",
+      gap: 8,
+      marginTop: 14,
+    },
+    dashSparkCol: { flex: 1, alignItems: "center" },
+    dashSparkTrack: {
+      width: "100%",
+      height: 52,
+      justifyContent: "flex-end",
+    },
+    dashQuickTitle: {
+      marginTop: 28,
+      marginBottom: 12,
+    },
+    dashQuickRow: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+    dashQuickChip: {
+      alignItems: "center",
+      gap: 6,
+      width: 72,
+      // The real chip's label box is two lines tall; matching it here keeps the
+      // row from growing when the shortcuts appear.
+      paddingBottom: 19,
     },
     rowBetween: {
       flexDirection: "row",

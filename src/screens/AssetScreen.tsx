@@ -36,7 +36,7 @@ const AssetScreen = () => {
           <Text style={styles.sectionTitle}>Banking</Text>
           <FeatureTile
             wide
-            title="Accounts & Deposits"
+            title="Cash & Deposits"
             subtitle="Balances, fixed & recurring deposits, and cash"
             accent={colors.positive}
             renderIcon={(color) => (

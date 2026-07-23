@@ -59,7 +59,11 @@ const TREE: Node[] = [
       { label: "Ornaments", icon: "ribbon-outline", href: "/assets/ornaments" },
       { label: "Properties", icon: "home-outline", href: "/assets/properties" },
       { label: "Vehicles", icon: "car-outline", href: "/assets/vehicles" },
-      { label: "Accounts", icon: "card-outline", href: "/assets/accounts" },
+      {
+        label: "Cash & Deposits",
+        icon: "card-outline",
+        href: "/assets/accounts",
+      },
       { label: "Overview", icon: "stats-chart-outline", href: "/assets/overview" },
     ],
   },
@@ -95,7 +99,7 @@ const SideDrawer = () => {
   const [mounted, setMounted] = useState(false);
 
   // A row is lit for its own route and anything pushed beneath it, so a deep
-  // screen (e.g. /assets/accounts/new) keeps "Accounts" highlighted.
+  // screen (e.g. /assets/accounts/new) keeps "Cash & Deposits" highlighted.
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
   // Groups start expanded so their children are reachable in one tap.
@@ -168,9 +172,13 @@ const SideDrawer = () => {
       ]
     : visibleTree;
 
+  // `withAnchor` for the same reason as Home's links: the drawer opens from
+  // Home, so every destination is in another tab's stack and would otherwise
+  // arrive as that stack's initial route — no back button, and no way back via
+  // the tab bar either. The anchor pushes the module's index underneath first.
   const go = (href: string) => {
     close();
-    router.push(href as never);
+    router.push(href as never, { withAnchor: true });
   };
 
   const renderLeaf = (leaf: Leaf, nested: boolean) => {

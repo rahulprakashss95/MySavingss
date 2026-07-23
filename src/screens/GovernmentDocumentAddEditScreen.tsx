@@ -185,7 +185,7 @@ const GovernmentDocumentAddEditScreen = ({ initial }: Props) => {
           style={[styles.input, styles.multiline]}
           onChangeText={setDescription}
           value={description}
-          placeholder="Anything worth remembering â€” issue date, where it's keptâ€¦"
+          placeholder="Anything worth remembering — issue date, where it's kept…"
           placeholderTextColor={colors.placeholder}
           multiline
           numberOfLines={4}

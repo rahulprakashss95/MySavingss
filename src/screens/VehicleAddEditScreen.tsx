@@ -228,7 +228,7 @@ const VehicleAddEditScreen = ({ initial }: Props) => {
           style={[styles.input, styles.multiline]}
           onChangeText={setDescription}
           value={description}
-          placeholder="Model year, colour, where the RC is keptâ€¦"
+          placeholder="Model year, colour, where the RC is kept…"
           placeholderTextColor={colors.placeholder}
           multiline
           numberOfLines={4}

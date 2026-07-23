@@ -92,7 +92,7 @@ const Game2048Screen = () => {
 
         {game.status === "won" && (
           <Overlay colors={colors}>
-            <Text style={styles.overlayTitle}>You made {game.target}! ðŸŽ‰</Text>
+            <Text style={styles.overlayTitle}>You made {game.target}! 🎉</Text>
             <View style={styles.overlayButtons}>
               <Pressable onPress={game.continuePlaying} style={styles.primaryButton}>
                 <Text style={styles.primaryButtonText}>Keep going</Text>

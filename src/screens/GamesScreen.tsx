@@ -10,7 +10,7 @@ import { GAMES, GameScoreModel } from "../models/GameModel";
 
 /**
  * The Games landing: a card per game in the `GAMES` registry. Open to every
- * signed-in member (no tile-gating â€” a game is a social, family-wide thing, not
+ * signed-in member (no tile-gating — a game is a social, family-wide thing, not
  * a vault module), so it needs no access checks. Each card shows the member's
  * own best and offers Play / Leaderboard.
  */

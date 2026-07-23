@@ -26,7 +26,7 @@ const SavingListScreen = () => {
       {...list}
       sections={sections}
       keyOf={(item) => item.id}
-      countLabel={(section) => `â‚¹ ${amountFormat(sumAmount(section.data))}`}
+      countLabel={(section) => `₹ ${amountFormat(sumAmount(section.data))}`}
       noun="saving"
       addLabel="Add saving"
       onAdd={() => navigateAddEdit(null)}
@@ -38,7 +38,7 @@ const SavingListScreen = () => {
           icon="wallet-outline"
           accent={colors.accentAmber}
           title={item.accountName || item.clientName || "Saving"}
-          value={`â‚¹ ${amountFormat(item.amount)}`}
+          value={`₹ ${amountFormat(item.amount)}`}
           meta={item.date || undefined}
           description={item.comments}
           onPress={() => navigateAddEdit(item)}

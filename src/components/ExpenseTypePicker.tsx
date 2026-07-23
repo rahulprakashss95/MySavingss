@@ -15,7 +15,7 @@ type IExpenseTypePicker = {
 /**
  * A searchable expense-type dropdown. Types are served from the cache;
  * "Add type" opens the full type form in a popup and selects the new record on
- * save â€” no leaving the expense form.
+ * save — no leaving the expense form.
  */
 const ExpenseTypePicker = ({
   selectedId,
@@ -27,7 +27,7 @@ const ExpenseTypePicker = ({
   return (
     <SearchableSelect
       label="Type"
-      placeholder={items.length ? "Select a type" : "No types yet â€” add one"}
+      placeholder={items.length ? "Select a type" : "No types yet — add one"}
       selectedId={selectedId}
       selectedName={selectedName}
       options={items}

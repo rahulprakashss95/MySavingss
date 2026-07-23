@@ -6,7 +6,7 @@ import { useCollectionState } from "../../../../../src/query/hooks";
 import VehicleAddEditScreen from "../../../../../src/screens/VehicleAddEditScreen";
 
 /**
- * Resolves the vehicle from the cache before mounting the form â€” the form seeds
+ * Resolves the vehicle from the cache before mounting the form — the form seeds
  * its fields from `initial` at mount, so on a cold deep link we wait for the
  * fetch rather than seeding an empty form. `new` = create.
  */

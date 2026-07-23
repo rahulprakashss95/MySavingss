@@ -154,7 +154,7 @@ const PropertyAddEditScreen = ({ initial }: Props) => {
   /**
    * Commits the form before handing off. The payments screen rewrites the whole
    * property document, so any unsaved edit sitting in this form would otherwise
-   * be silently resurrected â€” or lost â€” on the next entry it writes.
+   * be silently resurrected — or lost — on the next entry it writes.
    */
   const managePayments = () => {
     const error = validationError();
@@ -251,7 +251,7 @@ const PropertyAddEditScreen = ({ initial }: Props) => {
           {paymentMode === "loan" ? "Loan amount" : "Total amount"}
         </Text>
         <View style={[styles.affixRow, styles.inputSpacing]}>
-          <Text style={styles.affix}>â‚¹</Text>
+          <Text style={styles.affix}>₹</Text>
           <TextInput
             style={styles.affixInput}
             onChangeText={setTotalAmount}
@@ -301,10 +301,10 @@ const PropertyAddEditScreen = ({ initial }: Props) => {
                 <ProgressBar progress={totals.progress} />
                 <View style={styles.totalsRow}>
                   <Text style={styles.totalsPaid}>
-                    â‚¹ {amountFormat(totals.paid)} paid
+                    ₹ {amountFormat(totals.paid)} paid
                   </Text>
                   <Text style={styles.totalsRemaining}>
-                    â‚¹ {amountFormat(totals.remaining)} left
+                    ₹ {amountFormat(totals.remaining)} left
                   </Text>
                 </View>
 
@@ -341,7 +341,7 @@ const PropertyAddEditScreen = ({ initial }: Props) => {
           style={[styles.input, styles.multiline]}
           onChangeText={setDescription}
           value={description}
-          placeholder="Survey number, registration details, anything worth notingâ€¦"
+          placeholder="Survey number, registration details, anything worth noting…"
           placeholderTextColor={colors.placeholder}
           multiline
           numberOfLines={4}

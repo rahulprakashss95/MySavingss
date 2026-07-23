@@ -183,7 +183,7 @@ const BankDocumentAddEditScreen = ({ initial }: Props) => {
           style={[styles.input, styles.multiline]}
           onChangeText={setDescription}
           value={description}
-          placeholder="Branch, account type, or anything worth rememberingâ€¦"
+          placeholder="Branch, account type, or anything worth remembering…"
           placeholderTextColor={colors.placeholder}
           multiline
           numberOfLines={4}

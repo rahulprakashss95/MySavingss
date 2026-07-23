@@ -25,7 +25,7 @@ import {
 } from "../utils/ledger";
 import { amountFormat } from "../utils/Utils";
 
-const rupees = (value: number) => `â‚¹ ${amountFormat(Math.round(value))}`;
+const rupees = (value: number) => `₹ ${amountFormat(Math.round(value))}`;
 
 const LedgerOverviewScreen = () => {
   const { colors } = useTheme();
@@ -76,10 +76,10 @@ const LedgerOverviewScreen = () => {
     [expenses]
   );
   // Bounded to the last 12 active months, so the section never grows unbounded
-  // the way a per-month list would â€” older months scroll horizontally.
+  // the way a per-month list would — older months scroll horizontally.
   const monthlyEarnings = useMemo(() => monthlyByType(earnings), [earnings]);
 
-  /** Bars are scaled against the biggest bucket, not the total â€” easier to read. */
+  /** Bars are scaled against the biggest bucket, not the total — easier to read. */
   const renderBuckets = (buckets: Bucket[], color: string) => {
     const max = Math.max(...buckets.map((bucket) => bucket.total), 1);
     return buckets.map((bucket) => (

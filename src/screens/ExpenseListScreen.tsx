@@ -26,7 +26,7 @@ const ExpenseListScreen = () => {
       keyOf={(item) => item.id}
       // The money matters more than the count, so each month's heading carries
       // its total instead.
-      countLabel={(section) => `â‚¹ ${amountFormat(sumAmount(section.data))}`}
+      countLabel={(section) => `₹ ${amountFormat(sumAmount(section.data))}`}
       noun="expense"
       addLabel="Add expense"
       onAdd={() => navigateAddEdit(null)}
@@ -38,7 +38,7 @@ const ExpenseListScreen = () => {
           icon="receipt-outline"
           accent={colors.accentAmber}
           title={item.typeName}
-          value={`â‚¹ ${amountFormat(item.amount)}`}
+          value={`₹ ${amountFormat(item.amount)}`}
           meta={item.date || undefined}
           description={item.comments}
           onPress={() => navigateAddEdit(item)}

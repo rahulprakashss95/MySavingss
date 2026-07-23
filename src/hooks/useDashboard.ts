@@ -77,7 +77,7 @@ const UPCOMING_DAYS = 60;
 
 /**
  * Aggregates the family's holdings, upcoming events and this month's spending
- * for the Home dashboard. Everything is gated by module access â€” a member only
+ * for the Home dashboard. Everything is gated by module access — a member only
  * ever sees numbers for modules they can open, admins see all. All figures come
  * from the same RTK cache the module screens use, so nothing is re-fetched.
  */
@@ -95,7 +95,7 @@ export const useDashboard = (): DashboardData => {
     expenses: has("expenses"),
   };
 
-  // Served from the shared store â€” fetched once per session, not on every focus.
+  // Served from the shared store — fetched once per session, not on every focus.
   const accounts = useCollectionState<AccountModel>("accounts");
   // Feeds the FD maturity label ("FD at <bank>"); accounts store only a bankId.
   const banks = useCollectionState<BankModel>("banks");
@@ -123,7 +123,7 @@ export const useDashboard = (): DashboardData => {
     const orn = need.assets ? ornamentTotals(ornaments.items, ratesValue) : null;
     const portfolio = need.assets ? propertyPortfolio(properties.items) : null;
     const goldValue = orn?.totalValue ?? 0;
-    // Property "equity" â€” what's actually paid, not the sticker value still owed.
+    // Property "equity" — what's actually paid, not the sticker value still owed.
     const propertyEquity = portfolio?.paid ?? 0;
 
     const segments: WorthSegment[] = [];
@@ -188,7 +188,7 @@ export const useDashboard = (): DashboardData => {
             return {
               id: account.id,
               bankName:
-                institution !== "â€”"
+                institution !== "—"
                   ? institution
                   : account.name || "your bank",
               amount: Number(account.balance) || 0,

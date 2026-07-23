@@ -25,14 +25,14 @@ const iconFor = (vehicleType: string): IconName => {
   }
 };
 
-/** "Car Â· Insured till 12-Jan-2027" â€” whichever half actually applies. */
+/** "Car · Insured till 12-Jan-2027" — whichever half actually applies. */
 const rowMeta = (vehicle: VehicleModel) =>
   [
     vehicle.vehicleType,
     vehicle.insuranceExpiry ? `Insured till ${vehicle.insuranceExpiry}` : "",
   ]
     .filter(Boolean)
-    .join(" Â· ");
+    .join(" · ");
 
 const VehicleListScreen = () => {
   const router = useRouter();
@@ -67,7 +67,7 @@ const VehicleListScreen = () => {
           icon={iconFor(item.vehicleType)}
           accent={colors.accentBlue}
           title={item.name}
-          value={item.number || "â€”"}
+          value={item.number || "—"}
           copyValue={item.number || undefined}
           valueLabel={item.number ? "Registration number" : undefined}
           meta={rowMeta(item) || undefined}

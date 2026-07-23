@@ -72,7 +72,7 @@ const SavingAddEditScreen = ({ initial }: Props) => {
 
     setIsLoading(true);
     const payload = {
-      // Savings are a plain flow now â€” no client or account link. The fields
+      // Savings are a plain flow now — no client or account link. The fields
       // stay on the shape for older rows, written blank.
       accountId: "",
       accountName: "",
@@ -134,7 +134,7 @@ const SavingAddEditScreen = ({ initial }: Props) => {
 
         <Text style={styles.label}>Amount</Text>
         <View style={[styles.affixRow, styles.inputSpacing]}>
-          <Text style={styles.affix}>â‚¹</Text>
+          <Text style={styles.affix}>₹</Text>
           <TextInput
             style={styles.affixInput}
             onChangeText={setAmount}
@@ -160,7 +160,7 @@ const SavingAddEditScreen = ({ initial }: Props) => {
           style={[styles.input, styles.multiline]}
           onChangeText={setComments}
           value={comments}
-          placeholder="Where it went, why you set it asideâ€¦"
+          placeholder="Where it went, why you set it aside…"
           placeholderTextColor={colors.placeholder}
           multiline
           numberOfLines={4}

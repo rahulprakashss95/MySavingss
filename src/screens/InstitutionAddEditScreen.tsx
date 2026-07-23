@@ -9,7 +9,7 @@ import { ThemeColors } from "../utils/Color";
 
 /**
  * Add/edit an institution (a `banks` row). The route carries just the id
- * (`new` = create); the record itself is read from the RTK cache â€” which
+ * (`new` = create); the record itself is read from the RTK cache — which
  * `useCollectionState` hydrates on mount, so this works on a cold deep link,
  * not only when reached from the list. Fields, save and delete live in the
  * shared BankForm.

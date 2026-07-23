@@ -28,7 +28,7 @@ const EarningListScreen = () => {
       keyOf={(item) => item.id}
       // The count of entries matters less than the money, so each month's
       // heading carries its total instead.
-      countLabel={(section) => `â‚¹ ${amountFormat(sumAmount(section.data))}`}
+      countLabel={(section) => `₹ ${amountFormat(sumAmount(section.data))}`}
       noun="earning"
       addLabel="Add earning"
       onAdd={() => navigateAddEdit(null)}
@@ -40,7 +40,7 @@ const EarningListScreen = () => {
           icon="trending-up-outline"
           accent={colors.accentBlue}
           title={item.type}
-          value={`â‚¹ ${amountFormat(item.amount)}`}
+          value={`₹ ${amountFormat(item.amount)}`}
           subtitle={item.clientName}
           meta={item.date || undefined}
           description={item.comments}

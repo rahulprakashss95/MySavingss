@@ -148,7 +148,7 @@ const ExpenseAddEditScreen = ({ initial }: Props) => {
 
           <Text style={styles.label}>Amount</Text>
           <View style={[styles.affixRow, styles.inputSpacing]}>
-            <Text style={styles.affix}>â‚¹</Text>
+            <Text style={styles.affix}>₹</Text>
             <TextInput
               style={styles.affixInput}
               onChangeText={setAmount}
@@ -174,7 +174,7 @@ const ExpenseAddEditScreen = ({ initial }: Props) => {
             style={[styles.input, styles.multiline]}
             onChangeText={setComments}
             value={comments}
-            placeholder="What was this expense forâ€¦"
+            placeholder="What was this expense for…"
             placeholderTextColor={colors.placeholder}
             multiline
             numberOfLines={4}

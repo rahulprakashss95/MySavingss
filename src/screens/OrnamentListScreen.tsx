@@ -31,9 +31,9 @@ const pieceCount = (count: string) => {
   return `${parsed} pieces`;
 };
 
-/** "22K Â· 3 pieces", or whichever half of that actually applies. */
+/** "22K · 3 pieces", or whichever half of that actually applies. */
 const rowMeta = (ornament: OrnamentModel) =>
-  [karatOf(ornament), pieceCount(ornament.count)].filter(Boolean).join(" Â· ");
+  [karatOf(ornament), pieceCount(ornament.count)].filter(Boolean).join(" · ");
 
 const OrnamentListScreen = () => {
   const router = useRouter();
@@ -77,7 +77,7 @@ const OrnamentListScreen = () => {
           icon="ribbon-outline"
           accent={accentFor(item.ornamentType, colors)}
           title={item.name}
-          value={weightSummary(item.grams) || "â€”"}
+          value={weightSummary(item.grams) || "—"}
           subtitle={nameOf(item.ownerId) || undefined}
           meta={rowMeta(item) || undefined}
           description={item.description}

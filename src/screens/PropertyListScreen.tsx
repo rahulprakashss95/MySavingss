@@ -22,7 +22,7 @@ const ICONS: Record<string, IconName> = {
   Bike: "bicycle-outline",
 };
 
-/** Area for land, nothing for vehicles â€” a car has no cents. */
+/** Area for land, nothing for vehicles — a car has no cents. */
 const metaFor = (property: PropertyModel) => areaSummary(property.cents ?? "");
 
 const PropertyListScreen = () => {
@@ -61,7 +61,7 @@ const PropertyListScreen = () => {
     return (
       <View style={styles.trailing}>
         <Text style={[styles.trailingValue, settled && styles.settled]}>
-          {settled ? "Settled" : `â‚¹ ${amountFormat(totals.remaining)}`}
+          {settled ? "Settled" : `₹ ${amountFormat(totals.remaining)}`}
         </Text>
         {!settled && <Text style={styles.trailingLabel}>left</Text>}
         {property.paymentMode === "installments" && totals.entryCount > 0 && (

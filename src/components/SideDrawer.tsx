@@ -35,16 +35,20 @@ type Node = Leaf | Group;
 
 // The drawer mirrors the app's screen hierarchy as a tree: top-level
 // destinations plus one expandable group per module. `href` values are the
-// Expo Router paths under app/(app)/(tabs).
+// Expo Router paths under app/(app)/(tabs). Order follows the tab bar's TABS
+// list so the two navigations read the same left-to-right / top-to-bottom.
 const TREE: Node[] = [
   { label: "Home", icon: "home-outline", href: "/home" },
   {
-    label: "Documents",
-    icon: "document-text-outline",
-    module: "documents",
+    label: "Ledger",
+    icon: "book-outline",
+    module: "ledger",
     children: [
-      { label: "Government", icon: "shield-checkmark-outline", href: "/documents/government" },
-      { label: "Bank", icon: "business-outline", href: "/documents/bank-accounts" },
+      { label: "Earnings", icon: "trending-up-outline", href: "/ledger/earnings" },
+      { label: "Expenses", icon: "receipt-outline", href: "/ledger/expenses" },
+      { label: "Savings", icon: "wallet-outline", href: "/ledger/savings" },
+      { label: "Clients", icon: "people-outline", href: "/ledger/clients" },
+      { label: "Overview", icon: "stats-chart-outline", href: "/ledger/overview" },
     ],
   },
   {
@@ -60,17 +64,16 @@ const TREE: Node[] = [
     ],
   },
   {
-    label: "Ledger",
-    icon: "book-outline",
-    module: "ledger",
+    label: "Documents",
+    icon: "document-text-outline",
+    module: "documents",
     children: [
-      { label: "Earnings", icon: "trending-up-outline", href: "/ledger/earnings" },
-      { label: "Expenses", icon: "receipt-outline", href: "/ledger/expenses" },
-      { label: "Savings", icon: "wallet-outline", href: "/ledger/savings" },
-      { label: "Clients", icon: "people-outline", href: "/ledger/clients" },
-      { label: "Overview", icon: "stats-chart-outline", href: "/ledger/overview" },
+      { label: "Government", icon: "shield-checkmark-outline", href: "/documents/government" },
+      { label: "Bank", icon: "business-outline", href: "/documents/bank-accounts" },
     ],
   },
+  // Like Home, open to everyone — no module gating.
+  { label: "Games", icon: "game-controller-outline", href: "/games" },
   { label: "Settings", icon: "settings-outline", href: "/settings" },
 ];
 

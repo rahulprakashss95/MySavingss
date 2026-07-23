@@ -10,7 +10,7 @@ import { useRouter } from "expo-router";
 
 /** Phone and email on one line, whichever of them exists. */
 const contactLine = (client: LedgerClientModel) =>
-  [client.phone, client.email].filter(Boolean).join(" Â· ");
+  [client.phone, client.email].filter(Boolean).join(" · ");
 
 const LedgerClientListScreen = () => {
   const router = useRouter();
@@ -20,7 +20,7 @@ const LedgerClientListScreen = () => {
     useCollectionState<LedgerClientModel>("ledgerClients");
 
   // Private to one login and usually short, so a flat alphabetical list reads
-  // cleaner than letter headings â€” one section, headers hidden. Stay empty when
+  // cleaner than letter headings — one section, headers hidden. Stay empty when
   // there are no clients so GroupedList's empty state shows (a SectionList only
   // renders ListEmptyComponent when there are zero sections).
   const sections = useMemo(

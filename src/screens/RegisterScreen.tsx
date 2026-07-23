@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -126,7 +125,9 @@ const RegisterScreen = () => {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      // "padding" on Android too: under edge-to-edge the window no longer
+      // resizes for the keyboard, so adjustResize alone hides focused fields.
+      behavior="padding"
     >
       <ScrollView
         contentContainerStyle={styles.content}

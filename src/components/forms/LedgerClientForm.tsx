@@ -153,7 +153,7 @@ const LedgerClientForm = ({ initial, onSaved, onDeleted }: Props) => {
             style={[styles.input, styles.multiline]}
             onChangeText={setDescription}
             value={description}
-            placeholder="Anything worth remembering about this clientâ€¦"
+            placeholder="Anything worth remembering about this client…"
             placeholderTextColor={colors.placeholder}
             multiline
             numberOfLines={4}

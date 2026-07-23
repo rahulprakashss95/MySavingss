@@ -6,7 +6,7 @@ import { useCollectionState } from "../../../../../../src/query/hooks";
 import PropertyAddEditScreen from "../../../../../../src/screens/PropertyAddEditScreen";
 
 /**
- * Resolves the property from the cache before mounting the form â€” the form seeds
+ * Resolves the property from the cache before mounting the form — the form seeds
  * its fields from `initial` at mount, so on a cold deep link we wait for the
  * fetch rather than seeding an empty form. `new` = create.
  */

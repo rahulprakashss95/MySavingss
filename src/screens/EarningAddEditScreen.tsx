@@ -156,7 +156,7 @@ const EarningAddEditScreen = ({ initial }: Props) => {
 
         <Text style={styles.label}>Amount</Text>
         <View style={[styles.affixRow, styles.inputSpacing]}>
-          <Text style={styles.affix}>â‚¹</Text>
+          <Text style={styles.affix}>₹</Text>
           <TextInput
             style={styles.affixInput}
             onChangeText={setAmount}
@@ -182,7 +182,7 @@ const EarningAddEditScreen = ({ initial }: Props) => {
           style={[styles.input, styles.multiline]}
           onChangeText={setComments}
           value={comments}
-          placeholder="Anything worth remembering about this paymentâ€¦"
+          placeholder="Anything worth remembering about this payment…"
           placeholderTextColor={colors.placeholder}
           multiline
           numberOfLines={4}

@@ -6,7 +6,7 @@ import { useCollectionState } from "../../../../../src/query/hooks";
 import EarningAddEditScreen from "../../../../../src/screens/EarningAddEditScreen";
 
 /**
- * Resolves the earning from the cache before mounting the form â€” the form seeds
+ * Resolves the earning from the cache before mounting the form — the form seeds
  * its fields from `initial` at mount, so on a cold deep link we wait for the
  * fetch rather than seeding an empty form. `new` = create.
  */

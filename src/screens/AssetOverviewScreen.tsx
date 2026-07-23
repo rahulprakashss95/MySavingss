@@ -42,7 +42,7 @@ import { hasFeature } from "../models/common";
 import { AccountModel } from "../models/AccountModel";
 import { buildAccountTotals } from "../utils/deposits";
 
-const rupees = (value: number) => `â‚¹ ${amountFormat(Math.round(value))}`;
+const rupees = (value: number) => `₹ ${amountFormat(Math.round(value))}`;
 
 const AssetOverviewScreen = () => {
   const [isRatesModalOpen, setIsRatesModalOpen] = useState(false);
@@ -54,7 +54,7 @@ const AssetOverviewScreen = () => {
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Ornaments, properties and accounts come from the shared cache; metal rates
-  // from their own cached doc â€” none of them re-read on focus.
+  // from their own cached doc — none of them re-read on focus.
   const ornamentState = useCollectionState<OrnamentModel>("ornaments");
   const propertyState = useCollectionState<PropertyModel>("properties");
   const accountState = useCollectionState<AccountModel>("accounts");
@@ -65,7 +65,7 @@ const AssetOverviewScreen = () => {
   const rates = ratesState.value ?? EMPTY_METAL_RATES;
 
   // Deposits/balances count toward net worth only for members who hold the
-  // Accounts tile â€” the overview reflects the tiles you can see.
+  // Accounts tile — the overview reflects the tiles you can see.
   const showAccounts = hasFeature(user, "accounts");
   const accountTotals = useMemo(
     () => buildAccountTotals(accountState.items),
@@ -138,7 +138,7 @@ const AssetOverviewScreen = () => {
         </View>
         <View style={styles.metalTop}>
           <Text style={styles.metalMeta}>
-            {grams} g{pawn ? ` Â· ${pawn} pawn` : ""} Â·{" "}
+            {grams} g{pawn ? ` · ${pawn} pawn` : ""} ·{" "}
             {row.pieces === 1 ? "1 piece" : `${row.pieces} pieces`}
           </Text>
         </View>
@@ -194,9 +194,9 @@ const AssetOverviewScreen = () => {
         <Text style={styles.heroLabel}>Total asset value</Text>
         <Text style={styles.heroValue}>{rupees(netValue)}</Text>
         <Text style={styles.heroCaption}>
-          Ornaments {rupees(ornamentSummary.totalValue)} Â· Properties{" "}
+          Ornaments {rupees(ornamentSummary.totalValue)} · Properties{" "}
           {rupees(portfolio.total)} at cost
-          {showAccounts ? ` Â· Accounts ${rupees(accountTotals.balance)}` : ""}
+          {showAccounts ? ` · Accounts ${rupees(accountTotals.balance)}` : ""}
         </Text>
         {ornamentSummary.hasUnvalued && (
           <Text style={styles.heroWarning}>
@@ -228,7 +228,7 @@ const AssetOverviewScreen = () => {
           {hasRates ? (
             <>
               <Text style={styles.stripValue}>
-                Gold â‚¹{rates.goldPerGram}/g Â· Silver â‚¹{rates.silverPerGram}/g
+                Gold ₹{rates.goldPerGram}/g · Silver ₹{rates.silverPerGram}/g
               </Text>
               <Text style={styles.stripMeta}>
                 {rates.updatedAt
@@ -308,8 +308,8 @@ const AssetOverviewScreen = () => {
               {rupees(portfolio.paid)} paid across{" "}
               {portfolio.count === 1 ? "1 property" : `${portfolio.count} properties`}
               {portfolio.outstandingCount > 0
-                ? ` Â· ${portfolio.outstandingCount} still owing`
-                : " Â· all settled"}
+                ? ` · ${portfolio.outstandingCount} still owing`
+                : " · all settled"}
             </Text>
           </>
         )}

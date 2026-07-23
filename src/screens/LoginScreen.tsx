@@ -3,7 +3,6 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -158,10 +157,11 @@ const LoginScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+    // Android needs "padding" too. Since edge-to-edge became mandatory the
+    // window no longer resizes for the keyboard, so the manifest's
+    // adjustResize does nothing and an undefined behavior left the password
+    // field sitting behind the IME.
+    <KeyboardAvoidingView style={styles.container} behavior="padding">
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"

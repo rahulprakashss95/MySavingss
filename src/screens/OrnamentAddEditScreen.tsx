@@ -204,7 +204,7 @@ const OrnamentAddEditScreen = ({ initial }: Props) => {
           style={[styles.input, styles.multiline]}
           onChangeText={setDescription}
           value={description}
-          placeholder="Purity, where it's kept, who gifted itâ€¦"
+          placeholder="Purity, where it's kept, who gifted it…"
           placeholderTextColor={colors.placeholder}
           multiline
           numberOfLines={4}

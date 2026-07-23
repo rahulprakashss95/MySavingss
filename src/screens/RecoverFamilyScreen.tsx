@@ -3,7 +3,6 @@ import * as Clipboard from "expo-clipboard";
 import React, { useMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -99,7 +98,9 @@ const RecoverFamilyScreen = () => {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      // "padding" on Android too: under edge-to-edge the window no longer
+      // resizes for the keyboard, so adjustResize alone hides focused fields.
+      behavior="padding"
     >
       <ScrollView
         contentContainerStyle={styles.content}
